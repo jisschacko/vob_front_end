@@ -19,9 +19,31 @@
 
     <p class="muted"><strong>Status:</strong> {{ $tot['status_label'] ?? $tot['status'] ?? '' }}</p>
 
-    @unless ($page->editable())
-        <div class="card-note">This Terms of Trade is {{ strtolower($tot['status_label'] ?? 'under review') }} and can no longer be edited.</div>
-    @endunless
+    @if (! $page->editable())
+        <div class="status-card" role="status">
+            <strong>{{ ! empty($tot['submitted_at']) ? 'Submitted' : 'Not editable' }}</strong>
+            @if (! empty($tot['submitted_at']))
+                on {{ \Illuminate\Support\Carbon::parse($tot['submitted_at'])->setTimezone(config('vob.display_timezone'))->format('d-M-Y, h:i A') }}.
+            @endif
+            It is now <strong>{{ strtolower($tot['status_label'] ?? 'under review') }}</strong> and can no longer be edited. Follow its progress on the left.
+            You will be asked to update it only if a reviewer sends it back.
+        </div>
+    @elseif ($page->isResubmission())
+        <div class="status-card status-card-warn" role="status">
+            A reviewer sent this Terms of Trade back to you. Read the comments below, update the form and press <strong>Resubmit</strong>.
+        </div>
+    @endif
+
+    @if (session('submit_warnings'))
+        <div class="error-summary" role="status">
+            <strong>Submitted with items missing (development mode only):</strong>
+            <ul>@foreach (session('submit_warnings') as $warning)<li>{{ $warning }}</li>@endforeach</ul>
+        </div>
+    @endif
+
+    @foreach ($page->switchMismatches() as $mismatch)
+        <div class="dev-note">{{ $mismatch }}</div>
+    @endforeach
 
     @if ($page->reviewerComments() !== [])
         <div class="card">
@@ -37,10 +59,15 @@
     @if ($errors->any())
         <div class="error-summary" role="alert">
             @php $special = collect(['form', 'document', 'bank_verify'])->first(fn ($k) => $errors->has($k)) @endphp
-            <strong>{{ $special ? $errors->first($special) : 'Some values need correcting. Nothing was saved.' }}</strong>
-            @unless ($special)
-                <ul>@foreach ($errors->all() as $message)<li>{{ $message }}</li>@endforeach</ul>
-            @endunless
+            @if ($errors->has('submit'))
+                <strong>{{ $errors->first('submit') }} Your draft was saved.</strong>
+                <ul>@foreach ($errors->getMessages() as $key => $messages)@if ($key !== 'submit')<li>{{ $messages[0] }}</li>@endif @endforeach</ul>
+            @else
+                <strong>{{ $special ? $errors->first($special) : 'Some values need correcting. Nothing was saved.' }}</strong>
+                @unless ($special)
+                    <ul>@foreach ($errors->all() as $message)<li>{{ $message }}</li>@endforeach</ul>
+                @endunless
+            @endif
         </div>
     @endif
 
@@ -63,7 +90,8 @@
         <div class="actionbar">
             @if ($page->editable())
                 <button type="submit" class="btn">Save Draft</button>
-                <button type="button" class="btn btn-secondary" disabled title="Submitting becomes available in the next release">Submit</button>
+                <button type="submit" class="btn btn-secondary" formaction="{{ route('tot.submit') }}" data-submit
+                        data-confirm="{{ $page->isResubmission() ? 'Resubmit this Terms of Trade for review?' : 'Submit this Terms of Trade for review? You will not be able to edit it afterwards unless a reviewer sends it back.' }}">{{ $page->isResubmission() ? 'Resubmit' : 'Submit' }}</button>
             @endif
             <span id="autosave-status" class="muted" aria-live="polite">
                 @if ($draftSavedAt) Draft saved {{ \Illuminate\Support\Carbon::parse($draftSavedAt)->setTimezone(config('vob.display_timezone'))->format('d-M-Y, h:i A') }} @endif

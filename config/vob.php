@@ -6,6 +6,9 @@ return [
     'enforce_required' => filter_var(env('VOB_ENFORCE_REQUIRED', true), FILTER_VALIDATE_BOOLEAN),
     'enforce_documents' => filter_var(env('VOB_ENFORCE_DOCUMENTS', true), FILTER_VALIDATE_BOOLEAN),
 
+    // Demo / testing: skip every third-party integration (Cashfree bank verification, S3 uploads). Ignored in production.
+    'skip_third_party' => filter_var(env('VOB_SKIP_THIRD_PARTY', false), FILTER_VALIDATE_BOOLEAN),
+
     // Timezone used when showing Admin API timestamps ("Draft saved 20-Oct-2026, 10:42 AM").
     'display_timezone' => env('VOB_DISPLAY_TIMEZONE', 'Asia/Kolkata'),
 

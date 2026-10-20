@@ -30,6 +30,20 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
+        <!-- Tests never depend on a developer's local .env (demo flag, relaxed switches, real credentials) -->
+        <env name="VOB_SKIP_THIRD_PARTY" value="false"/>
+        <env name="VOB_ENFORCE_REQUIRED" value="true"/>
+        <env name="VOB_ENFORCE_DOCUMENTS" value="true"/>
+        <env name="VOB_SESSION_IDLE_MINUTES" value="30"/>
+        <env name="VOB_SESSION_ABSOLUTE_MINUTES" value="480"/>
+        <env name="VOB_DOCS_DISK" value="s3"/>
+        <env name="CASHFREE_CLIENT_ID" value=""/>
+        <env name="CASHFREE_CLIENT_SECRET" value=""/>
+        <env name="CASHFREE_ENV" value="sandbox"/>
+        <env name="CASHFREE_NAME_MATCH" value="ignore"/>
+        <env name="ADMIN_API_BASE_URL" value="https://admin.test/api/v1"/>
+        <env name="ADMIN_API_HMAC_SECRET" value=""/>
+        <env name="ADMIN_API_RSA_PUBLIC_KEY_PATH" value=""/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
     </php>

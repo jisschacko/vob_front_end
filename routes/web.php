@@ -39,6 +39,7 @@ Route::middleware('vendor')->group(function () {
     Route::post('/bank/verify/status', [BankVerificationController::class, 'status'])->middleware('throttle:60,1')->name('bank.status');
     Route::get('/home', [TotController::class, 'show'])->name('home');
     Route::post('/tot/draft', [TotController::class, 'save'])->name('tot.draft');
+    Route::post('/tot/submit', [TotController::class, 'submit'])->middleware('throttle:10,1')->name('tot.submit');
     Route::post('/tot/autosave', [TotController::class, 'autosave'])->middleware('throttle:60,1')->name('tot.autosave');
     Route::post('/tot/documents', [TotDocumentController::class, 'store'])->middleware('throttle:20,1')->name('tot.documents.store');
     Route::post('/tot/documents/remove', [TotDocumentController::class, 'destroy'])->name('tot.documents.destroy');

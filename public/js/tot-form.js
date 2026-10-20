@@ -65,6 +65,14 @@
   form.addEventListener('change', schedule);
   form.addEventListener('input', function (e) { if (!e.target.matches('[data-doc-input]')) schedule(); });
 
+  // ---- submit: ask for confirmation (the server-side checks run regardless) ------------------------------------------------
+  var submitBtn = document.querySelector('[data-submit]');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', function (e) {
+      if (!window.confirm(submitBtn.dataset.confirm)) e.preventDefault();
+    });
+  }
+
   // ---- bank verification: save the typed bank details first, then start the verification ----------------------------------
   var verifyBtn = document.querySelector('[data-bank-verify]');
   if (verifyBtn) {

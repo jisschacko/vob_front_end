@@ -15,6 +15,7 @@
         Development mode:
         @unless (\App\Support\EnforcementSwitches::required()) mandatory-field checks are OFF. @endunless
         @unless (\App\Support\EnforcementSwitches::documents()) document checks are OFF. @endunless
+        @if (\App\Support\EnforcementSwitches::skipThirdParty()) DEMO: third-party services are skipped (bank verification is simulated, documents are stored locally). @endif
     </div>
 @endif
 

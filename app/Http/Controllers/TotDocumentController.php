@@ -7,6 +7,7 @@ use App\Services\AdminApi\AdminSession;
 use App\Services\AdminApi\ApiLogger;
 use App\Services\Documents\DocumentScanner;
 use App\Services\Tot\TotLayout;
+use App\Support\EnforcementSwitches;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -57,7 +58,7 @@ class TotDocumentController extends Controller
         }
 
         $key = 'tots/'.$tot['id'].'/'.Str::random(40).'.pdf';
-        $disk = config('vob.docs_disk');
+        $disk = EnforcementSwitches::skipThirdParty() ? 'local' : config('vob.docs_disk'); // demo mode: no S3
 
         if (! $this->putObject($disk, $key, $file->getRealPath())) {
             return back()->withErrors(['document' => 'We could not store the file right now. Please try again.']);

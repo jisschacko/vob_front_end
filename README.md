@@ -6,7 +6,7 @@ verify their bank account with Cashfree and submit. There is **no business datab
 
 ## Status
 
-Phases 1-4 are done: Admin API client + logging, sign-in / password flow, the Terms of Trade form (Save Draft, autosave, locked / mandatory fields from the API, document upload to S3) and Cashfree Reverse Penny Drop bank verification. Phase 5 (submit / resubmit / status) is not started; the Submit button is shown disabled until then.
+All five phases are done: Admin API client + logging, sign-in / password flow, the Terms of Trade form (Save Draft, autosave, locked / mandatory fields from the API, document upload to S3), Cashfree bank verification, and Submit / Resubmit with a read-only status page. eMudhra e-sign (Phase 6) and the security review (Phase 7) are not started.
 
 ## Setup
 
@@ -34,6 +34,7 @@ vendor/bin/pest                 # needs a .env to exist, otherwise PHPUnit repor
 | `VOB_MASTERS_CACHE_MINUTES` | how long `/masters` dropdown data is cached (default 10) |
 | `CASHFREE_ENV`, `CASHFREE_CLIENT_ID`, `CASHFREE_CLIENT_SECRET` | bank verification. `sandbox` needs sandbox credentials, `production` live ones. Whitelist the server egress IP in the Cashfree dashboard |
 | `CASHFREE_NAME_MATCH` | `ignore` (default) or `reject_no_match`: the paying account number and IFSC must always match; this also fails a NO_MATCH name |
+| `VOB_SKIP_THIRD_PARTY` | **demo / testing only**: `true` skips every third-party service. Bank verification is not sent to Cashfree (the Admin is told `verified` with a `DEMO-...` reference) and documents are stored on the local disk instead of S3. A banner shows while it is on. Always off when `APP_ENV=production` |
 | `VOB_DISPLAY_TIMEZONE` | timezone for "Draft saved ..." (default `Asia/Kolkata`) |
 
 A missing key/secret/URL raises a clear "not configured" error before any request is sent.
@@ -68,6 +69,12 @@ A missing key/secret/URL raises a clear "not configured" error before any reques
 - The result is read from Cashfree (`GET /remitter/status`), never from a webhook payload. The paying account number and IFSC must match the form; then `POST /tots/{id}/bank-verification` tells the Admin `verified` (with the Cashfree ref_id) or `failed`. An expired link is not reported as failed.
 - `cashfree_verifications` is temporary (no account number, only last four digits and a keyed hash); `cashfree:purge-verifications` runs daily.
 - Webhook (optional, speeds things up): `POST /webhooks/cashfree`, signature checked, no session. Without it the vendor page polls every 4 seconds, and a payment made while the page was closed is picked up when the form is next opened.
+
+## Submit, resubmit, status
+
+- The Submit button posts the whole form: it is saved first, then the checks the switches allow (Admin `required_fields`, `required_documents`, bank verified or the manual-approval tick), then `POST /tots/{id}/submit`. The Admin repeats every check; its `incomplete` list is shown if it still refuses.
+- After submitting, the form is read-only (`tot.editable = false`) with a status card; the tracker stays. If a reviewer sends it back (`pending_vendor`), the comments show, the form is editable and the button reads Resubmit.
+- `VOB_ENFORCE_REQUIRED` / `VOB_ENFORCE_DOCUMENTS` = false skip VOB's own checks (the Admin may still refuse); formats are always validated by the Admin. Both are always on in production.
 
 ## Conventions
 

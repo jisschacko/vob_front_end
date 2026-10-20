@@ -2,6 +2,7 @@
 
 namespace App\Services\Tot;
 
+use App\Support\EnforcementSwitches;
 use Illuminate\Support\MessageBag;
 
 /** Everything the TOT page needs to draw a field: value, locked / required state, options, error. Built per request. */
@@ -216,6 +217,34 @@ class TotPage
     public function bankStatus(): string
     {
         return (string) ($this->detail['form']['bank']['verification_status'] ?? 'pending');
+    }
+
+    /** The reviewers sent it back (or it was submitted before) and the vendor may edit again. */
+    public function isResubmission(): bool
+    {
+        return $this->editable() && (! empty($this->tot()['submitted_at']) || $this->reviewerComments() !== []);
+    }
+
+    /**
+     * Development only: the Admin reports its own mandatory-check switches in `validation`; tell the tester when they differ from VOB's.
+     *
+     * @return list<string>
+     */
+    public function switchMismatches(): array
+    {
+        $admin = $this->detail['validation'] ?? null;
+        if (! is_array($admin) || app()->isProduction()) {
+            return [];
+        }
+
+        $notes = [];
+        foreach (['required_fields' => EnforcementSwitches::required(), 'documents' => EnforcementSwitches::documents()] as $key => $vob) {
+            if (isset($admin[$key]) && (bool) $admin[$key] !== $vob) {
+                $notes[] = "Development note: the Admin checks {$key} is ".($admin[$key] ? 'ON' : 'OFF').', this site has it '.($vob ? 'ON' : 'OFF').'.';
+            }
+        }
+
+        return $notes;
     }
 
     /** @return list<array<string,mixed>> */

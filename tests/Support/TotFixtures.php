@@ -2,6 +2,7 @@
 
 namespace Tests\Support;
 
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -78,6 +79,8 @@ class TotFixtures
      */
     public static function fake(array $routes = [], ?array $detail = null): void
     {
+        Http::swap(new Factory); // a fresh fake each call: the first registered stub would otherwise win
+
         $defaults = [
             'GET masters' => Http::response(self::masters()),
             'GET tots/'.self::TOT_ID => Http::response($detail ?? self::detail()),

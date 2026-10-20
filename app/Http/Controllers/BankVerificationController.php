@@ -7,8 +7,10 @@ use App\Services\AdminApi\AdminApiClient;
 use App\Services\AdminApi\AdminSession;
 use App\Services\Cashfree\BankVerificationService;
 use App\Services\Cashfree\CashfreeException;
+use App\Support\EnforcementSwitches;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
 
 /** "Verify bank account": pay Rs 1 by UPI from the entered account. Ids stay in the server-side session, never in a URL. */
 class BankVerificationController extends Controller
@@ -48,6 +50,9 @@ class BankVerificationController extends Controller
                 return back()->withErrors(['bank_verify' => 'Enter the account name, account number and IFS code, then verify.']);
             }
         }
+        if (EnforcementSwitches::skipThirdParty()) {
+            return $this->simulate($tot['id']);
+        }
         if (str_contains((string) $bank['account_no'], '*')) {
             return back()->withErrors(['bank_verify' => 'Please re-enter the full account number, then verify.']);
         }
@@ -61,6 +66,18 @@ class BankVerificationController extends Controller
         session()->put(self::PENDING, $row->verification_id);
 
         return redirect()->route('bank.verify');
+    }
+
+    /** VOB_SKIP_THIRD_PARTY: no Cashfree call. The Admin is told the account is verified, with a DEMO reference. */
+    private function simulate(string $totId): RedirectResponse
+    {
+        $response = $this->api->post('tots/'.$totId.'/bank-verification', ['status' => 'verified', 'reference' => 'DEMO-'.strtoupper(Str::random(10))]);
+
+        if ($response->successful()) {
+            return redirect()->route('home')->with('status', 'Demo mode: bank verification was skipped and the account is marked as verified.');
+        }
+
+        return back()->withErrors(['bank_verify' => 'We could not record the verification right now. Please try again.']);
     }
 
     public function show()

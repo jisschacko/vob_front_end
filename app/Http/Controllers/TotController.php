@@ -6,8 +6,10 @@ use App\Services\AdminApi\AdminApiClient;
 use App\Services\AdminApi\AdminSession;
 use App\Services\Cashfree\BankVerificationService;
 use App\Services\Tot\Masters;
+use App\Services\Tot\SubmitReadiness;
 use App\Services\Tot\TotFormMapper;
 use App\Services\Tot\TotPage;
+use App\Support\EnforcementSwitches;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +26,7 @@ class TotController extends Controller
         private readonly Masters $masters,
         private readonly TotFormMapper $mapper,
         private readonly BankVerificationService $bank,
+        private readonly SubmitReadiness $readiness,
     ) {}
 
     public function show(Request $request)
@@ -67,6 +70,48 @@ class TotController extends Controller
         }
 
         return back()->withInput()->withErrors($result['errors'] ?: ['form' => $result['message']]);
+    }
+
+    /**
+     * Submit (or resubmit after the reviewers sent it back). The posted form is saved first, then the mandatory-field / document checks
+     * the development switches allow, then POST /tots/{id}/submit. After a successful submit the Admin makes the TOT read-only.
+     */
+    public function submit(Request $request): RedirectResponse
+    {
+        $tot = $this->session->tot();
+        if ($tot === null) {
+            return redirect()->route('home');
+        }
+
+        $saved = $this->saveDraft($request);
+        if (! $saved['ok']) {
+            return back()->withInput()->withErrors($saved['errors'] ?: ['form' => $saved['message']]);
+        }
+
+        $detail = $this->api->get('tots/'.$tot['id']);
+        if (! $detail->successful()) {
+            return back()->withInput()->withErrors(['form' => 'We could not submit right now. Please try again.']);
+        }
+
+        $missing = $this->readiness->missing($detail->json(), EnforcementSwitches::required(), EnforcementSwitches::documents());
+        if ($missing !== []) {
+            return back()->withInput()->withErrors(['submit' => 'Please complete the following before submitting.'] + $missing);
+        }
+
+        $response = $this->api->post('tots/'.$tot['id'].'/submit');
+
+        if ($response->successful()) {
+            $warnings = $this->readiness->fromAdmin((array) $response->json('warnings', []));
+
+            return redirect()->route('home')->with('status', 'Your Terms of Trade has been submitted for review.')
+                ->with('submit_warnings', array_values($warnings));
+        }
+
+        return back()->withInput()->withErrors(match ($response->status()) {
+            422 => ['submit' => 'Please complete the following before submitting.'] + $this->readiness->fromAdmin((array) $response->json('errors', [])),
+            409 => ['form' => 'This Terms of Trade can no longer be edited.'],
+            default => ['form' => 'We could not submit right now. Please try again.'],
+        });
     }
 
     /** Autosave (same call, JSON answer). */
