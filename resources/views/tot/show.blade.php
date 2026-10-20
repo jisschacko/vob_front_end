@@ -112,11 +112,6 @@
         @endforeach
     @endif
 
-    <form method="POST" action="{{ route('logout') }}" class="inline-form">
-        @csrf
-        <button type="submit" class="link">Sign out</button>
-    </form>
-
     <p class="footer-note">Lulu International Shopping Malls Private Limited &nbsp;&middot;&nbsp; Business Development Agreement / Terms of Trade (TOT)</p>
 </div>
 @endsection

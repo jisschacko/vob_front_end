@@ -10,9 +10,9 @@ body { margin:0; font-family:var(--font); background:var(--bg); color:#1c2433; }
 .card { background:#fff; border:1px solid #e0e3ea; border-radius:10px; padding:24px; max-width:760px; width:100%; }
 
 /* Status tracker (left margin). Markup: resources/views/components/status-tracker.blade.php */
-.tracker { width:300px; flex:0 0 300px; background:var(--navy); color:#fff; padding:28px 26px; }
-.tracker .logo { background:#fff; border-radius:8px; padding:8px 12px; display:inline-block; margin-bottom:26px; }
-.tracker .logo img { height:34px; display:block; }
+.tracker { width:230px; flex:0 0 230px; background:var(--navy); color:#fff; padding:24px 20px; }
+.tracker .logo { background:#fff; border-radius:8px; padding:8px 10px; display:block; width:100%; margin-bottom:24px; text-align:center; }
+.tracker .logo img { height:74px; width:auto; max-width:100%; object-fit:contain; display:inline-block; vertical-align:middle; }
 .tracker h2 { margin:0 0 4px; font-size:17px; font-weight:600; }
 .tracker .sub { margin:0 0 30px; font-size:12px; color:var(--muted); line-height:1.5; }
 .steps { list-style:none; margin:0; padding:0; }
@@ -58,3 +58,11 @@ blockquote footer { color:#5d6a85; font-size:12px; margin-top:4px; }
 .bank-verify .upi-buttons { display:flex; flex-wrap:wrap; gap:8px; }
 .bank-verify .file-btn, .bank-verify button.file-btn { display:inline-block; width:auto; margin:0; padding:8px 14px; border:1px solid #c5cad6; border-radius:8px; background:#fff; color:#20222a; font:inherit; font-weight:600; font-size:13px; cursor:pointer; text-decoration:none; }
 .bank-verify .file-btn:hover { background:#f5f6fa; }
+
+/* Header with Sign out (top right of every signed-in page) */
+.content { position:relative; }
+.page-header { position:absolute; top:12px; right:24px; display:flex; align-items:center; gap:14px; font-size:13px; }
+.page-header-user { color:#5d6a85; }
+.signout-form { margin:0; }
+.signout { background:#fff; border:1px solid #c5cad6; border-radius:6px; padding:6px 14px; font:inherit; font-size:13px; font-weight:600; color:var(--navy); cursor:pointer; }
+.signout:hover { background:var(--navy); color:#fff; border-color:var(--navy); }

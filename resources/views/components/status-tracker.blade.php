@@ -27,7 +27,7 @@
             @php($state = in_array($step['state'] ?? '', ['done', 'current', 'pending'], true) ? $step['state'] : 'pending')
             <li class="step {{ $state }}" @if ($state === 'current') aria-current="step" @endif>
                 <span class="dot" data-n="{{ $i + 1 }}"></span>
-                <span class="label">{{ $step['label'] ?? $step['key'] ?? '' }}
+                <span class="label">{{ config('vob.tracker_labels.'.($step['key'] ?? ''), $step['label'] ?? $step['key'] ?? '') }}
                     @if ($state === 'current' && $currentNote)
                         <small>{{ $currentNote }}</small>
                     @elseif ($state === 'done' && $when($step['entered_at'] ?? null, 'd-M-Y'))

@@ -25,10 +25,5 @@
 
             <button type="submit">Change password</button>
         </form>
-
-        <form method="POST" action="{{ route('logout') }}" class="inline-form">
-            @csrf
-            <button type="submit" class="link">Sign out</button>
-        </form>
     </div>
 @endsection

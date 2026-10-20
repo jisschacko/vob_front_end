@@ -9,6 +9,12 @@ return [
     // Demo / testing: skip every third-party integration (Cashfree bank verification, S3 uploads). Ignored in production.
     'skip_third_party' => filter_var(env('VOB_SKIP_THIRD_PARTY', false), FILTER_VALIDATE_BOOLEAN),
 
+    // Display-only wording for steps of the status tracker, by the step key the Admin sends (order, states and dates always come from the
+    // API). Remove an entry once the Admin's own label says the same.
+    'tracker_labels' => [
+        'vendor' => 'Vendor Submission',
+    ],
+
     // Timezone used when showing Admin API timestamps ("Draft saved 20-Oct-2026, 10:42 AM").
     'display_timezone' => env('VOB_DISPLAY_TIMEZONE', 'Asia/Kolkata'),
 

@@ -2,6 +2,7 @@
 
 use App\Support\EnforcementSwitches;
 use Illuminate\Support\Facades\Blade;
+use Tests\Support\TotFixtures as T;
 
 function sampleProgress(): array
 {
@@ -39,7 +40,7 @@ it('shows the left tracker in the layout only when progress is supplied', functi
     $with = view('landing', ['progress' => sampleProgress(), 'vendorName' => 'Acme'])->render();
     $without = view('landing')->render();
 
-    expect($with)->toContain('class="tracker"')->toContain('Vendor details &amp; submission')
+    expect($with)->toContain('class="tracker"')->toContain('Vendor Submission')
         ->and($without)->not->toContain('class="tracker"');
 });
 
@@ -77,5 +78,33 @@ describe('development switches', function () {
         expect(EnforcementSwitches::required())->toBeTrue()
             ->and(EnforcementSwitches::documents())->toBeTrue()
             ->and(EnforcementSwitches::developmentMode())->toBeFalse();
+    });
+});
+
+describe('page header', function () {
+    it('shows a Sign out button (POST, with CSRF) at the top of every signed-in page', function () {
+        T::fake();
+        $html = $this->withSession(T::session())->get('/home')->getContent();
+
+        expect($html)->toMatch('/<header class="page-header">\s*<span class="page-header-user">Acme<\/span>\s*<form method="POST" action="[^"]+\/logout" class="signout-form">\s*<input type="hidden" name="_token"/')
+            ->toContain('class="signout">Sign out</button>')
+            ->and(substr_count($html, 'Sign out'))->toBe(1); // no duplicate links lower down
+    });
+
+    it('is not shown to visitors who are not signed in', function () {
+        $this->get('/')->assertDontSee('Sign out');
+    });
+
+    it('shows the logo 74px high inside a narrower left menu', function () {
+        $css = file_get_contents(public_path('css/vob.css'));
+
+        expect($css)->toMatch('/.tracker .logo img {[^}]*height:s*74px/')->toMatch('/.tracker { width:230px; flex:0 0 230px;/');
+    });
+
+    it('shows "Vendor Submission" for the vendor step, keeping every other label from the API', function () {
+        $html = Blade::render('<x-status-tracker :progress="$p" />', ['p' => sampleProgress()]);
+
+        expect($html)->toContain('Vendor Submission')->not->toContain('Vendor details &amp; submission')
+            ->toContain('TOT initiated')->toContain('Buyer review')->toContain('E-Sign');
     });
 });

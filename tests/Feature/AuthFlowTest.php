@@ -288,7 +288,7 @@ describe('after sign-in', function () {
         Http::fake(['admin.test/*' => Http::response(totDetail())]);
 
         $this->withSession(signedInSession())->get('/home')->assertOk()
-            ->assertSee('class="tracker"', false)->assertSee('Vendor details &amp; submission', false)
+            ->assertSee('class="tracker"', false)->assertSee('Vendor Submission', false)
             ->assertSee('Draft saved 20-Oct-2026, 10:42 AM')->assertSee('Pending with vendor')
             ->assertSee('Please fix the GST number')->assertSee('Terms of Trade 2026-27')
             ->assertDontSee(ACCESS);

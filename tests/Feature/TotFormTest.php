@@ -24,7 +24,7 @@ describe('the form page', function () {
             ->toContain('value="" ') // sanity: inputs render
             ->toContain('Acme Foods Pvt Ltd')                         // vendor name value
             ->toContain('Draft saved 20-Oct-2026, 10:42 AM')
-            ->toContain('class="tracker"')->toContain('Vendor details &amp; submission')
+            ->toContain('class="tracker"')->toContain('Vendor Submission')
             ->toContain('Terms of Trade 2026-27')
             ->toContain('Kerala')->toContain('Karnataka')               // /masters states
             ->toContain('Merchandise Vendor')                           // vendor accounting groups

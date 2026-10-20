@@ -31,6 +31,15 @@
     @endisset
 
     <main class="content @unless (isset($progress)) content-centered @endunless">
+        @if (session('admin_api.token'))
+            <header class="page-header">
+                <span class="page-header-user">{{ session('admin_api.user.name') }}</span>
+                <form method="POST" action="{{ route('logout') }}" class="signout-form">
+                    @csrf
+                    <button type="submit" class="signout">Sign out</button>
+                </form>
+            </header>
+        @endif
         <div class="main-inner">
             @if (session('status'))
                 <div class="flash" role="status">{{ session('status') }}</div>

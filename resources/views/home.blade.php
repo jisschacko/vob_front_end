@@ -23,10 +23,5 @@
 
             <p class="muted">The Terms of Trade form will appear here.</p>
         @endif
-
-        <form method="POST" action="{{ route('logout') }}" class="inline-form">
-            @csrf
-            <button type="submit" class="link">Sign out</button>
-        </form>
     </div>
 @endsection
