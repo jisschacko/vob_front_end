@@ -48,12 +48,17 @@ class ApiLogRedactor
     }
 
     /** @param array<mixed> $data */
-    private function walk(array $data): array
+    private function walk(array $data, bool $messages = false): array
     {
         foreach ($data as $key => $value) {
             if (is_array($value)) {
-                $data[$key] = $this->walk($value);
+                // "errors" / "warnings" map field paths to message text: the keys look like account_no but the values are not numbers
+                $data[$key] = $this->walk($value, $messages || in_array(strtolower((string) $key), ['errors', 'warnings'], true));
 
+                continue;
+            }
+
+            if ($messages) {
                 continue;
             }
 

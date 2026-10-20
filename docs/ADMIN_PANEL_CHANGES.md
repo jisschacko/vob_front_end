@@ -36,7 +36,7 @@ Requirements
 
 ---
 
-## 2. Confirm API behaviour VOB Phase 3 relies on - Status: OPEN (questions, small code/doc changes if the answer is "no")
+## 2. Confirm API behaviour VOB Phase 3 relies on - Status: DONE (answered in API_CONTRACT.md 5B and 5C; VOB aligned)
 
 VOB's TOT form (Phase 3) assumes the following. Ask the Admin repo to confirm each point, fix the Admin side if it differs, and state the final
 behaviour in `docs/API_CONTRACT.md`.
@@ -159,7 +159,7 @@ changes, with Pest tests, and tell me what you could not do.
 
 ---
 
-## 6. Found while running the two apps together - Status: OPEN
+## 6. Found while running the two apps together - Status: DONE (migration run, reviewer_comments and 500 body fixed, see API_CONTRACT.md 5C)
 
 Seen in VOB's `api_logs` during the first local run (Admin on http://127.0.0.1:8000).
 

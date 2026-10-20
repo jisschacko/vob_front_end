@@ -90,11 +90,18 @@ class TotPage
     }
 
     /**
-     * Is this document type mandatory? `required_documents` entries look like "pan_certificate" or
-     * "gst_certificate (when GST Registered)"; a conditional one counts when the vendor's GST/MSME type matches.
+     * Is this document type mandatory? The Admin already resolves this for the vendor's current GST / MSME type:
+     * `document_requirements` = [{type, required, uploaded}], `required_documents` = the required type strings.
+     * Older "gst_certificate (when GST Registered)" entries are still understood.
      */
     public function documentRequired(string $type): bool
     {
+        foreach ((array) ($this->detail['document_requirements'] ?? []) as $requirement) {
+            if (is_array($requirement) && ($requirement['type'] ?? null) === $type) {
+                return (bool) ($requirement['required'] ?? false);
+            }
+        }
+
         foreach ((array) ($this->detail['required_documents'] ?? []) as $entry) {
             if (! is_string($entry) || strtok($entry, ' ') !== $type) {
                 continue;
@@ -214,6 +221,14 @@ class TotPage
         return null;
     }
 
+    /** Cashfree / demo reference and time the Admin recorded when the bank account was verified. */
+    public function bankVerification(): array
+    {
+        $bank = (array) ($this->detail['form']['bank'] ?? []);
+
+        return ['reference' => $bank['verification_reference'] ?? null, 'verified_at' => $bank['verified_at'] ?? null];
+    }
+
     public function bankStatus(): string
     {
         return (string) ($this->detail['form']['bank']['verification_status'] ?? 'pending');
@@ -238,7 +253,7 @@ class TotPage
         }
 
         $notes = [];
-        foreach (['required_fields' => EnforcementSwitches::required(), 'documents' => EnforcementSwitches::documents()] as $key => $vob) {
+        foreach (['required_fields' => EnforcementSwitches::required(), 'documents' => EnforcementSwitches::documents(), 'skip_third_party' => EnforcementSwitches::skipThirdParty()] as $key => $vob) {
             if (isset($admin[$key]) && (bool) $admin[$key] !== $vob) {
                 $notes[] = "Development note: the Admin checks {$key} is ".($admin[$key] ? 'ON' : 'OFF').', this site has it '.($vob ? 'ON' : 'OFF').'.';
             }

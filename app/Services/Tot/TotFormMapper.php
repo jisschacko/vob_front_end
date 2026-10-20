@@ -101,6 +101,7 @@ class TotFormMapper
                         $row = $this->fields("$name.$i", $def, (array) $values, $locked, $masked);
                         if (array_filter($row, fn ($v) => $v !== null && $v !== false) !== []) { // blank rows are dropped
                             $rows[] = $row;
+                            $order[$name][] = (string) $i; // the Admin reports errors by position in what we sent: remember the page row
                         }
                     }
                     $form[$name] = $rows; // the list is replaced, so an empty list clears it
@@ -108,6 +109,7 @@ class TotFormMapper
 
                 case 'pivot': // categories: {CODE: Yes|No}
                     $form[$name] = array_values(array_map('strval', array_keys(array_filter((array) $data, fn ($v) => $v === 'Yes'))));
+                    $order[$name] = $form[$name]; // "categories.1" in an error is the second code sent
                     break;
             }
         }

@@ -35,8 +35,8 @@
     @endif
 
     @if (session('submit_warnings'))
-        <div class="error-summary" role="status">
-            <strong>Submitted with items missing (development mode only):</strong>
+        <div class="dev-note dev-note-block" role="status">
+            <strong>Submitted. Development mode only:</strong> these items were still incomplete, and the checks are switched off.
             <ul>@foreach (session('submit_warnings') as $warning)<li>{{ $warning }}</li>@endforeach</ul>
         </div>
     @endif

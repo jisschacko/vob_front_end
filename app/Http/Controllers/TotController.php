@@ -13,6 +13,7 @@ use App\Support\EnforcementSwitches;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\MessageBag;
 
 /**
@@ -120,7 +121,10 @@ class TotController extends Controller
         $result = $this->saveDraft($request);
 
         if ($result['ok']) {
-            return response()->json(['saved' => true, 'saved_at' => now()->setTimezone(config('vob.display_timezone'))->format('d-M-Y, h:i A')]);
+            // the Admin stamps draft_saved_at; fall back to our clock if it is not in the answer
+            $at = $result['saved_at'] ? Carbon::parse($result['saved_at']) : now();
+
+            return response()->json(['saved' => true, 'saved_at' => $at->setTimezone(config('vob.display_timezone'))->format('d-M-Y, h:i A')]);
         }
 
         return response()->json(['saved' => false, 'message' => $result['message'], 'errors' => $result['errors']], $result['status']);
@@ -151,7 +155,7 @@ class TotController extends Controller
         $response = $this->api->put('tots/'.$tot['id'].'/draft', ['form' => $payload['form']]);
 
         if ($response->successful()) {
-            return ['ok' => true, 'status' => 200, 'message' => '', 'errors' => []];
+            return ['ok' => true, 'status' => 200, 'message' => '', 'errors' => [], 'saved_at' => $response->json('draft_saved_at')];
         }
 
         return match ($response->status()) {

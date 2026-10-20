@@ -171,6 +171,18 @@ Steps are in travel order: `initiated, vendor, buyer, kam, legal, finance, audit
 - **Submit**: 200 `{message, tot:{status:"pending_buyer", editable:false, submitted_at}, warnings}`; 422 `{error:"incomplete", errors:{"<path>":"message"}}` with `documents.<type>` and `bank.verification` keys.
 - **Reviewer outcome**: when a reviewer rejects, the TOT comes back to the vendor as `pending_vendor` with `tot.editable=true`, the reviewer's comment in `reviewer_comments` (newest first) and a new invitation link emailed; the vendor resubmits with the same `POST .../submit`. Rejections by Buyer or Legal go to the vendor, all other stages go back to the buyer.
 
+## 5C. Behaviour VOB depends on (confirmed by tests in `tests/Feature/ApiContractChecksTest.php`)
+
+- **`GET /masters` keys**: `vendor_accounting_groups`, `states`, `regions`, `categories`, `deliverable_assets` = `[{code,name}]`; `company_codes` = `[{code,name,city}]`; `purchase_orgs` = `[{code,description}]`. Active entries only.
+- **`PUT /tots/{id}/draft` 422 keys**: `{"message":"...","errors":{"<section>.<index>.<field>":[...]}}`, where `<index>` is the row's position in the list VOB sent (`contacts.1.phone`, `pocs.1.second_email`, `outlets.0.store_3`); single sections use `<section>.<field>` (`bank.ifsc`); pivot lists use `<section>.<index>` (`categories.1`).
+- **All or nothing**: if any field fails validation the whole PUT is rejected, nothing is saved and `draft_saved_at` is not updated.
+- **`required_documents`** is a list of type strings already resolved for the vendor's current GST / MSME type (no "(when ...)" text). **`document_requirements`** is the structured form: `[{"type":"gst_certificate","required":true,"uploaded":false}, ...]` for every document type.
+- **Sensitive values** (PAN, GSTIN, MSME no, account no) are returned in clear to the signed-in vendor who owns the TOT. Omitting a field in a draft keeps the stored value; a value containing `*` is rejected with 422 and never saved.
+- **Dates** are `Y-m-d`.
+- **`locked_fields`** entries are a whole section (`company_codes`) or `section.field`; an entry covers everything below it.
+- **`reviewer_comments`** holds ONLY the comments reviewers wrote when they rejected the TOT back to the vendor (status `pending_vendor`), newest first, each `{status, comments, by, at}`. It is empty for a TOT that was never returned, and never contains system history ("TOT initiated", first login, edits, resends) or approvals / internal rejections between reviewers. `tot.submitted_at` stays set after a return, so the vendor front end can offer **Resubmit**.
+- **Unexpected failures**: with `APP_DEBUG=false` a 500 answers `{"error":"server_error","message":"..."}` with no SQL, file path or stack trace (details go to the Admin log). 401, 404 and 422 answers are unchanged.
+
 ## 6. Statuses (`status` value -> label)
 
 `initiated` TOT Initiated - `pending_vendor` Pending with vendor - `pending_buyer` - `pending_kam` - `pending_legal` - `pending_finance` - `pending_audit` - `pending_gm_buying` - `pending_director` - `approved` TOT Approved - `esign_initiated` E-Sign Initiated.

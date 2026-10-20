@@ -44,3 +44,15 @@ it('does not keep non-JSON bodies, and truncates huge ones', function () {
         ->and($this->r->body(null))->toBeNull()
         ->and($this->r->body(json_encode(['x' => str_repeat('a', 50000)])))->toEndWith('...[truncated]');
 });
+
+it('does not mask the message text in errors / warnings keyed by field path', function () {
+    $out = json_decode((new ApiLogRedactor)->body(json_encode([
+        'warnings' => ['bank.account_no' => 'This field is required.', 'vendor_details.pan_no' => 'This field is required.'],
+        'errors' => ['bank.account_no' => ['The account number is invalid.']],
+        'form' => ['bank' => ['account_no' => '123456789012']],
+    ])), true);
+
+    expect($out['warnings']['bank.account_no'])->toBe('This field is required.')
+        ->and($out['errors']['bank.account_no'][0])->toBe('The account number is invalid.')
+        ->and($out['form']['bank']['account_no'])->toBe('********9012');
+});
