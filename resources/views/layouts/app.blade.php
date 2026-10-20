@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Vendor Handshake') | Lulu</title>
+    <link rel="stylesheet" href="{{ asset('css/vob.css') }}">
+    @stack('head')
+</head>
+<body>
+@if (\App\Support\EnforcementSwitches::developmentMode())
+    <div class="dev-banner" role="alert">
+        Development mode:
+        @unless (\App\Support\EnforcementSwitches::required()) mandatory-field checks are OFF. @endunless
+        @unless (\App\Support\EnforcementSwitches::documents()) document checks are OFF. @endunless
+    </div>
+@endif
+
+<div class="layout">
+    {{-- Left margin: the status tracker, shown whenever the API gave us `progress` (form and status pages). --}}
+    @isset($progress)
+        <x-status-tracker
+            :progress="$progress"
+            :vendor-name="$vendorName ?? null"
+            :subtitle="$subtitle ?? null"
+            :draft-saved-at="$draftSavedAt ?? null"
+            :current-note="$currentNote ?? null" />
+    @endisset
+
+    <main class="content @unless (isset($progress)) content-centered @endunless">
+        @yield('content')
+    </main>
+</div>
+@stack('scripts')
+</body>
+</html>

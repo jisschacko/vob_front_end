@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOB status tracker - reference</title>
+<!--
+  Reference markup for the vendor-form left margin (docs/Onboarding_status.jpg), rendered from the API's
+  `progress.steps[]` (state = done | current | pending). Done = tick, current = filled step number,
+  pending = hollow step number. Labels, order and states come from the API; do not hard-code them.
+  Example below: Legal rejected the TOT back to the vendor, so everything after "Vendor details & submission" is pending again.
+-->
+<style>
+  :root { --navy:#16233b; --navy-deep:#0e1a2e; --gold:#b8923f; --ink:#d9e1f2; --muted:#8fa0c0; --line:#34476b; --bg:#eceef2; --font:"Segoe UI","Inter",system-ui,Arial,sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:var(--font); background:var(--bg); }
+  .layout { display:flex; min-height:100vh; }
+  .tracker { width:300px; flex:0 0 300px; background:var(--navy); color:#fff; padding:28px 26px; }
+  .tracker .logo { background:#fff; border-radius:8px; padding:8px 12px; display:inline-block; margin-bottom:26px; }
+  .tracker .logo img { height:34px; display:block; }
+  .tracker h2 { margin:0 0 4px; font-size:17px; font-weight:600; }
+  .tracker .sub { margin:0 0 30px; font-size:12px; color:var(--muted); line-height:1.5; }
+  .steps { list-style:none; margin:0; padding:0; }
+  .step { position:relative; display:flex; align-items:center; gap:14px; padding-bottom:30px; font-size:13.5px; color:var(--muted); }
+  .step:last-child { padding-bottom:0; }
+  .step::before { content:""; position:absolute; left:13px; top:28px; bottom:-2px; width:2px; background:var(--line); }
+  .step:last-child::before { display:none; }
+  .dot { flex:0 0 28px; width:28px; height:28px; border-radius:50%; border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; background:var(--navy); position:relative; z-index:1; }
+  .step .label small { display:block; font-size:11px; color:var(--muted); margin-top:2px; font-weight:400; }
+  /* done: tick */
+  .step.done { color:var(--ink); }
+  .step.done .dot { border-color:#7fa2ff; color:#7fa2ff; }
+  .step.done .dot::after { content:"\2713"; font-size:14px; }
+  .step.done::before { background:#7fa2ff; }
+  /* current: filled with its number */
+  .step.current { color:#fff; font-weight:600; }
+  .step.current .dot { border-color:var(--gold); background:var(--gold); color:#fff; box-shadow:0 0 0 4px rgba(184,146,63,.25); }
+  .step.current .dot::after { content:attr(data-n); }
+  /* pending: hollow with its number */
+  .step.pending .dot::after { content:attr(data-n); }
+  .content { flex:1; padding:40px; }
+  .card { background:#fff; border:1px solid #e0e3ea; border-radius:10px; padding:24px; max-width:760px; }
+  @media (max-width:800px) { .layout { flex-direction:column; } .tracker { width:auto; flex:none; } }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="tracker">
+    <div class="logo"><img src="lulu-hypermarket.png" alt="Lulu"></div>
+    <h2>Acme Foods Pvt Ltd</h2>
+    <p class="sub">Terms of Trade 2026-27<br>Draft saved 20-Oct-2026, 10:42 AM</p>
+
+    <ol class="steps">
+      <li class="step done"    ><span class="dot" data-n="1"></span><span class="label">TOT initiated<small>20-Oct-2026</small></span></li>
+      <li class="step current" ><span class="dot" data-n="2"></span><span class="label">Vendor details &amp; submission<small>Action needed: see reviewer comments</small></span></li>
+      <li class="step pending" ><span class="dot" data-n="3"></span><span class="label">Buyer review</span></li>
+      <li class="step pending" ><span class="dot" data-n="4"></span><span class="label">KAM review</span></li>
+      <li class="step pending" ><span class="dot" data-n="5"></span><span class="label">Legal review</span></li>
+      <li class="step pending" ><span class="dot" data-n="6"></span><span class="label">Finance review</span></li>
+      <li class="step pending" ><span class="dot" data-n="7"></span><span class="label">Audit review</span></li>
+      <li class="step pending" ><span class="dot" data-n="8"></span><span class="label">Director approval</span></li>
+      <li class="step pending" ><span class="dot" data-n="9"></span><span class="label">TOT approved</span></li>
+      <li class="step pending" ><span class="dot" data-n="10"></span><span class="label">E-Sign</span></li>
+    </ol>
+  </aside>
+  <main class="content"><div class="card">TOT form goes here (with <strong>Save Draft</strong> and <strong>Submit</strong> buttons).</div></main>
+</div>
+</body>
+</html>

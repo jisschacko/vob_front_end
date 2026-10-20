@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOT Main Form</title>
+<style>
+  :root {
+    --bg: #eef1f7;
+    --card-bg: #ffffff;
+    --card-border: #e2e5ee;
+    --header-green: #a9e0af;
+    --header-green-text: #1c3a26;
+    --label-color: #20222a;
+    --help-color: #8a8f9c;
+    --input-border: #d7dae3;
+    --input-bg: #ffffff;
+    --input-disabled-bg: #eef0f4;
+    --focus-border: #6c8cff;
+    --required: #e04141;
+    --font: "Segoe UI", "Inter", system-ui, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--label-color);
+    margin: 0;
+    padding: 24px 0 60px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+
+  .topbar {
+    background: #fff;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .logo {
+    flex: 0 0 auto;
+    height: 52px;
+    width: auto;
+    object-fit: contain;
+  }
+  .topbar h1 { font-size: 18px; margin: 0; }
+  .topbar p { margin: 2px 0 0; font-size: 12.5px; color: var(--help-color); }
+
+  .page-divider {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #5b6472;
+    margin: 36px 0 14px;
+    text-transform: uppercase;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(20,20,40,0.04);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .card-header {
+    background: var(--header-green);
+    color: var(--header-green-text);
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 13px 24px;
+  }
+  .card-body { padding: 22px 24px 24px; }
+  .card-note {
+    font-size: 12.5px;
+    color: #4d5566;
+    background: #f6f8fb;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 0 0 16px;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 28px;
+  }
+  @media (max-width: 620px) {
+    .field-grid { grid-template-columns: 1fr; }
+  }
+  .field-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px 24px;
+  }
+  @media (max-width: 760px) {
+    .field-grid-3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .field-grid-3 { grid-template-columns: 1fr; }
+  }
+  .field-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .field-wrap.span-all { grid-column: 1 / -1; }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 8px; }
+  .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; margin-top: 2px; flex: 0 0 auto; }
+  .field-wrap.locked .field-row input,
+  .field-wrap.locked .field-row select { background: var(--input-disabled-bg); color: #9aa0ab; }
+  label.flabel { font-weight: 600; font-size: 13.5px; }
+  .req { color: var(--required); margin-left: 2px; }
+  .tag-readonly { color: #9aa0ab; font-weight: 400; font-size: 12px; margin-left: 6px; }
+
+  .field-row { display: flex; align-items: flex-start; gap: 8px; }
+  input.f, select.f, textarea.f {
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13.5px;
+    color: var(--label-color);
+    background: var(--input-bg);
+    outline: none;
+  }
+  input.f:focus, select.f:focus, textarea.f:focus {
+    border-color: var(--focus-border);
+    box-shadow: 0 0 0 3px rgba(108,140,255,0.15);
+  }
+  input.f:disabled, select.f:disabled, textarea.f:disabled {
+    background: var(--input-disabled-bg);
+    color: #9aa0ab;
+    cursor: not-allowed;
+  }
+  textarea.f {
+    display: block;
+    width: 100%;
+    resize: none;
+    overflow: hidden;
+    min-height: 36px;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+  table.mini textarea.f { min-height: 28px; padding: 6px 8px; }
+  .pencil-btn { margin-top: 0; }
+  select.f {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    cursor: pointer;
+    padding-right: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath fill='%235b6472' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 9px 6px;
+    text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+  }
+  select.f:disabled { background-image: none; }
+
+  .pencil-btn {
+    flex: 0 0 auto;
+    width: 34px; height: 34px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: #5b6472;
+  }
+  .pencil-btn:hover { background: #f5f6fa; }
+  .pencil-btn.locked-btn { color: #b3771a; border-color: #eccf9c; background: #fff8ec; }
+
+  .chip-box {
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 5px 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    cursor: text;
+  }
+  .chip-box:focus-within {
+    border-color: var(--focus-border);
+    box-shadow: 0 0 0 3px rgba(108,140,255,0.15);
+  }
+  .chip-box.disabled { background: var(--input-disabled-bg); cursor: not-allowed; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    background: #eef1fa;
+    border: 1px solid #d7ddf0;
+    border-radius: 6px;
+    padding: 3px 4px 3px 9px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--label-color);
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .chip-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0;
+  }
+  .chip-close:hover { background: #d7ddf0; color: #2b2d33; }
+  .chip-box.disabled .chip-close { display: none; }
+  .chip-input-text {
+    flex: 1 1 70px;
+    min-width: 70px;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: inherit;
+    font-size: 13.5px;
+    color: var(--label-color);
+    padding: 3px 2px;
+  }
+  .chip-input-text:disabled { cursor: not-allowed; background: transparent; }
+
+  p.help { font-size: 12px; color: var(--help-color); line-height: 1.4; margin: 0; }
+  p.help-top { font-size: 12px; color: var(--help-color); font-style: italic; margin: 0 0 2px; }
+
+  .file-btn {
+    display: inline-block;
+    padding: 9px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background: #fff;
+    font-weight: 600;
+    font-size: 12.5px;
+    cursor: pointer;
+    color: var(--label-color);
+    white-space: nowrap;
+  }
+  .file-btn:hover { background: #f5f6fa; }
+  .file-btn input[type="file"] { display: none; }
+  .file-name { font-size: 12.5px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .toggle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px 20px;
+  }
+  .toggle-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .toggle-item label { font-size: 13px; font-weight: 600; }
+  .toggle-item select.f { width: 84px; flex: 0 0 auto; padding: 6px 22px 6px 8px; font-size: 12.5px; }
+
+  .table-scroll { overflow-x: auto; }
+  table.mini {
+    width: 100%;
+    min-width: 560px;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  table.mini th {
+    background: #f5f6fa;
+    text-align: left;
+    padding: 8px 10px;
+    font-weight: 600;
+    color: #4b4f5a;
+    border-bottom: 1px solid var(--input-border);
+    white-space: nowrap;
+  }
+  table.mini td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #eef0f4;
+    vertical-align: middle;
+  }
+  table.mini input.f, table.mini select.f { padding: 6px 8px; font-size: 12.5px; border-radius: 6px; }
+  table.mini tr:last-child td { border-bottom: none; }
+  #poc-table td:nth-child(2), #poc-table td:nth-child(5) { min-width: 180px; }
+
+  .esign-grid {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+  }
+  .esign-side {
+    padding: 8px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .esign-vendor { border-left: 1px solid var(--card-border); }
+  .esign-head { margin: 0; font-size: 13.5px; font-weight: 600; text-align: center; color: #4b4f5a; }
+  .esign-space { min-height: 130px; }
+  .esign-desig { margin: 0; font-size: 12.5px; color: #4b4f5a; text-align: center; border-top: 1px solid var(--input-border); padding-top: 8px; }
+  .esign-id { margin: 3px 0 0; font-size: 10px; letter-spacing: 0.05em; color: #b4b7bf; text-align: center; }
+  .esign-sub-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 20px; }
+  .esign-sub { display: flex; flex-direction: column; gap: 14px; }
+  @media (max-width: 760px) {
+    .esign-grid { grid-template-columns: 1fr; }
+    .esign-vendor { border-left: none; border-top: 1px solid var(--card-border); }
+    .esign-sub-grid { grid-template-columns: 1fr; }
+  }
+
+  .text-body { font-size: 13px; line-height: 1.65; color: #2b2d33; }
+  .text-body p { margin: 0 0 9px; }
+  .text-body p:last-child { margin-bottom: 0; }
+  .greenhi { background: #bdeec2; border-radius: 3px; padding: 0 2px; }
+  .inline-f {
+    display: inline-block;
+    width: 70px;
+    padding: 2px 6px;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 13px;
+    text-align: center;
+    vertical-align: baseline;
+  }
+
+  .info-block { font-size: 13px; line-height: 1.6; color: #2b2d33; margin: 0 0 14px; }
+  .info-block:last-child { margin-bottom: 0; }
+  .info-block .lbl { font-weight: 700; display: block; margin-bottom: 3px; }
+
+  .footer-note {
+    text-align: center;
+    font-size: 12px;
+    color: var(--help-color);
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <img class="logo" src="lulu-hypermarket.png" alt="LuLu Group International">
+    <div>
+      <h1>Business Development Agreement &mdash; Terms of Trade (TOT)</h1>
+      <p>Central Buying Division: Lulu India &nbsp;&middot;&nbsp; Lulu International Shopping Malls Private Limited</p>
+    </div>
+  </div>
+
+  <!-- ============ REGISTRATION ============ -->
+  <div class="card">
+    <div class="card-header">Registration</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">Registration Type<span class="req">*</span></label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>New</option><option>Renewal</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)" title="Lock field">&#9998;</button>
+          </div>
+          <p class="help">Whether this is a brand-new vendor agreement or a renewal of an existing one.</p>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Vendor Agreement No</label>
+          <div class="field-row">
+            <textarea class="f" maxlength="200" rows="1"></textarea>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)" title="Lock field">&#9998;</button>
+          </div>
+          <p class="help">Unique reference number for this vendor agreement.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ TOT SCOPE ============ -->
+  <div class="card">
+    <div class="card-header">TOT Scope</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">Scope Type</label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>PAN India</option><option>Regional</option><option>State</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)" title="Lock field">&#9998;</button>
+          </div>
+          <p class="help">Whether this agreement applies across India, to a region, or a single state.</p>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">State</label>
+          <div class="field-row">
+            <textarea class="f" maxlength="200" rows="1"></textarea>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)" title="Lock field">&#9998;</button>
+          </div>
+          <p class="help">Required only when Scope Type is Regional or State.</p>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Company Code</label>
+          <div class="field-row">
+            <div class="chip-box" id="company-code-box">
+              <input type="text" class="chip-input-text" inputmode="numeric" autocomplete="off" placeholder="Type or paste company codes">
+            </div>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)" title="Lock field">&#9998;</button>
+          </div>
+          <p class="help">SAP company code linked to this agreement. Paste a bulk list and it will be split into 4-digit codes automatically.</p>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Purchase Organization</label>
+          <div class="field-row">
+            <textarea class="f" maxlength="200" rows="1"></textarea>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)" title="Lock field">&#9998;</button>
+          </div>
+          <p class="help">Purchase organization code for this agreement.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VENDOR DETAILS ============ -->
+  <div class="card">
+    <div class="card-header">Vendor Details</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">Vendor Name<span class="req">*</span></label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Vendor Code</label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Brand (If any)</label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Parent Code</label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Address</label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">City</label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">State</label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">PIN</label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">PAN No<span class="req">*</span></label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">GST Type<span class="req">*</span></label>
+          <div class="field-row">
+            <select class="f" id="gst-type" onchange="toggleGstRequired(this)"><option value=""></option><option>GST Registered</option><option>GST Unregistered</option><option>GST Compounding</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">GST Regn. No<span class="req" id="gst-regn-req">*</span></label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">MSME Type</label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>MSME Registered</option><option>MSME Unregistered</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+          <p class="help">If MSME Registered, the vendor is eligible for payment within 45 days from GRN.</p>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">MSME Regn No.</label>
+          <div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+      </div>
+
+      <div class="card-note" style="margin-top:20px;">A copy of the PAN, GST and MSME certificate is mandatory if registered.</div>
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">PAN Certificate</label>
+          <p class="help-top">No file uploaded yet.</p>
+          <div class="field-row">
+            <label class="file-btn">Choose File<input type="file" onchange="updateFileName(this)"></label>
+            <span class="file-name">No file chosen</span>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">GST Certificate</label>
+          <p class="help-top">No file uploaded yet.</p>
+          <div class="field-row">
+            <label class="file-btn">Choose File<input type="file" onchange="updateFileName(this)"></label>
+            <span class="file-name">No file chosen</span>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">MSME Certificate</label>
+          <p class="help-top">No file uploaded yet.</p>
+          <div class="field-row">
+            <label class="file-btn">Choose File<input type="file" onchange="updateFileName(this)"></label>
+            <span class="file-name">No file chosen</span>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONTACT PERSON ============ -->
+  <div class="card">
+    <div class="card-header">Contact Person</div>
+    <div class="card-body">
+      <div class="field-grid-3">
+        <div class="field-wrap"><label class="flabel">Sales Contact Name</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Sales Contact No</label><div class="field-row"><input class="f" type="tel" maxlength="200"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Sales Email</label><div class="field-row"><input class="f" type="email" maxlength="200"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Finance Contact Name</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Finance Contact No</label><div class="field-row"><input class="f" type="tel" maxlength="200"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Finance Email</label><div class="field-row"><input class="f" type="email" maxlength="200"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Logistics Contact Name</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Logistics Contact No</label><div class="field-row"><input class="f" type="tel" maxlength="200"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Logistics Email</label><div class="field-row"><input class="f" type="email" maxlength="200"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VENDOR ACCOUNTING GROUP ============ -->
+  <div class="card">
+    <div class="card-header">Vendor Accounting Group</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">Vendor Accounting Group Type<span class="req">*</span></label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>Merchandise Vendor</option><option>SOR Vendor</option><option>Tenant</option><option>Inter State Vendor</option><option>Consignment/SOA Vendor</option><option>Import</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VENDOR TYPE ============ -->
+  <div class="card">
+    <div class="card-header">Vendor Type</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">Vendor Type<span class="req">*</span></label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>Company</option><option>Partnership</option><option>Proprietorship</option><option>Hindu Undivided Family</option><option>Society</option><option>PSU/ Govt bodies</option><option>Others</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ BANK ACCOUNT DETAILS ============ -->
+  <div class="card">
+    <div class="card-header">Bank Account Details</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap"><label class="flabel">Account Name<span class="req">*</span></label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Bank Name and Address</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Account No<span class="req">*</span></label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">IFS Code<span class="req">*</span></label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+      </div>
+
+      <div class="field-wrap span-all" style="margin-top:18px;">
+        <label class="flabel checkbox-row">Bank details validation failed. <input type="checkbox" id="bank-not-validated"></label>
+        <p class="help">Check this to proceed on manual vendor approval if automated bank account validation fails or is unavailable.</p>
+      </div>
+
+      <div class="card-note" style="margin-top:20px;">A copy of the cancelled cheque, bank letter, and RTGS form is mandatory.</div>
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">Cancelled Cheque / Bank Letter</label>
+          <p class="help-top">No file uploaded yet.</p>
+          <div class="field-row">
+            <label class="file-btn">Choose File<input type="file" onchange="updateFileName(this)"></label>
+            <span class="file-name">No file chosen</span>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">RTGS Form</label>
+          <p class="help-top">No file uploaded yet.</p>
+          <div class="field-row">
+            <a class="file-btn" href="RTGS_template.docx" download="RTGS_template.docx">Download Sample</a>
+            <label class="file-btn">Choose File<input type="file" onchange="updateFileName(this)"></label>
+            <span class="file-name">No file chosen</span>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+          <p class="help">Download the sample, fill it in, then upload the completed form here.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ REGIONS & OUTLETS ============ -->
+  <div class="card">
+    <div class="card-header">Regions &amp; Outlets</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">State<span class="req">*</span></label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>All</option><option>Kerala</option><option>Karnataka</option><option>UP</option><option>Telangana</option><option>Tamil Nadu</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+      </div>
+      <p class="flabel" style="margin:18px 0 8px;">Store Codes</p>
+      <div class="table-scroll">
+        <table class="mini">
+          <tr><th>Store 1</th><th>Store 2</th><th>Store 3</th><th>Store 4</th><th>Store 5</th><th>Store 6</th><th>Store 7</th></tr>
+          <tr>
+            <td><textarea class="f" maxlength="200" rows="1">All</textarea></td>
+            <td><textarea class="f" maxlength="200" rows="1"></textarea></td>
+            <td><textarea class="f" maxlength="200" rows="1"></textarea></td>
+            <td><textarea class="f" maxlength="200" rows="1"></textarea></td>
+            <td><textarea class="f" maxlength="200" rows="1"></textarea></td>
+            <td><textarea class="f" maxlength="200" rows="1"></textarea></td>
+            <td><textarea class="f" maxlength="200" rows="1"></textarea></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ACCOUNTING INFORMATION ============ -->
+  <div class="card">
+    <div class="card-header">Accounting Information</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">Accounting Information Type</label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>Monthly</option><option>Quarterly</option><option>Half Yearly</option><option>Yearly</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+          <p class="help">Frequency of financial reconciliation.</p>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Reconciliation of Accounts Type</label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>Merchandise Payable</option><option>Merchandise Payable Import</option><option>Non-Merchandise Payable</option><option>Tenant Payable</option><option>Consignment /SOA Vendor Payable</option><option>Project Payable</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VENDOR PAYMENT TERMS ============ -->
+  <div class="card">
+    <div class="card-header">Vendor Payment Terms</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap"><label class="flabel">Days from Statement / Month End</label><div class="field-row"><input class="f" type="number" min="0"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Days from GRN / IML</label><div class="field-row"><input class="f" type="number" min="0"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Y (days)</label><div class="field-row"><input class="f" type="number" min="0"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Z (days)</label><div class="field-row"><input class="f" type="number" min="0"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">B (days)</label><div class="field-row"><input class="f" type="number" min="0"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">SOR (days)</label><div class="field-row"><input class="f" type="number" min="0"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap">
+          <label class="flabel">Payment Mode</label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>RTGS Payment</option><option>ePayment</option><option>Bank Transfer</option><option>Manual Check</option><option>RTGS/NEFT Payment H2H</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Apply 15 Days from Month End Rule</label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>Yes</option><option>No</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+      </div>
+      <p class="flabel" style="margin:18px 0 8px;">Bank Guarantee</p>
+      <div class="field-grid-3">
+        <div class="field-wrap"><label class="flabel">Value</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Date</label><div class="field-row"><input class="f" type="date"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Expiry</label><div class="field-row"><input class="f" type="date"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+      </div>
+      <p class="flabel" style="margin:18px 0 8px;">Security Cheque</p>
+      <div class="field-grid-3">
+        <div class="field-wrap"><label class="flabel">Value</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Date</label><div class="field-row"><input class="f" type="date"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Expiry</label><div class="field-row"><input class="f" type="date"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LULU RECEIPT TERMS ============ -->
+  <div class="card">
+    <div class="card-header">Lulu Receipt Terms</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">Terms</label>
+          <div class="field-row">
+            <textarea class="f" maxlength="200" rows="1">As per the agreed terms.</textarea>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Mode</label>
+          <div class="field-row">
+            <select class="f"><option value=""></option><option>RTGS Payment</option><option>ePayment</option><option>Bank Transfer</option><option>Manual Check</option><option>RTGS/NEFT Payment H2H</option></select>
+            <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CATEGORY ============ -->
+  <div class="card">
+    <div class="card-header">Category</div>
+    <div class="card-body">
+      <p class="help" style="margin-bottom:14px;">Select "Yes" for every category this agreement applies to.</p>
+      <div class="toggle-grid" id="category-grid"></div>
+    </div>
+  </div>
+
+  <!-- ============ EXPENSES LIABILITY ============ -->
+  <div class="card">
+    <div class="card-header">Expenses Liability</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap"><label class="flabel">Transportation</label><div class="field-row"><select class="f"><option value=""></option><option>Lulu</option><option>Vendor</option><option>NA</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Loading / Unloading</label><div class="field-row"><select class="f"><option value=""></option><option>Lulu</option><option>Vendor</option><option>NA</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Pilferage</label><div class="field-row"><select class="f"><option value=""></option><option>Lulu</option><option>Vendor</option><option>NA</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Ullage</label><div class="field-row"><select class="f"><option value=""></option><option>Lulu</option><option>Vendor</option><option>NA</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Packing / Forwarding</label><div class="field-row"><select class="f"><option value=""></option><option>Lulu</option><option>Vendor</option><option>NA</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Insurance of Goods in Transit</label><div class="field-row"><select class="f"><option value=""></option><option>Lulu</option><option>Vendor</option><option>NA</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Insurance of Goods in Store</label><div class="field-row"><select class="f"><option value=""></option><option>Lulu</option><option>Vendor</option><option>NA</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Vendor Returns Transportation</label><div class="field-row"><select class="f"><option value=""></option><option>Lulu</option><option>Vendor</option><option>NA</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Returnable Goods</label><div class="field-row"><select class="f"><option value=""></option><option>Yes</option><option>No</option><option>NA</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Return Type</label><div class="field-row"><select class="f"><option value=""></option><option>B to B Invoice</option><option>Delivery Challan (Debit Note)</option><option>Credit Note</option><option>NA</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ BUSINESS DEVELOPMENT TERMS ============ -->
+  <div class="card">
+    <div class="card-header">Business Development Terms</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap"><label class="flabel">Business Agreement Period From<span class="req">*</span></label><div class="field-row"><input class="f" type="date"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Business Agreement Period To<span class="req">*</span></label><div class="field-row"><input class="f" type="date"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Vendor Listing Fee</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Brand Listing Fee</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Article/SKU Listing Fee</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Base Margin &mdash; Regular Margin</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Base Margin &mdash; EOSS Margin</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="mini">
+          <tr><th>Value / %</th><th>On Invoice</th><th>Off Invoice</th><th>Monthly</th><th>Quarterly</th><th>Yearly</th></tr>
+          <tr>
+            <td>Fixed Rebate<br>(% of Purchase)</td>
+            <td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td>
+            <td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td>
+          </tr>
+          <tr>
+            <td>Primary Visibility</td>
+            <td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td>
+            <td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td>
+          </tr>
+          <tr>
+            <td>Secondary Visibility</td>
+            <td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td>
+            <td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td>
+          </tr>
+          <tr>
+            <td>Logistics Rebate<br>(% of Purchase)</td>
+            <td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td>
+            <td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td>
+          </tr>
+          <tr>
+            <td>Unloading Charges</td>
+            <td colspan="5"><textarea class="f" maxlength="200" rows="1" placeholder="As per the regional norms"></textarea></td>
+          </tr>
+        </table>
+      </div>
+
+      <p class="flabel" style="margin:20px 0 8px;">Stock Correction</p>
+      <div class="table-scroll">
+        <table class="mini">
+          <tr><th>% of Purchase</th><th>Half Yearly</th><th>Yearly</th></tr>
+          <tr><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td></tr>
+        </table>
+      </div>
+
+      <p class="flabel" style="margin:20px 0 8px;">Central Payment / Early Payment / Data Sharing / Ullage</p>
+      <div class="table-scroll">
+        <table class="mini">
+          <tr><th>Item</th><th>% of Purchase</th><th>On Invoice</th><th>Off Invoice</th></tr>
+          <tr><td>Central Payment</td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td></tr>
+          <tr><td>Early Payment / CD</td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td></tr>
+          <tr><td>Data Sharing</td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td></tr>
+          <tr><td>Ullage</td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td></tr>
+          <tr><td>Pilferage</td><td colspan="3"><textarea class="f" maxlength="200" rows="1">As per the agreed terms</textarea></td></tr>
+          <tr><td>Advertisement Support</td><td colspan="3"><textarea class="f" maxlength="200" rows="1"></textarea></td></tr>
+        </table>
+      </div>
+
+      <p class="flabel" style="margin:20px 0 8px;">New Store Opening Support</p>
+      <div class="field-grid">
+        <div class="field-wrap"><label class="flabel">Lulu Daily</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Lulu Hyper</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap">
+          <label class="flabel">Deduction Mode</label>
+          <div class="field-row"><select class="f"><option value=""></option><option>RTGS Payment</option><option>ePayment</option><option>Bank Transfer</option><option>Manual Check</option><option>RTGS/NEFT Payment H2H</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Base Target</label>
+          <div class="field-row"><select class="f"><option value=""></option><option>All Stores</option><option>Online</option><option>Corporate</option><option>New Store</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ GROWTH REBATE SLAB ============ -->
+  <div class="card">
+    <div class="card-header">Growth Rebate Slab</div>
+    <div class="card-body">
+      <div class="table-scroll">
+        <table class="mini">
+          <tr><th>Slab</th><th>Target</th><th>Rebate</th></tr>
+          <tr><td>Slab 1</td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td></tr>
+          <tr><td>Slab 2</td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td></tr>
+          <tr><td>Slab 3</td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td></tr>
+          <tr><td>Slab 4</td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td></tr>
+          <tr><td>Slab 5</td><td><input class="f" type="number" min="0"></td><td><input class="f" type="number" min="0"></td></tr>
+        </table>
+      </div>
+      <p class="help" style="margin-top:10px;">Any Brand/Product discontinued during the agreement period would result in the revision of the base target.</p>
+    </div>
+  </div>
+
+  <!-- ============ MARGIN & REBATE ============ -->
+  <div class="card">
+    <div class="card-header">Margin &amp; Rebate</div>
+    <div class="card-body">
+      <div class="table-scroll">
+        <table class="mini">
+          <tr><th>Material Category / Brand</th><th>Front End Margin</th><th>Back End Margin</th></tr>
+          <tr><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td></tr>
+          <tr><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td></tr>
+          <tr><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td></tr>
+          <tr><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td></tr>
+          <tr><td>Others</td><td colspan="2"><textarea class="f" maxlength="200" rows="1"></textarea></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MERCHANDISING MANPOWER SUPPORT ============ -->
+  <div class="card">
+    <div class="card-header">Merchandising Manpower Support</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap"><label class="flabel">No of Promoters</label><div class="field-row"><input class="f" type="number" min="0"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Sharing Value (Lumpsum)</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap">
+          <label class="flabel">Pay Roll</label>
+          <div class="field-row"><select class="f"><option value=""></option><option>LuLu</option><option>Vendor/Brand</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+        <div class="field-wrap">
+          <label class="flabel">Uniform Cost</label>
+          <div class="field-row"><select class="f"><option value=""></option><option>LuLu</option><option>Vendor/Brand</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PAYMENT DEDUCTION ============ -->
+  <div class="card">
+    <div class="card-header">Payment Deduction</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap">
+          <label class="flabel">Payment Deduction</label>
+          <div class="field-row"><select class="f"><option value=""></option><option>Debit</option><option>Cheque/RTGS</option></select><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DELIVERABLES / SECONDARY VISIBILITY ============ -->
+  <div class="card">
+    <div class="card-header">Deliverables / Secondary Visibility</div>
+    <div class="card-body">
+      <div class="table-scroll">
+        <table class="mini" id="deliverables-table">
+          <tr><th>Asset</th><th>Nos</th><th>Brand</th><th>Paid/ToT</th><th>Duration</th><th>Payment Terms</th></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SINGLE POINT OF CONTACT - LULU ============ -->
+  <div class="card">
+    <div class="card-header">Single Point of Contact &mdash; Lulu</div>
+    <div class="card-body">
+      <div class="table-scroll">
+        <table class="mini" id="poc-table">
+          <tr><th>Dept</th><th>1st POC</th><th>Mobile</th><th>Email</th><th>2nd POC</th><th>Mobile</th><th>Email</th></tr>
+          <tr><td>Buying</td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td></tr>
+          <tr><td>Logistics</td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td></tr>
+          <tr><td>Finance</td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td></tr>
+          <tr><td>GST</td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td><td><textarea class="f" maxlength="200" rows="1"></textarea></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ E-SIGN ============ -->
+  <div class="card">
+    <div class="card-header">E-Sign</div>
+    <div class="card-body">
+      <div class="esign-grid">
+        <div class="esign-side">
+          <p class="esign-head">For &amp; On behalf of Lulu</p>
+          <div class="esign-sub-grid">
+            <div class="esign-sub">
+              <div class="esign-space"></div>
+              <p class="esign-desig">Central Buyer/ Regional Buying Manager</p>
+              <p class="esign-id">L01</p>
+            </div>
+            <div class="esign-sub">
+              <div class="esign-space"></div>
+              <p class="esign-desig">Manager Central Buying</p>
+              <p class="esign-id">L02</p>
+            </div>
+            <div class="esign-sub">
+              <div class="esign-space"></div>
+              <p class="esign-desig">GM-Buying / Director</p>
+              <p class="esign-id">L03</p>
+            </div>
+          </div>
+        </div>
+        <div class="esign-side esign-vendor">
+          <p class="esign-head">For &amp; On behalf of Vendor</p>
+          <div class="esign-space"></div>
+          <p class="esign-desig">Authorised Signatory</p>
+          <p class="esign-id">V01</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SIGNATORIES - BUSINESS DEVELOPMENT AGREEMENT ============ -->
+  <div class="card">
+    <div class="card-header">Signatories &mdash; Business Development Agreement</div>
+    <div class="card-body">
+      <p class="flabel" style="margin:0 0 10px;">Lulu Signatory</p>
+      <div class="field-grid">
+        <div class="field-wrap"><label class="flabel">Lulu Signatory Name</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Lulu Signatory Designation</label><div class="field-row"><textarea class="f" maxlength="200" rows="1" placeholder="Central Buyer / Regional Buying Manager / Manager Central Buying / GM-Buying"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Lulu Signatory Contact No</label><div class="field-row"><input class="f" type="tel" maxlength="200"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Lulu Signatory Date</label><div class="field-row"><input class="f" type="date"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Lulu Company Stamp</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+      </div>
+
+      <hr style="border:none;border-top:1mm dotted var(--header-green);margin:22px 0;">
+
+      <p class="flabel" style="margin:0 0 10px;">Vendor Signatory</p>
+      <div class="field-grid">
+        <div class="field-wrap"><label class="flabel">Vendor Signatory Name</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Vendor Signatory Designation</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Vendor Signatory Contact No</label><div class="field-row"><input class="f" type="tel" maxlength="200"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Vendor Signatory Date</label><div class="field-row"><input class="f" type="date"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Vendor Company Stamp</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-divider">Terms of Trade (TOT)</div>
+
+  <div class="card">
+    <div class="card-header">1. Supply &amp; Invoicing</div>
+    <div class="card-body text-body">
+      <p>a) The Vendor shall supply the Products to the Company at its warehouse and/or any other place as instructed by the Company by way of raising Purchase Orders from time to time.</p>
+      <p>b) The Vendor shall raise a tax invoice to the Company while supplying the Products. The Vendor shall fix the Maximum Retail Price (MRP) of the Products (wherever applicable) and send the list of MRP of the Products to the Company.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">2. Taxes/GST Obligations</div>
+    <div class="card-body text-body">
+      <p>a) The Vendor shall issue invoice to the Company in compliance with the provisions of GST Act, 2017, Rules and Directions.</p>
+      <p>b) The Vendor shall file the GSTR1 and GSTR3B and other GST returns on or before the due date.</p>
+      <p>c) The Vendor shall be liable to compensate any loss to the Company attributable to Vendor's failure in compliance of GST laws.</p>
+      <p>d) Any indirect tax leviable by the state/central government other than GST and any other charges/fees shall be borne by the Vendor.</p>
+      <p>e) The Vendor shall issue/generate e-way bills and e-invoices in accordance with the GST Act, Rules and Directions made thereunder or by any applicable laws.</p>
+      <p>f) In case of return of Products by the Company then the Company shall issue a Delivery chalan/debit note to the Vendor. Subsequently the Vendor agrees to issue a credit note within the time period prescribed under the applicable GST or any other Laws.</p>
+      <p>g) If the products are returned after the time period prescribed under GST law or any other law, a B2B invoice will be issued as per the applicable law.</p>
+      <p>h) B2B invoice can be issued by the Company, even during the time period prescribed under GST laws, if the Vendor raises a request for the same.</p>
+      <p>i) In the event a B2B invoice is issued by the Company as par sub-clauses (g) and (h) above for the return of goods, the Vendor shall accept the B2B invoice and shall not report credit note in GST returns for such transactions.</p>
+      <p>j) The Company shall have the right to recover any loss including loss of ITC (Input Tax Credit) claim incurred by the Company on account of Vendor's failure to report tax documents such as invoice/ debit note/ credit note in their GST returns or in any other documents/ as required by any applicable Laws or rules.</p>
+      <p>k) The Company shall have the right to deduct or withhold any taxes, which it is obligated to withhold from any amount due to the Vendor, and such payment made by withholding taxes/deduction will be treated as full and final settlement of payments towards the Vendor.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">3. Compliance &amp; Regulations</div>
+    <div class="card-body text-body">
+      <p>a) All products supplied by the Vendor are packed and labelled in accordance with the provisions of the Legal Metrology Act, 2009, the Legal Metrology (Packaged Commodity Rules), 2011 and all other rules, regulations and directions issued by the authorities from time to time applicable in respect of packaging and labelling of products in India.</p>
+      <p>b) All products supplied by the Vendor shall be in compliance with the Bureau of Indian Standards Act, 2016 and the rules made thereunder containing BIS/ISI marks. The Vendor shall provide the Bureau of Indian Standards certificates to the Company for the product supplied.</p>
+      <p>c) All food products manufactured, supplied by the Vendor shall be in compliance with Food Safety and Standards Act, 2006/Rules/Directions issued by the authorities from time to time. The Vendor shall provide the FSSAI License to the Company.</p>
+      <p>d) The Vendor hereby certifies that food/foods supplied to the Company are warranted to be the nature and quality which they are purported to be.</p>
+      <p>e) The Vendor shall be solely responsible for illness, diseases, death or injury caused due to usage/consumption of products supplied by the Vendor.</p>
+      <p>f) If any discrepancy is found in the supplied products during inspection of concerned government department, Vendor alone will be responsible for penalties and other Charges, if any, levied by the department for any statutory default.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">4. Intellectual Property</div>
+    <div class="card-body text-body">
+      <p>a) The Company is the sole owner of its trademarks, service marks, trade names, trade secrets, corporate slogans, corporate logos, product designations (collectively the "Marks") and its goodwill.</p>
+      <p>b) The Vendor agrees that they shall have no right to use the intellectual Property rights of the Company in any mode or manner without the prior written consent of the Company.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">5. Damaged/Defective Products and Return Policy</div>
+    <div class="card-body text-body">
+      <p>a) The damaged and manufacturing defect related products shall be taken back by the Vendor at its cost. Payments, if any, made by the Company shall be refunded within <input class="inline-f" type="number" min="0" aria-label="Refund within (days)"> days from the date of intimation of the defective/damaged products by the Company or the Company is entitled to adjust such amount at the time of periodical reconciliation.</p>
+      <p>b) The Vendor/Manufacturer shall be responsible for disputes/issues/claims raised by the End User/customer that are attributable to any manufacturing defects/damage relating to the products supplied by the Vendor/Manufacturer.</p>
+      <p class="help" style="margin-top:8px;">Field: Refund within (days)</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">6. Other Obligations</div>
+    <div class="card-body text-body">
+      <p>a) The Vendor shall ensure that the shelf life of the products supplied shall not be less than <input class="inline-f" type="number" min="0" max="100" aria-label="Minimum shelf life (%)">%.</p>
+      <p>b) The Vendor shall provide correct HSN code for the products supplied.</p>
+      <p>c) The accounting details/statement of accounts shall be submitted by the Vendor to the Company as may be required, at agreed intervals, for reconciliation purpose.</p>
+      <p>d) The Vendor shall always keep the Company informed about their Distributor through whom the Vendor will supply the products.</p>
+      <p class="help" style="margin-top:8px;">Field: Minimum shelf life (%)</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">7. Termination</div>
+    <div class="card-body text-body">
+      <p>a) Either party shall have the liberty to terminate this TOT by giving 30(Thirty) days written notice with or without assigning any reason.</p>
+      <p>b) The Company shall have the right to terminate this TOT forthwith, in the event of any breach/violation of this TOT by the Vendor.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">8. Anti Bribery &amp; Anti Corruption</div>
+    <div class="card-body text-body">
+      <p>a) The Vendor agrees that it has not and undertakes that it shall not engage in any conduct that may be in violation of the applicable anti-corruption and/or anti-bribery laws. The Vendor warrants and undertakes to the Company that the Vendor (i) will not offer gift, consideration or benefit of any kind, which constitute illegal or corrupt practice to anyone, either directly or indirectly, as an inducement or reward for execution of this TOT (ii) will ensure that any person who performs or has performed services for or on its behalf in connection with this TOT complies with this Clause. (iii) will not enter into any agreement/arrangements with any person in connection with this TOT, unless such agreement/arrangements contain undertakings on the same terms as contained in this Clause. (iv) has and will maintain in place effective accounting procedures and internal controls necessary to record all expenditure in connection with the TOT. (v) from time to time, at the reasonable request of the Company, will confirm in writing that it has complied with its undertakings in this Clause and will provide any information reasonably requested by the Company in support of such compliance. (vi) The Vendor shall notify the Company as soon as practicable of any breach of any of the undertakings contained within this Clause of which it becomes aware.</p>
+      <p>b) In the event, the company detects any such breaches by Vendor or any of its staff or any person on behalf of the Vendor, the same will constitute a fundamental and material breach of this TOT following which the Company shall be entitled to terminate the TOT and the Vendor shall be liable to pay the Company double the value of purchase made by the Company for the last 6 months. The Vendor shall hold the Company harmless for all losses and expenses arising out of such violation. Any amount payable by the Vendor due to this breach shall be adjusted/deducted from any amount payable in terms of any purchase Order.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">9. Confidentiality</div>
+    <div class="card-body text-body">
+      <p>The Vendor shall treat as confidential all information provided by the Company to the Vendor, including without limitation financial transactions. All confidential information provided by the Company hereto shall be used by the Vendor hereto solely for the purposes of this TOT. Except as may be required in carrying out the terms of this TOT, confidential information shall not be disclosed to any third party without the prior consent of the Company.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">10. Data Privacy</div>
+    <div class="card-body text-body">
+      <p>a) In connection with this business transaction, the Vendor acknowledges and agrees that in the course of the business, it shall not process personal data and nor permit its Sub-contractors/employees to process personal data of the Company/ its employees for any other purpose other than performing its obligation under this TOT. The Vendor shall be liable for the acts or omissions of its Sub-contractors/employees in connection with the processing of personal data and shall intimate the Company about any data breach within 24 hours. The Vendor shall and cause its Sub-contractors/employees to comply with any direction the Company may issue on the processing personal data for compliance with applicable Laws. The Vendor shall process data strictly in accordance with "Data Protection Laws" as per the Digital Personal Data Protection Act of 2023 and Rules made thereunder, as may be amended from time to time. On Company's request or upon termination of this TOT, the Vendor shall instruct its Sub-Contractors/employees to delete the personal data received by them.</p>
+      <p>b) The Vendor hereby explicitly and unambiguously consents to the collection, use and transfer, in electronic or other form, of the Vendor's/its employees' personal data, Phone Number, Email Id and any other materials as applicable. The Company shall process such Personal Data in the capacity of a Data Fiduciary in accordance with Company's Privacy Notice (Annexure A). The Company will collect and process information for the following business purposes:</p>
+      <p>(i) As required to do so by local applicable law.<br>
+      (ii) Order Processing: To fulfil the orders, process payments, and related services.<br>
+      (iii) Support: To provide support and address your inquiries or concerns.<br>
+      (iv) Marketing and Communication: To send promotional offers, newsletters, and updates about our products and services.<br>
+      (v) Analytics: To improve our website and services by analysing user behaviour and preferences.</p>
+      <p>c) Sharing Your Information &mdash; Service Providers who help process payments and fulfil orders; and disclosures required by law or to protect rights and safety.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">11. Audit</div>
+    <div class="card-body text-body">
+      <p>The Vendor agrees that all accounts, books and other records pertaining to the transactions under this TOT will be subject to reasonable periodic examinations and audit by the Company or by any third-party auditor or adviser.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">12. Indemnity</div>
+    <div class="card-body text-body">
+      <p>The Vendor shall indemnify, defend and hold harmless the Company against any claim, loss, litigation cost or damage suffered by the Company on account of any action taken by any governmental authority, third party claim arising out of or in connection with i) design, manufacture, packaging, labelling, distribution, marketing, Standards, quality, use or sale of the product, ii) in respect of non-compliance omissions or delay in any of the terms and conditions of this TOT or observance of any statutory requirement or legal dues of any nature. iii) any act or omission by the employees/personnel of the vendor, in performance of their duties.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">13. Amendments</div>
+    <div class="card-body text-body">
+      <p>No modification or amendment to this TOT and no waiver of any of the terms or conditions hereof shall be valid or binding unless made in writing and signed by both the parties.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">14. Governing Law &amp; Jurisdiction</div>
+    <div class="card-body text-body">
+      <p>This TOT shall be governed by the Laws in India and the courts of Ernakulam district will have exclusive jurisdiction to adjudicate any dispute arising under or in connection with this TOT.</p>
+    </div>
+  </div>
+
+  <!-- ============ SIGNATORIES - TERMS OF TRADE ============ -->
+  <div class="card">
+    <div class="card-header">Signatories &mdash; Terms of Trade</div>
+    <div class="card-body">
+      <div class="field-grid">
+        <div class="field-wrap"><label class="flabel">For the Company &mdash; Authorized Signatory</label><p class="help">Lulu International Shopping Malls Pvt. Ltd.</p><p class="esign-id" style="text-align:left;">L03</p><div class="esign-space"></div></div>
+        <div class="field-wrap"><label class="flabel">For the Vendor &mdash; Authorized Signatory</label><p class="esign-id" style="text-align:left;">V01</p><div class="esign-space"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-divider">Annexures</div>
+
+  <div class="card">
+    <div class="card-header">Annexure A &mdash; Company's Privacy Notice</div>
+    <div class="card-body">
+      <p class="info-block"><span class="lbl">Consent</span>You give express consent towards the collection and usage of your/your representative's personal data as stipulated in the Data Privacy clause under this TOT.</p>
+      <p class="info-block"><span class="lbl">Exercising Your Rights</span>In order to exercise your rights under applicable data protection laws (access, correction, or deletion of your personal data), you may contact us as below.</p>
+      <p class="info-block"><span class="lbl">Miscellaneous</span>Person with Disability &mdash; if the personal data is of a person with disability who has a lawful guardian, please let us know by writing to us at the contact information below.</p>
+
+      <p class="flabel" style="margin:18px 0 8px;">Grievance Redressal</p>
+      <div class="field-grid">
+        <div class="field-wrap"><label class="flabel">Attention</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Address</label><div class="field-row"><textarea class="f" maxlength="200" rows="1"></textarea><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+        <div class="field-wrap"><label class="flabel">Email Address</label><div class="field-row"><input class="f" type="email" maxlength="200"><button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button></div></div>
+      </div>
+      <p class="help" style="margin-top:14px;">If the grievance is not redressed, the Vendor may make a complaint to the Data Protection Board of India established by the Central Government.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Annexure B &mdash; Board Resolution / Authorisation Letter of the Vendor</div>
+    <div class="card-body">
+      <div class="field-wrap">
+        <label class="flabel">Board Resolution / Authorisation Letter</label>
+        <p class="help-top">No file uploaded yet.</p>
+        <div class="field-row">
+          <label class="file-btn">Choose File<input type="file" onchange="updateFileName(this)"></label>
+          <span class="file-name">No file chosen</span>
+          <button type="button" class="pencil-btn" onclick="toggleLock(this)">&#9998;</button>
+        </div>
+        <p class="help">Attach the vendor's board resolution or authorisation letter naming its signatory for this agreement.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">Lulu International Shopping Malls Private Limited &nbsp;&middot;&nbsp; Business Development Agreement / Terms of Trade (TOT)</p>
+</div>
+
+<script>
+  function autoGrow(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+  document.addEventListener('input', function (e) {
+    if (e.target.matches('textarea.f')) autoGrow(e.target);
+  });
+  function autoGrowAll() {
+    document.querySelectorAll('textarea.f').forEach(autoGrow);
+  }
+  window.addEventListener('load', autoGrowAll);
+  document.addEventListener('DOMContentLoaded', autoGrowAll);
+
+  function toggleGstRequired(select) {
+    var req = document.getElementById('gst-regn-req');
+    if (!req) return;
+    req.style.display = select.value === 'GST Unregistered' ? 'none' : '';
+  }
+
+  function toggleLock(btn) {
+    var row = btn.closest('.field-row');
+    var field = row.querySelector('input, select');
+    var chipBox = row.querySelector('.chip-box');
+    if (!field && !chipBox) return;
+    var locking = chipBox ? !chipBox.classList.contains('disabled') : !field.disabled;
+    if (field) field.disabled = locking;
+    if (chipBox) {
+      chipBox.classList.toggle('disabled', locking);
+      var chipInput = chipBox.querySelector('.chip-input-text');
+      if (chipInput) chipInput.disabled = locking;
+    }
+    var wrap = btn.closest('.field-wrap');
+    if (locking) {
+      if (wrap) wrap.classList.add('locked');
+      btn.classList.add('locked-btn');
+      btn.title = 'Unlock field';
+    } else {
+      if (wrap) wrap.classList.remove('locked');
+      btn.classList.remove('locked-btn');
+      btn.title = 'Lock field';
+    }
+  }
+
+  // Chip input: splits pasted/typed company codes into 4-digit chips with a remove button
+  function chipTextToCodes(text) {
+    var codes = [];
+    text.split(/[^0-9]+/).filter(Boolean).forEach(function (run) {
+      for (var i = 0; i < run.length; i += 4) codes.push(run.slice(i, i + 4));
+    });
+    return codes;
+  }
+
+  function addChipCodes(box, text) {
+    var input = box.querySelector('.chip-input-text');
+    var existing = Array.prototype.map.call(box.querySelectorAll('.chip-code'), function (s) { return s.textContent; });
+    chipTextToCodes(text).forEach(function (code) {
+      if (!code || existing.indexOf(code) !== -1) return;
+      existing.push(code);
+      var chip = document.createElement('span');
+      chip.className = 'chip';
+      var codeSpan = document.createElement('span');
+      codeSpan.className = 'chip-code';
+      codeSpan.textContent = code;
+      var closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'chip-close';
+      closeBtn.setAttribute('aria-label', 'Remove ' + code);
+      closeBtn.innerHTML = '&times;';
+      closeBtn.onclick = function () { chip.remove(); };
+      chip.appendChild(codeSpan);
+      chip.appendChild(closeBtn);
+      box.insertBefore(chip, input);
+    });
+  }
+
+  function initChipBox(box) {
+    var input = box.querySelector('.chip-input-text');
+    box.addEventListener('click', function (e) {
+      if (e.target === box) input.focus();
+    });
+    input.addEventListener('paste', function (e) {
+      e.preventDefault();
+      var text = (e.clipboardData || window.clipboardData).getData('text');
+      addChipCodes(box, text);
+      input.value = '';
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ',' || e.key === ' ' || e.key === 'Tab') {
+        if (input.value.trim()) {
+          e.preventDefault();
+          addChipCodes(box, input.value);
+          input.value = '';
+        }
+      } else if (e.key === 'Backspace' && !input.value) {
+        var chips = box.querySelectorAll('.chip');
+        if (chips.length) chips[chips.length - 1].remove();
+      }
+    });
+    input.addEventListener('blur', function () {
+      if (input.value.trim()) {
+        addChipCodes(box, input.value);
+        input.value = '';
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.chip-box').forEach(initChipBox);
+  });
+
+  function updateFileName(input) {
+    var row = input.closest('.field-row');
+    var nameSpan = row.querySelector('.file-name');
+    var wrap = input.closest('.field-wrap');
+    var topNote = wrap ? wrap.querySelector('.help-top') : null;
+    if (input.files && input.files.length) {
+      nameSpan.textContent = input.files[0].name;
+      if (topNote) topNote.textContent = 'File attached.';
+    } else {
+      nameSpan.textContent = 'No file chosen';
+      if (topNote) topNote.textContent = 'No file uploaded yet.';
+    }
+  }
+
+  // Category grid (25 categories, Yes/No each)
+  (function () {
+    var categories = ['Gro- Food','GroN/food','H&B','Chlld & Frzn','F&V','Bkry/IH, Deli','Roastery','Meat/Fish','IT Pro','Stationery','Electricals','Electronics','Textiles','H/Furnish','Footware','Luggage','Jewellery','Toys','Telecom','Outdoor','Sports','H/hold','Eye wear','BLSH','Others'];
+    var grid = document.getElementById('category-grid');
+    categories.forEach(function (name) {
+      var item = document.createElement('div');
+      item.className = 'toggle-item';
+      var label = document.createElement('label');
+      label.textContent = name;
+      var select = document.createElement('select');
+      select.className = 'f';
+      ['', 'Yes', 'No'].forEach(function (opt) {
+        var o = document.createElement('option');
+        o.value = opt; o.textContent = opt;
+        select.appendChild(o);
+      });
+      item.appendChild(label);
+      item.appendChild(select);
+      grid.appendChild(item);
+    });
+  })();
+
+  // Deliverables table (14 assets, Payment terms dropdown)
+  (function () {
+    var assets = ['End Cap','Pallett','Element Block','Category Display','Category Management','Cash till','Window Display','Peg Hooks','FSU','Floor Stack','Additional Display','Branding Space','Seasonal Display','Others'];
+    var table = document.getElementById('deliverables-table');
+    assets.forEach(function (name) {
+      var tr = document.createElement('tr');
+      var tdName = document.createElement('td');
+      tdName.textContent = name;
+      tr.appendChild(tdName);
+      ['Nos', 'Brand', 'Paid/ToT', 'Duration'].forEach(function () {
+        var td = document.createElement('td');
+        var textarea = document.createElement('textarea');
+        textarea.className = 'f'; textarea.maxLength = 200; textarea.rows = 1;
+        td.appendChild(textarea);
+        tr.appendChild(td);
+      });
+      var tdPay = document.createElement('td');
+      var select = document.createElement('select');
+      select.className = 'f';
+      ['', 'Debit', 'Cheque/RTGS'].forEach(function (opt) {
+        var o = document.createElement('option');
+        o.value = opt; o.textContent = opt;
+        select.appendChild(o);
+      });
+      tdPay.appendChild(select);
+      tr.appendChild(tdPay);
+      table.appendChild(tr);
+    });
+  })();
+</script>
+</body>
+</html>
