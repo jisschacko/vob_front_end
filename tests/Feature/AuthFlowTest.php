@@ -30,7 +30,7 @@ function loginResponse(bool $mustChange = true): array
 function totDetail(): array
 {
     return [
-        'tot' => ['id' => 'TOTPUBLICID00001', 'financial_year' => '2026-27', 'vendor_name' => 'Acme Foods Pvt Ltd', 'status' => 'pending_vendor', 'status_label' => 'Pending with vendor'],
+        'tot' => ['id' => 'TOTPUBLICID00001', 'financial_year' => '2026-27', 'vendor_name' => 'Acme Foods Pvt Ltd', 'status' => 'pending_vendor', 'status_label' => 'Pending with vendor', 'submitted_at' => '2026-10-20T08:00:00+00:00'],
         'draft_saved_at' => '2026-10-20T05:12:00+00:00',
         'progress' => ['current' => 'vendor', 'steps' => [
             ['key' => 'initiated', 'label' => 'TOT initiated', 'state' => 'done', 'entered_at' => '2026-10-20T09:00:00+00:00'],

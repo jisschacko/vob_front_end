@@ -81,7 +81,7 @@ $header = rtrim(strtr(base64_encode(json_encode(['kid'=>$kid,'ek'=>base64_encode
   "tot": { "id": "...", "tot_number": 12, "financial_year": "2026-27", "type": "new", "vendor_name": "...", "status": "pending_vendor", "status_label": "Pending with vendor", "editable": true, "submitted_at": null } }
 ```
 `tot` is the TOT behind `link_token` (null when no link). A valid link on a TOT in "TOT Initiated" moves it to **Pending with vendor**.
-401 `invalid_credentials` (identical for wrong password / unknown / inactive / internal accounts) - 429 `too_many_attempts` after 5 failures (15 min) - 422 `link_invalid` (credentials were right, link wrong/for another vendor; no token issued) - 404 bad envelope.
+401 `invalid_credentials` (identical for wrong password / unknown / inactive / internal accounts) - 429 `too_many_attempts` after 5 failures (15 min; one counter per vendor email, the VOB IP is not part of the key; an Admin can clear it at once from User Administration > Vendors or the TOT page, which also lets the next login through) - 422 `link_invalid` (credentials were right, link wrong/for another vendor; no token issued) - 404 bad envelope.
 
 ### After login (signature + bearer)
 
@@ -161,8 +161,15 @@ Steps are in travel order: `initiated, vendor, buyer, kam, legal, finance, audit
 
 - Admin switches are ignored (always on) when `APP_ENV=production`; VOB must do the same.
 - Formats (PAN, GSTIN, IFSC, PIN, phone, email, allowed values) are **always** validated, switches or not.
-- `GET /tots/{id}` returns `validation: { required_fields: bool, documents: bool }` with the Admin side state, so VOB can show a "development mode" banner and see when the two sides disagree. A submit that went through while a switch was off returns `warnings` (same shape as `errors`) listing what was missing.
+- `GET /tots/{id}` returns `validation: { required_fields: bool, documents: bool, skip_third_party: bool }` with the Admin side state (`skip_third_party` = Admin demo mode `TOT_SKIP_THIRD_PARTY`: mail goes to the log and vendor documents are read from the VOB machine instead of S3; VOB should warn when its own `VOB_SKIP_THIRD_PARTY` differs), so VOB can show a "development mode" banner and see when the two sides disagree. A submit that went through while a switch was off returns `warnings` (same shape as `errors`) listing what was missing.
 - The Admin Panel shows a yellow "Development mode" banner on every page while a switch is off.
+
+## 5B. Answers to VOB questions (entry 2 of ADMIN_PANEL_CHANGES.md, points confirmed while building the demo)
+
+- **Bank verification**: `POST /tots/{id}/bank-verification` accepts `{"status":"verified","reference":"<any non-empty text, e.g. DEMO-4F9K2LQ7XA>"}` and `{"status":"failed"}`; `GET /tots/{id}` then returns `form.bank.verification_status`, `verification_reference` and `verified_at`, and reviewers see them on the TOT page.
+- **Documents**: `DELETE /tots/{id}/documents/{docId}` and re-uploading a document of the same type both **delete the stored file** from the configured disk (S3, or the VOB folder in demo mode). `{docId}` is an opaque 16-character id.
+- **Submit**: 200 `{message, tot:{status:"pending_buyer", editable:false, submitted_at}, warnings}`; 422 `{error:"incomplete", errors:{"<path>":"message"}}` with `documents.<type>` and `bank.verification` keys.
+- **Reviewer outcome**: when a reviewer rejects, the TOT comes back to the vendor as `pending_vendor` with `tot.editable=true`, the reviewer's comment in `reviewer_comments` (newest first) and a new invitation link emailed; the vendor resubmits with the same `POST .../submit`. Rejections by Buyer or Legal go to the vendor, all other stages go back to the buyer.
 
 ## 6. Statuses (`status` value -> label)
 

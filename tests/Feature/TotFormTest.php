@@ -102,7 +102,7 @@ describe('the form page', function () {
     });
 
     it('shows reviewer comments and the action-needed note on the tracker', function () {
-        $html = page(T::detail(['reviewer_comments' => [['status' => 'pending_vendor', 'comments' => 'Fix the GST number', 'by' => 'Buyer One', 'at' => '2026-10-21']]]))->getContent();
+        $html = page(T::detail(['tot' => ['submitted_at' => '2026-10-21T05:00:00+00:00'], 'reviewer_comments' => [['status' => 'pending_vendor', 'comments' => 'Fix the GST number', 'by' => 'Buyer One', 'at' => '2026-10-21']]]))->getContent();
 
         expect($html)->toContain('Reviewer comments')->toContain('Fix the GST number')->toContain('Action needed: see reviewer comments');
     });

@@ -159,6 +159,37 @@ changes, with Pest tests, and tell me what you could not do.
 
 ---
 
+## 6. Found while running the two apps together - Status: OPEN
+
+Seen in VOB's `api_logs` during the first local run (Admin on http://127.0.0.1:8000).
+
+**6a. Save Draft fails with a 500 from the Admin (blocks the whole demo).** `PUT /api/v1/tots/{id}/draft` returns 500:
+`SQLSTATE[42S22]: Column not found: 1054 Unknown column 'second_email' in 'field list' ... insert into tot_pocs (tot_id, dept, first_poc, first_mobile, email, second_poc, second_mobile, second_email)`
+in database `vendor_onboarding`. The migration that adds it (`2026_10_23_000001_update_tot_form_for_main_form`, which also widens the payment-mode columns and adds the
+Hindu Undivided Family entity type) has not been run on that database. Fix on the Admin side: run `php artisan migrate`, then check `php artisan migrate:status` shows
+nothing pending. Until then every draft save and autosave from VOB shows "We could not save right now".
+
+**6b. `reviewer_comments` contains system history.** `GET /tots/{id}` for a TOT that was never submitted returns
+`"reviewer_comments":[{"status":"TOT Initiated","comments":"TOT initiated","by":"VOB Admin","at":"..."}]`. The contract says this list holds what reviewers wrote when
+the TOT was sent back to the vendor. VOB now treats a TOT as "returned" only when `tot.submitted_at` is set and hides the system "TOT Initiated" row, but the Admin
+should return only real return comments.
+
+**Prompt for the Admin Panel repo:**
+
+```
+1. Run all pending migrations on the vendor_onboarding database (the tot_pocs.second_email column from 2026_10_23_000001_update_tot_form_for_main_form is missing)
+   and confirm PUT /api/v1/tots/{id}/draft saves a full form without a 500. Add a Pest test that sends a draft containing every section, including pocs with
+   second_email, so a missing column is caught.
+2. In GET /api/v1/tots/{id}, make `reviewer_comments` contain ONLY the comments written by reviewers when they returned the TOT to the vendor
+   (status "pending_vendor" after a reject), newest first, each {status, comments, by, at}. Do not include system history rows such as "TOT initiated" or
+   "Pending with vendor" (first login). Keep `tot.submitted_at` set after a return so the vendor front end can show "Resubmit". Update docs/API_CONTRACT.md
+   and add a test: a TOT that was never submitted returns an empty list.
+3. A 500 from the API must not leak the SQL, file paths or stack trace in its body when APP_DEBUG is false. Check that the API returns {"error":"server_error"}
+   style JSON with no trace in non-local environments.
+```
+
+---
+
 ## 5. Demo run-book (both apps on one machine)
 
 **Admin Panel `.env`** (names as above; values are yours): `APP_URL=http://127.0.0.1:8000`, `VOB_URL=http://127.0.0.1:8001`, `VOB_ALLOWED_IPS=127.0.0.1`,

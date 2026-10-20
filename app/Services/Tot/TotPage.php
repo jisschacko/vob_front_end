@@ -219,10 +219,10 @@ class TotPage
         return (string) ($this->detail['form']['bank']['verification_status'] ?? 'pending');
     }
 
-    /** The reviewers sent it back (or it was submitted before) and the vendor may edit again. */
+    /** It was submitted before (so a reviewer has sent it back): the vendor edits again and presses Resubmit. */
     public function isResubmission(): bool
     {
-        return $this->editable() && (! empty($this->tot()['submitted_at']) || $this->reviewerComments() !== []);
+        return $this->editable() && ! empty($this->tot()['submitted_at']);
     }
 
     /**
@@ -247,9 +247,21 @@ class TotPage
         return $notes;
     }
 
-    /** @return list<array<string,mixed>> */
+    /**
+     * Comments from reviewers who returned the TOT. Before the first submission there can be none, whatever the Admin lists (it also
+     * returns system history such as "TOT initiated"), and that system row is never shown as a reviewer comment.
+     *
+     * @return list<array<string,mixed>>
+     */
     public function reviewerComments(): array
     {
-        return array_values((array) ($this->detail['reviewer_comments'] ?? []));
+        if (empty($this->tot()['submitted_at'])) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            (array) ($this->detail['reviewer_comments'] ?? []),
+            fn ($c) => is_array($c) && filled($c['comments'] ?? null) && ! in_array(strtolower((string) ($c['status'] ?? '')), ['tot initiated', 'initiated'], true),
+        ));
     }
 }

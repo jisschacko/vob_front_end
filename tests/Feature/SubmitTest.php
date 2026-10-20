@@ -313,3 +313,28 @@ describe('demo mode (VOB_SKIP_THIRD_PARTY)', function () {
         expect($this->get('/home')->getContent())->not->toContain('DEMO:');
     });
 });
+
+describe('first visit (regression: the Admin lists system history in reviewer_comments)', function () {
+    it('shows Submit, no "sent back" note and no reviewer comments before the first submission', function () {
+        $history = [['status' => 'TOT Initiated', 'comments' => 'TOT initiated', 'by' => 'VOB Admin', 'at' => '2026-10-20T11:46:32+00:00']];
+        T::fake([], readyDetail(['reviewer_comments' => $history, 'tot' => ['submitted_at' => null]]));
+
+        $html = $this->withSession(T::session())->get('/home')->getContent();
+
+        expect($html)->toMatch('/data-submit[^>]*>\s*Submit\s*<\/button>/s')
+            ->not->toContain('Resubmit')->not->toContain('A reviewer sent this Terms of Trade back')
+            ->not->toContain('Reviewer comments')->not->toContain('Action needed: see reviewer comments')->not->toContain('VOB Admin');
+    });
+
+    it('ignores the initiation row and empty comments even after a return', function () {
+        T::fake([], readyDetail(['tot' => ['submitted_at' => '2026-10-21T05:00:00+00:00'], 'reviewer_comments' => [
+            ['status' => 'TOT Initiated', 'comments' => 'TOT initiated', 'by' => 'VOB Admin', 'at' => '2026-10-20'],
+            ['status' => 'Pending with vendor', 'comments' => null, 'by' => 'system', 'at' => '2026-10-20'],
+            ['status' => 'Pending with vendor', 'comments' => 'Please correct the PAN', 'by' => 'Buyer One', 'at' => '2026-10-22'],
+        ]]));
+
+        $html = $this->withSession(T::session())->get('/home')->getContent();
+
+        expect($html)->toContain('Please correct the PAN')->not->toContain('VOB Admin')->toContain('Resubmit');
+    });
+});
