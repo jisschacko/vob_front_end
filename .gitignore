@@ -25,3 +25,6 @@ Thumbs.db
 
 # Owner-supplied keys
 *.pem
+
+# local page previews
+/public/_preview

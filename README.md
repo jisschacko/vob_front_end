@@ -6,7 +6,7 @@ verify their bank account with Cashfree and submit. There is **no business datab
 
 ## Status
 
-Phase 1 (scaffolding, `AdminApiClient`, logging + purge, layout with status tracker) and Phase 2 (invitation link, sign-in, forced password change, logout, session-expiry handling) are done. Phase 3 (TOT wizard + S3) not started.
+Phases 1-4 are done: Admin API client + logging, sign-in / password flow, the Terms of Trade form (Save Draft, autosave, locked / mandatory fields from the API, document upload to S3) and Cashfree Reverse Penny Drop bank verification. Phase 5 (submit / resubmit / status) is not started; the Submit button is shown disabled until then.
 
 ## Setup
 
@@ -30,6 +30,10 @@ vendor/bin/pest                 # needs a .env to exist, otherwise PHPUnit repor
 | `API_LOG_RETENTION_MONTHS` | `api_logs` retention, default 2 |
 | `VOB_ENFORCE_REQUIRED`, `VOB_ENFORCE_DOCUMENTS` | `false` = Submit not blocked on mandatory fields / documents. Ignored (always on) in production |
 | `VOB_SESSION_IDLE_MINUTES` / `VOB_SESSION_ABSOLUTE_MINUTES` | vendor session expiry: no activity for this long (default 30) / since sign-in (default 480). On expiry the vendor sees "Your session has ended" and the invitation link is kept. The Admin token has its own 30 min idle / 8 h limits and ends the session earlier if shorter. Keep `SESSION_LIFETIME` >= the absolute value |
+| `VOB_DOCS_DISK` | filesystem disk for vendor PDFs, default `s3` (set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`; the bucket must be private and be the same one the Admin reads with `TOT_DOCS_DISK=s3`) |
+| `VOB_MASTERS_CACHE_MINUTES` | how long `/masters` dropdown data is cached (default 10) |
+| `CASHFREE_ENV`, `CASHFREE_CLIENT_ID`, `CASHFREE_CLIENT_SECRET` | bank verification. `sandbox` needs sandbox credentials, `production` live ones. Whitelist the server egress IP in the Cashfree dashboard |
+| `CASHFREE_NAME_MATCH` | `ignore` (default) or `reject_no_match`: the paying account number and IFSC must always match; this also fails a NO_MATCH name |
 | `VOB_DISPLAY_TIMEZONE` | timezone for "Draft saved ..." (default `Asia/Kolkata`) |
 
 A missing key/secret/URL raises a clear "not configured" error before any request is sent.
@@ -51,6 +55,19 @@ A missing key/secret/URL raises a clear "not configured" error before any reques
 - `api_logs` - every outbound attempt; passwords, tokens, emails, `X-Auth-Data`, signatures redacted, account / PAN / GST numbers masked.
 - `resources/views/layouts/app.blade.php` + `components/status-tracker.blade.php` - left-margin tracker rendered from the API `progress`.
 - `App\Support\EnforcementSwitches` - the two development switches; the layout shows a "Development mode" banner when one is off.
+
+## The TOT form
+
+- `app/Services/Tot/TotLayout.php` = presentation of the reference form (cards, labels, widgets) and the shape of each API section. Locked fields, mandatory fields, dropdown masters and all format rules come from the Admin API on every load; formats are validated by the Admin on each draft save and shown beside the field.
+- Save Draft (POST) and autosave (POST, JSON) both call `PUT /tots/{id}/draft`. The TOT id never appears in a URL: it is kept in the server-side session.
+- Documents: PDF only, max 5 MB, PDF signature checked, `DocumentScanner` hook for antivirus (no-op by default), stored at `tots/{tot id}/{random}.pdf` in the private bucket, then registered with the Admin; the object is removed again if registration fails.
+
+## Bank verification (Cashfree Reverse Penny Drop)
+
+- "Verify bank account" on the form saves the draft, then creates an RPD request for the saved account name / number / IFSC; the vendor pays Rs 1 by UPI (QR or app link, valid 10 minutes, refunded in 48 h).
+- The result is read from Cashfree (`GET /remitter/status`), never from a webhook payload. The paying account number and IFSC must match the form; then `POST /tots/{id}/bank-verification` tells the Admin `verified` (with the Cashfree ref_id) or `failed`. An expired link is not reported as failed.
+- `cashfree_verifications` is temporary (no account number, only last four digits and a keyed hash); `cashfree:purge-verifications` runs daily.
+- Webhook (optional, speeds things up): `POST /webhooks/cashfree`, signature checked, no session. Without it the vendor page polls every 4 seconds, and a payment made while the page was closed is picked up when the form is next opened.
 
 ## Conventions
 

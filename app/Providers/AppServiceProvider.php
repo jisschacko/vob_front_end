@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Services\AdminApi\CredentialEnvelope;
 use App\Services\AdminApi\RequestSigner;
+use App\Services\Documents\DocumentScanner;
+use App\Services\Documents\NullScanner;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -13,6 +15,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(DocumentScanner::class, NullScanner::class);
+
         $this->app->bind(RequestSigner::class, fn () => new RequestSigner(config('admin_api.hmac_secret')));
 
         $this->app->bind(CredentialEnvelope::class, fn () => new CredentialEnvelope(

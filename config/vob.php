@@ -12,4 +12,11 @@ return [
     // Vendor session limits, enforced by VOB (the Admin token has its own 30 min idle / 8 h absolute limits and wins if shorter).
     'session_idle_minutes' => (int) env('VOB_SESSION_IDLE_MINUTES', 30),
     'session_absolute_minutes' => (int) env('VOB_SESSION_ABSOLUTE_MINUTES', 480),
+
+    // Vendor documents: private bucket (disk 's3' reads AWS_* from .env). Tests use a fake disk.
+    'docs_disk' => env('VOB_DOCS_DISK', 's3'),
+    'docs_max_kb' => 5120,
+
+    // Admin /masters data changes rarely; cache it (not vendor specific) for this many minutes.
+    'masters_cache_minutes' => (int) env('VOB_MASTERS_CACHE_MINUTES', 10),
 ];

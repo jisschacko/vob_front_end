@@ -17,14 +17,16 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(SecurityHeaders::class);
+        $middleware->validateCsrfTokens(except: ['webhooks/cashfree']);
         $middleware->alias(['vendor' => EnsureVendorSession::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReport(AdminApiUnauthenticatedException::class);
 
         // Admin session ended (idle 30 min / 8 h absolute / token replaced): back to sign-in. The invitation link stays in the session.
-        $exceptions->render(fn (AdminApiUnauthenticatedException $e, Request $request) => redirect()->route('sign-in')
-            ->with('status', 'Your session has ended. Please sign in again.'));
+        $exceptions->render(fn (AdminApiUnauthenticatedException $e, Request $request) => $request->expectsJson()
+            ? response()->json(['error' => 'session_ended'], 401)
+            : redirect()->route('sign-in')->with('status', 'Your session has ended. Please sign in again.'));
 
         // Admin unreachable or VOB mis-configured: a neutral page, never the reason.
         $exceptions->render(fn (AdminApiException $e, Request $request) => response()->view('errors.service-unavailable', [], 503));

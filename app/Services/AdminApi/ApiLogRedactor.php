@@ -10,13 +10,13 @@ class ApiLogRedactor
     private const MAX_BODY = 20000;
 
     /** Header names whose values are never logged. */
-    private const SENSITIVE_HEADERS = ['authorization', 'x-auth-data', 'x-signature', 'x-nonce', 'cookie', 'set-cookie', 'x-csrf-token', 'x-xsrf-token'];
+    private const SENSITIVE_HEADERS = ['authorization', 'x-auth-data', 'x-signature', 'x-nonce', 'cookie', 'set-cookie', 'x-csrf-token', 'x-xsrf-token', 'x-client-id', 'x-client-secret', 'x-cf-signature', 'x-webhook-signature'];
 
     /** Body keys removed completely. A key is also removed when it contains "password" or "token". */
-    private const SENSITIVE_KEYS = ['secret', 'authorization', 'otp', 'cvv', 'ek', 'iv', 'ct', 'tag', 'client_secret', 'x_auth_data'];
+    private const SENSITIVE_KEYS = ['secret', 'authorization', 'otp', 'cvv', 'ek', 'iv', 'ct', 'tag', 'client_secret', 'x_auth_data', 'signature', 'qr_code', 'upi', 'upi_link', 'gpay', 'bhim', 'paytm', 'phonepe'];
 
     /** Body keys kept only as "******1234". */
-    private const MASKED_KEYS = ['account_no', 'account_number', 'bank_account_no', 'beneficiary_account', 'pan', 'pan_no', 'pan_number', 'gst', 'gst_no', 'gstin', 'gst_number'];
+    private const MASKED_KEYS = ['account_no', 'account_number', 'bank_account_no', 'beneficiary_account', 'bank_account', 'pan', 'pan_no', 'pan_number', 'gst', 'gst_no', 'gstin', 'gst_number'];
 
     /** @param array<string,mixed> $headers */
     public function headers(array $headers): array

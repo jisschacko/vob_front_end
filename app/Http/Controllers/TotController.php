@@ -1,0 +1,119 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Services\AdminApi\AdminApiClient;
+use App\Services\AdminApi\AdminSession;
+use App\Services\Cashfree\BankVerificationService;
+use App\Services\Tot\Masters;
+use App\Services\Tot\TotFormMapper;
+use App\Services\Tot\TotPage;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\MessageBag;
+
+/**
+ * The vendor's Terms of Trade form. The TOT id never appears in a URL: it lives in the server-side session (from login).
+ */
+class TotController extends Controller
+{
+    public function __construct(
+        private readonly AdminApiClient $api,
+        private readonly AdminSession $session,
+        private readonly Masters $masters,
+        private readonly TotFormMapper $mapper,
+        private readonly BankVerificationService $bank,
+    ) {}
+
+    public function show(Request $request)
+    {
+        $tot = $this->session->tot();
+        if ($tot === null) {
+            return view('home', ['tot' => null]);
+        }
+
+        $this->bank->reconcile($tot['id']); // a payment made while the page was closed is reported to the Admin first
+
+        $response = $this->api->get('tots/'.$tot['id']);
+        if (! $response->successful()) {
+            return response()->view('errors.service-unavailable', [], 503);
+        }
+
+        $this->masters->all(); // load now: a failure must become the neutral 503 page, not a view error
+
+        $detail = $response->json();
+        $request->session()->put('tot.locked', array_values((array) ($detail['locked_fields'] ?? [])));
+        $page = new TotPage($detail, $this->masters, $this->mapper, $request->session()->get('errors')?->getBag('default') ?? new MessageBag);
+
+        return view('tot.show', [
+            'page' => $page,
+            'tot' => $page->tot(),
+            'progress' => $detail['progress'] ?? ['steps' => []],
+            'vendorName' => $page->tot()['vendor_name'] ?? ($tot['vendor_name'] ?? null),
+            'subtitle' => isset($page->tot()['financial_year']) ? 'Terms of Trade '.$page->tot()['financial_year'] : null,
+            'draftSavedAt' => $detail['draft_saved_at'] ?? null,
+            'currentNote' => $page->reviewerComments() !== [] && $page->editable() ? 'Action needed: see reviewer comments' : null,
+        ]);
+    }
+
+    /** Save Draft button: POST, then back to the form. */
+    public function save(Request $request): RedirectResponse
+    {
+        $result = $this->saveDraft($request);
+
+        if ($result['ok']) {
+            return redirect()->route('home')->with('status', 'Draft saved.');
+        }
+
+        return back()->withInput()->withErrors($result['errors'] ?: ['form' => $result['message']]);
+    }
+
+    /** Autosave (same call, JSON answer). */
+    public function autosave(Request $request): JsonResponse
+    {
+        $result = $this->saveDraft($request);
+
+        if ($result['ok']) {
+            return response()->json(['saved' => true, 'saved_at' => now()->setTimezone(config('vob.display_timezone'))->format('d-M-Y, h:i A')]);
+        }
+
+        return response()->json(['saved' => false, 'message' => $result['message'], 'errors' => $result['errors']], $result['status']);
+    }
+
+    /**
+     * @return array{ok:bool,status:int,message:string,errors:array<string,string>}
+     */
+    private function saveDraft(Request $request): array
+    {
+        $tot = $this->session->tot();
+        if ($tot === null) {
+            return ['ok' => false, 'status' => 404, 'message' => 'No Terms of Trade is linked to this sign-in.', 'errors' => []];
+        }
+
+        $input = $request->input('form');
+        $payload = $this->mapper->payload(
+            is_array($input) ? $input : [],
+            (array) $request->session()->get('tot.locked', []), // as the Admin reported them when the page was shown
+            array_values(array_filter((array) $request->input('masked', []), 'is_string')),
+            array_keys($this->masters->options('deliverable_assets')),
+        );
+
+        if ($payload['form'] === []) {
+            return ['ok' => true, 'status' => 200, 'message' => '', 'errors' => []];
+        }
+
+        $response = $this->api->put('tots/'.$tot['id'].'/draft', ['form' => $payload['form']]);
+
+        if ($response->successful()) {
+            return ['ok' => true, 'status' => 200, 'message' => '', 'errors' => []];
+        }
+
+        return match ($response->status()) {
+            422 => ['ok' => false, 'status' => 422, 'message' => 'Some values need correcting. Nothing was saved.',
+                'errors' => $this->mapper->errorsByPath((array) $response->json('errors', []), $payload['keyed'])],
+            409 => ['ok' => false, 'status' => 409, 'message' => 'This Terms of Trade can no longer be edited.', 'errors' => []],
+            default => ['ok' => false, 'status' => 502, 'message' => 'We could not save right now. Please try again.', 'errors' => []],
+        };
+    }
+}

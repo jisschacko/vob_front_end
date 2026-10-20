@@ -1,0 +1,3 @@
+      <p class="info-block"><span class="lbl">Consent</span>You give express consent towards the collection and usage of your/your representative's personal data as stipulated in the Data Privacy clause under this TOT.</p>
+      <p class="info-block"><span class="lbl">Exercising Your Rights</span>In order to exercise your rights under applicable data protection laws (access, correction, or deletion of your personal data), you may contact us as below.</p>
+      <p class="info-block"><span class="lbl">Miscellaneous</span>Person with Disability &mdash; if the personal data is of a person with disability who has a lawful guardian, please let us know by writing to us at the contact information below.</p>

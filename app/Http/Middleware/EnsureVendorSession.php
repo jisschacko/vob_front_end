@@ -15,11 +15,15 @@ class EnsureVendorSession
     public function handle(Request $request, Closure $next): Response
     {
         if (! $this->session->check()) {
-            return redirect()->route('sign-in');
+            return $request->expectsJson() ? response()->json(['error' => 'session_ended'], 401) : redirect()->route('sign-in');
         }
 
         if ($this->session->expired()) {
             $this->session->forget(); // the invitation link stays so the vendor can sign in again
+
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'session_ended'], 401);
+            }
 
             return redirect()->route('sign-in')->with('status', 'Your session has ended. Please sign in again.');
         }
