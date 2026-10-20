@@ -30,7 +30,12 @@
     @endisset
 
     <main class="content @unless (isset($progress)) content-centered @endunless">
-        @yield('content')
+        <div class="main-inner">
+            @if (session('status'))
+                <div class="flash" role="status">{{ session('status') }}</div>
+            @endif
+            @yield('content')
+        </div>
     </main>
 </div>
 @stack('scripts')

@@ -18,3 +18,5 @@ REST API (separate repo). Read before coding: docs/API_CONTRACT.md, docs/DEVELOP
   `validation`) - do not hard-code them.
 - Left margin shows the status tracker from the API `progress` (docs/vob_status_tracker_reference.html). Form has Save Draft + Submit.
 - Tests: Pest with Http::fake for the Admin API, Cashfree and S3. Stop after each phase for review.
+- Every browser form/action that changes state is a POST (never PUT/PATCH/DELETE/GET); only link navigation and page views are GET.
+- Changes that must be made in the Admin Panel repo are written to `docs/ADMIN_PANEL_CHANGES.md` as a ready-to-paste prompt.

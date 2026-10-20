@@ -13,6 +13,7 @@ class SecurityHeaders
     {
         $response = $next($request);
 
+        $response->headers->set('Cache-Control', 'no-store, private'); // pages carry vendor data
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'no-referrer');

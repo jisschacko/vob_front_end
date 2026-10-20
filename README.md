@@ -6,7 +6,7 @@ verify their bank account with Cashfree and submit. There is **no business datab
 
 ## Status
 
-Phase 1 (scaffolding, `AdminApiClient`, logging + purge, layout with status tracker, tests). Phase 2 (login/password flow) not started.
+Phase 1 (scaffolding, `AdminApiClient`, logging + purge, layout with status tracker) and Phase 2 (invitation link, sign-in, forced password change, logout, session-expiry handling) are done. Phase 3 (TOT wizard + S3) not started.
 
 ## Setup
 
@@ -29,6 +29,7 @@ vendor/bin/pest                 # needs a .env to exist, otherwise PHPUnit repor
 | `ADMIN_API_TIMEOUT`, `ADMIN_API_RETRIES` | seconds / extra attempts for GET, PUT, DELETE (POST is never retried) |
 | `API_LOG_RETENTION_MONTHS` | `api_logs` retention, default 2 |
 | `VOB_ENFORCE_REQUIRED`, `VOB_ENFORCE_DOCUMENTS` | `false` = Submit not blocked on mandatory fields / documents. Ignored (always on) in production |
+| `VOB_SESSION_IDLE_MINUTES` / `VOB_SESSION_ABSOLUTE_MINUTES` | vendor session expiry: no activity for this long (default 30) / since sign-in (default 480). On expiry the vendor sees "Your session has ended" and the invitation link is kept. The Admin token has its own 30 min idle / 8 h limits and ends the session earlier if shorter. Keep `SESSION_LIFETIME` >= the absolute value |
 | `VOB_DISPLAY_TIMEZONE` | timezone for "Draft saved ..." (default `Asia/Kolkata`) |
 
 A missing key/secret/URL raises a clear "not configured" error before any request is sent.
@@ -50,3 +51,7 @@ A missing key/secret/URL raises a clear "not configured" error before any reques
 - `api_logs` - every outbound attempt; passwords, tokens, emails, `X-Auth-Data`, signatures redacted, account / PAN / GST numbers masked.
 - `resources/views/layouts/app.blade.php` + `components/status-tracker.blade.php` - left-margin tracker rendered from the API `progress`.
 - `App\Support\EnforcementSwitches` - the two development switches; the layout shows a "Development mode" banner when one is off.
+
+## Conventions
+
+- Every state-changing browser route is POST (a test enforces it). Admin-side changes needed by VOB are listed in `docs/ADMIN_PANEL_CHANGES.md`.
