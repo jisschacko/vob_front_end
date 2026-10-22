@@ -86,7 +86,7 @@ describe('invitation link', function () {
     it('shows "ask your Lulu contact" for an invalid link', function () {
         Http::fake(['admin.test/*' => Http::response(['valid' => false, 'error' => 'link_invalid'], 422)]);
 
-        $this->get('/onboard/'.LINK)->assertStatus(410)->assertSee('Ask your Lulu contact to resend the invitation');
+        $this->get('/onboard/'.LINK)->assertStatus(410)->assertSee('ask your Lulu contact to resend the invitation')->assertSee('newer invitation email');
         expect(app(AdminSession::class)->link())->toBeNull();
     });
 

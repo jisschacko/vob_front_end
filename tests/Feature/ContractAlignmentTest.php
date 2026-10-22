@@ -180,3 +180,58 @@ describe('reviewer return (5B/5C)', function () {
             ->and($html)->toMatch('/data-submit[^>]*>\s*Resubmit\s*<\/button>/s');
     });
 });
+
+describe('resubmission goes back to the stage that rejected it (API_CONTRACT submit + 5B)', function () {
+    it('tells the vendor where the TOT will go, from resubmit_to', function (string $status, string $label) {
+        T::fake([], T::detail(['tot' => ['submitted_at' => '2026-10-21T05:00:00+00:00'], 'resubmit_to' => $status,
+            'reviewer_comments' => [['status' => 'pending_vendor', 'comments' => 'Please fix', 'by' => 'Reviewer', 'at' => '2026-10-22']]]));
+        $html = test()->withSession(T::session())->get('/home')->getContent();
+
+        expect($html)->toContain("It will go back to <strong>$label</strong>")->toMatch('/data-submit[^>]*>\s*Resubmit\s*<\/button>/s');
+    })->with([
+        'buyer' => ['pending_buyer', 'Pending with buyer'],
+        'legal' => ['pending_legal', 'Pending with legal'],
+        'gm buying' => ['pending_gm_buying', 'Pending with GM Buying'],
+    ]);
+
+    it('says nothing about a destination when the Admin does not send one, and never before the first submission', function () {
+        T::fake([], T::detail(['resubmit_to' => 'pending_legal', 'tot' => ['submitted_at' => null]]));
+        expect(test()->withSession(T::session())->get('/home')->getContent())->not->toContain('It will go back to');
+
+        T::fake([], T::detail(['tot' => ['submitted_at' => '2026-10-21T05:00:00+00:00'], 'reviewer_comments' => [['status' => 'pending_vendor', 'comments' => 'x', 'by' => 'R', 'at' => '2026-10-22']]]));
+        expect(test()->get('/home')->getContent())->not->toContain('It will go back to');
+    });
+
+    it('accepts any status in the submit answer, not only pending_buyer, and shows the Admin label', function () {
+        T::fake(['POST tots/'.T::TOT_ID.'/submit' => Http::response(['message' => 'ok', 'tot' => ['status' => 'pending_legal', 'status_label' => 'Pending with legal'], 'warnings' => []])],
+            T::detail(['form' => ['vendor_details' => ['gst_regn_no' => '29ABCDE1234F1Z5']], 'documents' => [], 'document_requirements' => [], 'required_documents' => [], 'tot' => ['submitted_at' => '2026-10-21T05:00:00+00:00']]));
+        config(['vob.enforce_required' => false, 'vob.enforce_documents' => false]);
+
+        test()->withSession(T::session())->post('/tot/submit', ['form' => ['vendor_details' => ['vendor_name' => 'A']]])
+            ->assertRedirect(route('home'))->assertSessionHas('status', 'Your Terms of Trade has been submitted for review.')->assertSessionHas('submit_warnings', []);
+
+        T::fake([], T::detail(['tot' => ['editable' => false, 'status' => 'pending_legal', 'status_label' => 'Pending with legal', 'submitted_at' => '2026-10-22T05:00:00+00:00']]));
+        expect(test()->get('/home')->getContent())->toContain('pending with legal')->not->toContain('pending with buyer');
+    });
+
+    it('keeps the ticks the Admin reports for stages that already approved', function () {
+        T::fake([], T::detail(['tot' => ['editable' => false, 'status' => 'pending_legal', 'status_label' => 'Pending with legal', 'submitted_at' => '2026-10-22T05:00:00+00:00'],
+            'progress' => ['current' => 'legal', 'steps' => [
+                ['key' => 'initiated', 'label' => 'TOT initiated', 'state' => 'done', 'entered_at' => null],
+                ['key' => 'vendor', 'label' => 'Vendor details & submission', 'state' => 'done', 'entered_at' => null],
+                ['key' => 'buyer', 'label' => 'Buyer review', 'state' => 'done', 'entered_at' => null],
+                ['key' => 'kam', 'label' => 'KAM review', 'state' => 'done', 'entered_at' => null],
+                ['key' => 'legal', 'label' => 'Legal review', 'state' => 'current', 'entered_at' => null],
+            ]]]));
+        $html = test()->withSession(T::session())->get('/home')->getContent();
+
+        preg_match_all('/class="step (done|current|pending)"/', $html, $m);
+        expect($m[1])->toBe(['done', 'done', 'done', 'done', 'current']);
+    });
+});
+
+it('tells a vendor whose old invitation link was replaced to use the newest email', function () {
+    Http::fake(['admin.test/*' => Http::response(['valid' => false, 'error' => 'link_invalid'], 422)]);
+
+    test()->get('/onboard/SOME-OLD-LINK-TOKEN-12345')->assertStatus(410)->assertSee('newer invitation email');
+});

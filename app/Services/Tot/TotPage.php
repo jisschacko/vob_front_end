@@ -241,6 +241,21 @@ class TotPage
     }
 
     /**
+     * Where a resubmission will go, e.g. "Pending with legal" (the Admin sends `resubmit_to`: the status of the stage that rejected it).
+     */
+    public function resubmitTo(): ?string
+    {
+        $status = $this->detail['resubmit_to'] ?? null;
+        if (! is_string($status) || $status === '') {
+            return null;
+        }
+
+        $name = ['gm_buying' => 'GM Buying'][substr($status, 8)] ?? str_replace('_', ' ', substr($status, 8));
+
+        return str_starts_with($status, 'pending_') ? 'Pending with '.$name : ucfirst(str_replace('_', ' ', $status));
+    }
+
+    /**
      * Development only: the Admin reports its own mandatory-check switches in `validation`; tell the tester when they differ from VOB's.
      *
      * @return list<string>

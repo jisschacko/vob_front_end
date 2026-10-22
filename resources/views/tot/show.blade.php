@@ -31,6 +31,7 @@
     @elseif ($page->isResubmission())
         <div class="status-card status-card-warn" role="status">
             A reviewer sent this Terms of Trade back to you. Read the comments below, update the form and press <strong>Resubmit</strong>.
+            @if ($page->resubmitTo()) It will go back to <strong>{{ $page->resubmitTo() }}</strong>, the stage that returned it. @endif
         </div>
     @endif
 
