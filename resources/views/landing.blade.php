@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Vendor Handshake')
+@section('title', 'Vendor Onboarding...')
 
 @section('content')
     <div class="card">
-        <h1>Vendor Handshake</h1>
-        <p>Please open the link in the invitation email sent by your Lulu contact. If it has expired, ask them to resend the invitation.</p>
+        <h1>Vendor onboarding...</h1>
+        <p>Please open the link in the invitation email sent by your Lulu contact.</p>
     </div>
 @endsection
