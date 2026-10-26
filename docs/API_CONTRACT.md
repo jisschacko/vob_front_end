@@ -105,16 +105,20 @@ $header = rtrim(strtr(base64_encode(json_encode(['kid'=>$kid,'ek'=>base64_encode
 ```json
 { "tot": { ...summary... },
   "form": { "vendor_details": {...}, "company_codes": [...], "contacts": [...], "bank": {...}, "outlets": [...], "payment_terms": {...}, "trade_terms": {...},
-            "categories": [...], "business_terms": {...}, "rebate_lines": [...], "growth_slabs": [...], "margins": [...], "deliverables": [...], "pocs": [...], "signatories": [...] },
+            "categories": [...], "business_terms": {...}, "rebate_lines": [...], "growth_slabs": [...], "margins": [...], "deliverables": [...], "pocs": [...], "signatories": [...],
+            "clauses": { "termination": "<edited text>" } },
+  "clause_templates": [{ "key": "supply_invoicing", "number": 1, "title": "Supply & Invoicing", "text": "a) ...", "placeholders": [] }, "... 14 ..."],
+  "comment_sections": [{ "key": "vendor_details", "label": "Vendor Details" }, "..."],
+  "flagged_sections": [{ "key": "vendor_details", "label": "Vendor Details" }],
   "locked_fields": ["company_codes","vendor_details.purchase_org","vendor_details.vendor_accounting_group","payment_terms.reconciliation_type"],
   "required_fields": ["vendor_details.vendor_name", "..."],
   "documents": [{ "id","type","name","size","uploaded_at" }],
   "required_documents": ["pan_certificate","cancelled_cheque","rtgs_form", "gst_certificate (when GST Registered)", "msme_certificate (when MSME Registered)"],
-  "reviewer_comments": [{ "status","comments","by","at" }] }
+  "reviewer_comments": [{ "status","comments","by","at","sections","section_note" }] }
 ```
 - `locked_fields` are **greyed out** in VOB; the API also ignores them if sent.
 - `required_fields` are the 18 vendor-mandatory fields (asterisks). `payment_terms.terms` means "at least one of the six payment-day fields". GST Regn. No is not required when `gst_type` is `GST Unregistered`.
-- `reviewer_comments` are what reviewers wrote when the TOT was returned to the vendor.
+- `reviewer_comments` are what reviewers wrote when the TOT was returned to the vendor, with the sections they pointed at (see "Reviewer comments per section" below).
 - `bank.verification_status` is `pending|verified|failed`; any later change to account name, number or IFSC resets it to `pending`. **On renewals the bank account is always re-verified**, even when unchanged.
 
 **`PUT /tots/{id}/draft`**  body `{ "form": { "<section>": ... } }` - only the sections sent are touched. Returns `{ "saved": ["vendor_details", ...], "ignored": ["company_codes", ...] }` or 422 `{ "errors": { "vendor_details.pan_no": ["..."] } }`.
@@ -126,13 +130,42 @@ Section kinds (full field list, formats and allowed values: `config/tot_form.php
 | keyed (`contacts` by `type` sales/finance/logistics, `pocs` by `dept`, `signatories` by `kind`, `growth_slabs` by `slab_no` 1-5, `rebate_lines` by `group`+`kind`, `deliverables` by `asset` code) | list of objects each carrying its key | upsert per row; other rows kept |
 | list (`outlets`, `margins`) | list of objects | **replaces** the whole list |
 | pivot (`categories` = category codes; `company_codes` buyer-only) | list of codes | **replaces** the whole list |
+| clauses (`clauses`) | object `{ clause_key: text }` | only the clauses sent change; `null` / original text removes an edit (see "Terms of Trade clauses") |
 
 Masters are sent/returned as **codes** (`state: "KL"`, `deliverables[].asset: "end_cap"`), never ids. PAN, GSTIN, IFSC are upper-cased and phone numbers stripped of spaces by the server. PAN `ABCDE1234F`, GSTIN 15 chars, IFSC `HDFC0001234`, PIN 6 digits, phone `+?` 7-15 digits.
 Saving is lenient (format only, nothing required); completeness is checked at submit.
 
 **Documents** - VOB uploads the PDF (max 5 MB) **directly to the private S3 bucket** with its own AWS credentials at key `tots/{tot id}/{random 8-120 chars of [A-Za-z0-9._-]}.pdf`, then registers it:
 `POST /tots/{id}/documents` `{ "type", "path", "original_name", "mime": "application/pdf", "size": <bytes> }` -> 201 `{ "document": { "id","type","name","size" } }`.
-Types: `pan_certificate`, `gst_certificate`, `msme_certificate`, `cancelled_cheque`, `rtgs_form`, `board_resolution`. One document per type (a new one replaces the old). Admin and VOB must point at the same bucket (`TOT_DOCS_DISK=s3` on the Admin side).
+Types: `pan_certificate`, `gst_certificate`, `msme_certificate`, `cancelled_cheque`, `rtgs_form`, `board_resolution`. One document per type (a new one replaces the old). Admin and VOB must point at the same bucket (`TOT_DOCS_DISK=s3` on the Admin side). The TOT owner can also upload / replace / remove these documents in the Admin Panel on the vendor's behalf (`documents[].id` of such a file is returned like any other).
+
+### Terms of Trade clauses (editable by the vendor)
+
+The 14 "Terms of Trade (TOT)" sections of `docs/TOT_Main_Form.html` - 1. Supply & Invoicing, 2. Taxes/GST Obligations, 3. Compliance & Regulations, 4. Intellectual Property, 5. Damaged/Defective Products and Return Policy, 6. Other Obligations, 7. Termination, 8. Anti Bribery & Anti Corruption, 9. Confidentiality, 10. Data Privacy, 11. Audit, 12. Indemnity, 13. Amendments, 14. Governing Law & Jurisdiction - can be edited by the vendor in VOB and by the TOT owner in the Admin Panel. The wording in the form is the **original**; an edit is kept per TOT and the Admin Panel shows the owner and the reviewers the edited sentences compared with the original (original struck through in red, new wording on a yellow background). The originals are not editable anywhere in the Admin Panel.
+
+- `GET /tots/{id}` returns **`clause_templates`**: the 14 originals, in order, `[{ "key": "termination", "number": 7, "title": "Termination", "text": "a) Either party ...\n\nb) The Company ...", "placeholders": [] }]`. Use these instead of hard-coding the wording, so the original stays in one place. In `text`, paragraphs are separated by a blank line and a single line break stays inside a paragraph (the list under Data Privacy b). Clause 5 contains `{refund_within_days}` and clause 6 `{min_shelf_life_percent}`: render them as the number inputs of `form.business_terms.refund_within_days` / `min_shelf_life_percent` exactly like the form does today (`placeholders` lists which clause has which).
+- `form.clauses` is an **object** `{ "<key>": "<the complete edited text>" }` holding **only the clauses that were edited** (always `{}` when none, never `[]`). A clause that is not in it uses the original.
+- **Pencil icon**: show it on the right of each of the 14 titles. On click show the clause as a `<textarea>` filled with `form.clauses[key]` or, when not edited, with `text` (keep the placeholders in the text; also show the number fields of that clause). Add a "Restore original wording" button.
+- **Saving**: `PUT /tots/{id}/draft` with `{ "form": { "clauses": { "termination": "<full text>" } } }`. Only the clauses sent are touched. Sending `null`, an empty string, or text identical to the original (line endings and surrounding blanks ignored) **removes the edit**. Unknown keys are listed in `ignored` (`clauses.<key>`); text longer than 20,000 characters, a non-string value, or a list instead of an object is a 422 (`errors["clauses.termination"]`). Clauses are editable while the TOT is editable (`tot.editable`), and are part of the submission like any other field.
+- Nothing about clauses is mandatory.
+- The agreement PDF prints the edited wording of the clauses that were edited.
+
+### Reviewer comments per section ("Look for comment")
+
+When a reviewer rejects a TOT back to the vendor they can tick **Look for comment** in the title of each section the comment is about. The API returns:
+
+```json
+"reviewer_comments": [{ "status": "Pending with vendor", "comments": "PAN and bank details do not match.", "by": "Asha", "at": "2026-10-27T09:30:00+00:00",
+    "sections": [{ "key": "vendor_details", "label": "Vendor Details" }, { "key": "bank_account_details", "label": "Bank Account Details" }],
+    "section_note": "comment added for sections: 'Vendor Details', 'Bank Account Details'" }],
+"flagged_sections": [{ "key": "vendor_details", "label": "Vendor Details" }, { "key": "bank_account_details", "label": "Bank Account Details" }],
+"comment_sections": [{ "key": "registration", "label": "Registration" }, "... every section, in form order ..."]
+```
+
+- `reviewer_comments[].section_note` is the sentence to show under the comment (`comment added for section: 'Vendor Details'`; several sections: `comment added for sections: 'A', 'B'`; **`null`** when the reviewer marked none, `sections` is then `[]`). `sections[].label` is the title of the section as the reviewer saw it.
+- `flagged_sections` are the sections of the **latest** rejection while the TOT is with the vendor (`[]` otherwise): show a small "Comment added" marker on those section titles and scroll to the first one.
+- `comment_sections` lists every key that can be flagged, with its title: the form cards (`registration`, `tot_scope`, `vendor_details`, `contact_person`, `vendor_accounting_group`, `vendor_type`, `bank_account_details`, `regions_outlets`, `accounting_information`, `vendor_payment_terms`, `lulu_receipt_terms`, `category`, `expenses_liability`, `business_development_terms`, `growth_rebate_slab`, `margin_rebate`, `merchandising_manpower_support`, `payment_deduction`, `deliverables`, `single_point_of_contact`, `signatories_bda`), each Terms of Trade clause as `clause_<key>` (for example `clause_termination`, label `Terms of Trade: 7. Termination`), and `annexure_a`, `annexure_b`. Use the same keys as the `id` of your section blocks.
+- The rejection email to the vendor carries the same sentence.
 
 **`POST /tots/{id}/submit`** - 200 `{ "message", "tot": { "status": ..., ... }, "warnings" }`. The first submission goes to `pending_buyer`; a **resubmission after a rejection goes back to the stage that rejected it** (`pending_legal` if Legal rejected it, `pending_buyer` if the Buyer did), and only that stage's reviewers are emailed. `GET /tots/{id}` returns `resubmit_to` (that status) so VOB can tell the vendor where the TOT will go. 422 `{ "error": "incomplete", "errors": { "<path>": "message" } }` lists everything still missing, including `bank.verification` (bank must be `verified`, or `bank.validation_failed_override = true` for manual approval) and `documents.<type>`.
 
@@ -180,8 +213,12 @@ Steps are in travel order: `initiated, vendor, buyer, kam, legal, finance, audit
 - **Sensitive values** (PAN, GSTIN, MSME no, account no) are returned in clear to the signed-in vendor who owns the TOT. Omitting a field in a draft keeps the stored value; a value containing `*` is rejected with 422 and never saved.
 - **Dates** are `Y-m-d`.
 - **`locked_fields`** entries are a whole section (`company_codes`) or `section.field`; an entry covers everything below it.
-- **`reviewer_comments`** holds ONLY the comments reviewers wrote when they rejected the TOT back to the vendor (status `pending_vendor`), newest first, each `{status, comments, by, at}`. It is empty for a TOT that was never returned, and never contains system history ("TOT initiated", first login, edits, resends) or approvals / internal rejections between reviewers. `tot.submitted_at` stays set after a return, so the vendor front end can offer **Resubmit**.
+- **`reviewer_comments`** holds ONLY the comments reviewers wrote when they rejected the TOT back to the vendor (status `pending_vendor`), newest first, each `{status, comments, by, at, sections, section_note}`. It is empty for a TOT that was never returned, and never contains system history ("TOT initiated", first login, edits, resends) or approvals / internal rejections between reviewers. `tot.submitted_at` stays set after a return, so the vendor front end can offer **Resubmit**.
 - **Unexpected failures**: with `APP_DEBUG=false` a 500 answers `{"error":"server_error","message":"..."}` with no SQL, file path or stack trace (details go to the Admin log). 401, 404 and 422 answers are unchanged.
+
+## 5D. The agreement PDF (Admin Panel only)
+
+When the Director approves a TOT the Admin Panel generates the Business Development Agreement / Terms of Trade PDF (logo, title "Business Development Agreement Terms of Trade (TOT)", sub heading "Central Buying Division: Lulu India", page numbers on top, "Company" bottom left and "Vendor" bottom right on every page, the form data, the 14 clauses, the e-sign anchors L01, L02, L03, V01 and the annexures). It is stored privately (`tot_pdf` document) and shown only to Admin Panel users through the **View PDF** button on the TOT page; it is streamed inline, has no download route, and is **never** part of the vendor API (`documents`, `document_requirements` and the delete endpoint ignore it). Browsers keep their own PDF toolbar, so "not downloadable" means: no link, no download route, no public URL, toolbar hidden where the browser allows it.
 
 ## 6. Statuses (`status` value -> label)
 

@@ -39,6 +39,48 @@ class TotFixtures
         ];
     }
 
+    /** The 14 originals as the Admin returns them in clause_templates (shortened wording, same keys / numbers / placeholders). */
+    public static function clauseTemplates(): array
+    {
+        $titles = [
+            'supply_invoicing' => 'Supply & Invoicing', 'taxes_gst' => 'Taxes/GST Obligations', 'compliance' => 'Compliance & Regulations',
+            'intellectual_property' => 'Intellectual Property', 'damaged_defective' => 'Damaged/Defective Products and Return Policy',
+            'other_obligations' => 'Other Obligations', 'termination' => 'Termination', 'anti_bribery' => 'Anti Bribery & Anti Corruption',
+            'confidentiality' => 'Confidentiality', 'data_privacy' => 'Data Privacy', 'audit' => 'Audit', 'indemnity' => 'Indemnity',
+            'amendments' => 'Amendments', 'governing_law' => 'Governing Law & Jurisdiction',
+        ];
+        $templates = [];
+        $n = 0;
+        foreach ($titles as $key => $title) {
+            $n++;
+            $text = "a) Original wording of clause $n, first sentence. Second sentence.
+
+b) Original paragraph b of clause $n.";
+            $placeholders = [];
+            if ($key === 'damaged_defective') {
+                $text = 'a) Payments shall be refunded within {refund_within_days} days from the date of intimation.'.'
+
+'.'b) The Vendor shall be responsible for defects.';
+                $placeholders = ['refund_within_days'];
+            }
+            if ($key === 'other_obligations') {
+                $text = 'a) The shelf life shall not be less than {min_shelf_life_percent}%.'.'
+
+'.'b) The Vendor shall provide correct HSN code.';
+                $placeholders = ['min_shelf_life_percent'];
+            }
+            if ($key === 'data_privacy') {
+                $text .= '
+
+(i) As required by law.
+(ii) Order processing.';
+            }
+            $templates[] = ['key' => $key, 'number' => $n, 'title' => $title, 'text' => $text, 'placeholders' => $placeholders];
+        }
+
+        return $templates;
+    }
+
     public static function detail(array $over = []): array
     {
         return array_replace_recursive([
@@ -58,6 +100,8 @@ class TotFixtures
                 'deliverables' => [['asset' => 'end_cap', 'numbers' => '3']],
                 'pocs' => [['dept' => 'Buying', 'first_poc' => 'Bea']], 'signatories' => [],
             ],
+            'clause_templates' => self::clauseTemplates(),
+            'flagged_sections' => [],
             'locked_fields' => ['company_codes', 'vendor_details.purchase_org', 'vendor_details.vendor_accounting_group', 'payment_terms.reconciliation_type'],
             'required_fields' => ['vendor_details.vendor_name', 'vendor_details.gst_regn_no', 'contacts.sales.phone', 'bank.account_no', 'payment_terms.terms', 'payment_terms.payment_mode'],
             'documents' => [['id' => 77, 'type' => 'pan_certificate', 'name' => 'pan.pdf', 'size' => 2048, 'uploaded_at' => '2026-10-20']],

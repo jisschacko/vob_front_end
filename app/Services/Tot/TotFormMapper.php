@@ -43,6 +43,13 @@ class TotFormMapper
                 case 'pivot':
                     $values[$name] = array_map('strval', array_values($data));
                     break;
+                case 'clauses': // { clause_key: edited text }, only the clauses that were edited
+                    foreach ($data as $key => $text) {
+                        if (is_string($text)) {
+                            $values[$name][(string) $key] = $text;
+                        }
+                    }
+                    break;
             }
         }
 
@@ -105,6 +112,20 @@ class TotFormMapper
                         }
                     }
                     $form[$name] = $rows; // the list is replaced, so an empty list clears it
+                    break;
+
+                case 'clauses': // Terms of Trade wording. Empty text removes the edit; the Admin also drops text identical to the original.
+                    $edits = [];
+                    foreach ((array) $data as $key => $text) {
+                        if (! is_string($key) || ! preg_match('/^[a-z0-9_]{1,60}$/', $key) || ! (is_string($text) || $text === null)) {
+                            continue;
+                        }
+                        $text = $text === null ? '' : self::normaliseNewlines($text);
+                        $edits[$key] = trim($text) === '' ? null : $text;
+                    }
+                    if ($edits !== []) {
+                        $form[$name] = $edits; // always an object: an empty list would be a 422
+                    }
                     break;
 
                 case 'pivot': // categories: {CODE: Yes|No}
@@ -194,6 +215,12 @@ class TotFormMapper
     private function toDisplay(mixed $value): mixed
     {
         return is_bool($value) ? ($value ? 'Yes' : 'No') : (is_scalar($value) ? (string) $value : null);
+    }
+
+    /** Browsers post textarea line breaks as CRLF; the clauses are stored with plain LF. */
+    private static function normaliseNewlines(string $text): string
+    {
+        return str_replace(["\r\n", "\r"], "\n", $text);
     }
 
     /** A locked entry covers itself and everything below it ("company_codes" covers "company_codes.x"). */

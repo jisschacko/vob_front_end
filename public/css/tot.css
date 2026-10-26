@@ -79,3 +79,20 @@
 .tot .dev-note { background:#fff8cc; border:1px dashed #d9c34d; color:#5b4600; border-radius:8px; padding:8px 12px; margin:0 0 10px; font-size:12.5px; }
 .tot .dev-note-block { padding:12px 16px; font-size:13.5px; }
 .tot .dev-note-block ul { margin:6px 0 0 18px; padding:0; }
+
+/* Terms of Trade clauses: pencil, edited / comment markers, editor */
+.tot .clause-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.tot .pencil { flex:0 0 auto; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #8fc79a; border-radius:8px; background:#fff; color:#1c3a26; cursor:pointer; padding:0; }
+.tot .pencil:hover, .tot .pencil[aria-expanded="true"] { background:#1c3a26; color:#fff; }
+.tot .badge { display:inline-block; margin-left:8px; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:0; text-transform:none; vertical-align:middle; }
+.tot .badge-edited { background:#fff3a8; color:#5b4600; }
+.tot .badge-flag { background:#ffe0b3; color:#7a3b00; }
+.tot [data-flagged] { box-shadow:0 0 0 2px #f0a54a; }
+.tot .card { scroll-margin-top:60px; }
+.tot .clause-edit textarea.clause-text { min-height:200px; line-height:1.5; white-space:pre-wrap; resize:vertical; overflow:auto; }
+.tot .clause-edit .flabel { display:block; margin:0 0 6px; }
+.tot .clause-edit .help { margin:6px 0 10px; }
+.tot .clause-fields { display:flex; flex-wrap:wrap; gap:14px; margin:10px 0 4px; }
+.tot .clause-fields .field-wrap { width:200px; }
+.tot .section-note { display:block; margin-top:6px; font-size:12.5px; font-style:italic; color:#7a3b00; }
+.tot .clause-view[hidden], .tot .clause-edit[hidden] { display:none; }

@@ -63,6 +63,14 @@ A missing key/secret/URL raises a clear "not configured" error before any reques
 - Save Draft (POST) and autosave (POST, JSON) both call `PUT /tots/{id}/draft`. The TOT id never appears in a URL: it is kept in the server-side session.
 - Documents: PDF only, max 5 MB, PDF signature checked, `DocumentScanner` hook for antivirus (no-op by default), stored at `tots/{tot id}/{random}.pdf` in the private bucket, then registered with the Admin; the object is removed again if registration fails.
 
+## Terms of Trade clauses (editable by the vendor)
+
+- The 14 clauses are not stored in VOB: their original wording comes from the Admin on every load (`clause_templates`), the vendor's edits are `form.clauses` (`{ key: complete edited text }`, only edited clauses).
+- Each title has a pencil icon on the right. It opens the clause as a textarea (original or edited wording, with an extra "Restore original wording" button); closing it after typing saves the draft and reloads. Number fields of clauses 5 and 6 (`{refund_within_days}`, `{min_shelf_life_percent}`) are the `business_terms` inputs, shown in the text and beside the textarea.
+- Only opened or already-edited clauses are posted. Empty text or text equal to the original removes the edit at the Admin. Clauses are not mandatory and are read-only once the TOT is not editable.
+- The comparison (original struck through in red, new wording on yellow) is shown by the **Admin Panel** to the owner and reviewers; VOB only edits.
+- Reviewer "Look for comment" sections (`flagged_sections`, `section_note`): the flagged section titles get a "Comment added" marker and the page scrolls to the first one. Every section card has the Admin's section key as its `id`.
+
 ## Bank verification (Cashfree Reverse Penny Drop)
 
 - "Verify bank account" on the form saves the draft, then creates an RPD request for the saved account name / number / IFSC; the vendor pays Rs 1 by UPI (QR or app link, valid 10 minutes, refunded in 48 h).

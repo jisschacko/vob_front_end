@@ -278,6 +278,53 @@ class TotPage
     }
 
     /**
+     * The 14 Terms of Trade clauses as the Admin keeps them (the "original" wording): [{key, number, title, text, placeholders}].
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function clauseTemplates(): array
+    {
+        return array_values(array_filter((array) ($this->detail['clause_templates'] ?? []), fn ($t) => is_array($t) && filled($t['key'] ?? null)));
+    }
+
+    /** The vendor's edited wording of a clause as stored at the Admin, or null when the original is in use. */
+    public function storedClauseEdit(string $key): ?string
+    {
+        $text = $this->values['clauses'][$key] ?? null;
+
+        return is_string($text) && trim($text) !== '' ? $text : null;
+    }
+
+    /** What the clause textarea shows: what was just posted (after a failed save), else the stored edit, else the original. */
+    public function clauseText(string $key, string $original): string
+    {
+        $posted = old('form.clauses.'.$key);
+
+        return is_string($posted) ? $posted : ($this->storedClauseEdit($key) ?? $original);
+    }
+
+    public function clauseIsEdited(string $key): bool
+    {
+        return $this->storedClauseEdit($key) !== null;
+    }
+
+    /** Sections the latest rejection pointed at, while the TOT is with the vendor ("Comment added" marker). */
+    public function isFlagged(string $sectionKey): bool
+    {
+        if (! $this->editable()) {
+            return false;
+        }
+
+        foreach ((array) ($this->detail['flagged_sections'] ?? []) as $section) {
+            if (is_array($section) && ($section['key'] ?? null) === $sectionKey) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Comments from reviewers who returned the TOT. Before the first submission there can be none, whatever the Admin lists (it also
      * returns system history such as "TOT initiated"), and that system row is never shown as a reviewer comment.
      *

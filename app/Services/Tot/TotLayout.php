@@ -66,6 +66,7 @@ final class TotLayout
                 'fields' => $text('numbers', 'brand', 'paid_total', 'duration', 'payment_terms')],
             'pocs' => ['kind' => 'keyed', 'key' => ['dept'], 'keys' => ['Buying', 'Logistics', 'Finance', 'GST'],
                 'fields' => $text('first_poc', 'first_mobile', 'email', 'second_poc', 'second_mobile', 'second_email')],
+            'clauses' => ['kind' => 'clauses'],
             'signatories' => ['kind' => 'keyed', 'key' => ['kind'], 'keys' => ['bda_lulu', 'bda_vendor'],
                 'fields' => $text('name', 'designation', 'contact_no', 'signed_date', 'company_stamp')],
         ];
@@ -95,19 +96,19 @@ final class TotLayout
         $abc = fn (string $path, string $label, array $options = []) => self::field($path, $label, 'select', $options + ['options' => self::PARTY]);
 
         return [
-            ['title' => 'Registration', 'blocks' => [['grid', 2, [
+            ['id' => 'registration', 'title' => 'Registration', 'blocks' => [['grid', 2, [
                 self::field('vendor_details.registration_type', 'Registration Type', 'select', ['options' => ['New', 'Renewal'], 'help' => 'Whether this is a brand-new vendor agreement or a renewal of an existing one.']),
                 self::field('vendor_details.agreement_no', 'Vendor Agreement No', 'text', ['help' => 'Unique reference number for this vendor agreement.']),
             ]]]],
 
-            ['title' => 'TOT Scope', 'blocks' => [['grid', 2, [
+            ['id' => 'tot_scope', 'title' => 'TOT Scope', 'blocks' => [['grid', 2, [
                 self::field('vendor_details.scope_type', 'Scope Type', 'select', ['options' => ['PAN India', 'Regional', 'State'], 'help' => 'Whether this agreement applies across India, to a region, or a single state.']),
                 self::field('vendor_details.scope_state', 'State', 'text', ['help' => 'Required only when Scope Type is Regional or State.']),
                 ['type' => 'company_codes', 'path' => 'company_codes', 'label' => 'Company Code', 'help' => 'SAP company codes linked to this agreement (set by Lulu).'],
                 self::field('vendor_details.purchase_org', 'Purchase Organization', 'select', ['master' => 'purchase_orgs', 'help' => 'Purchase organization for this agreement (set by Lulu).']),
             ]]]],
 
-            ['title' => 'Vendor Details', 'blocks' => [
+            ['id' => 'vendor_details', 'title' => 'Vendor Details', 'blocks' => [
                 ['grid', 2, [
                     self::field('vendor_details.vendor_name', 'Vendor Name'),
                     self::field('vendor_details.vendor_code', 'Vendor Code'),
@@ -127,21 +128,21 @@ final class TotLayout
                 ['documents', ['pan_certificate', 'gst_certificate', 'msme_certificate']],
             ]],
 
-            ['title' => 'Contact Person', 'blocks' => [['grid', 3, [
+            ['id' => 'contact_person', 'title' => 'Contact Person', 'blocks' => [['grid', 3, [
                 self::field('contacts.sales.name', 'Sales Contact Name'), self::field('contacts.sales.phone', 'Sales Contact No', 'tel'), self::field('contacts.sales.email', 'Sales Email', 'email'),
                 self::field('contacts.finance.name', 'Finance Contact Name'), self::field('contacts.finance.phone', 'Finance Contact No', 'tel'), self::field('contacts.finance.email', 'Finance Email', 'email'),
                 self::field('contacts.logistics.name', 'Logistics Contact Name'), self::field('contacts.logistics.phone', 'Logistics Contact No', 'tel'), self::field('contacts.logistics.email', 'Logistics Email', 'email'),
             ]]]],
 
-            ['title' => 'Vendor Accounting Group', 'blocks' => [['grid', 2, [
+            ['id' => 'vendor_accounting_group', 'title' => 'Vendor Accounting Group', 'blocks' => [['grid', 2, [
                 self::field('vendor_details.vendor_accounting_group', 'Vendor Accounting Group Type', 'select', ['master' => 'vendor_accounting_groups']),
             ]]]],
 
-            ['title' => 'Vendor Type', 'blocks' => [['grid', 2, [
+            ['id' => 'vendor_type', 'title' => 'Vendor Type', 'blocks' => [['grid', 2, [
                 self::field('vendor_details.entity_type', 'Vendor Type', 'select', ['options' => ['Company', 'Partnership', 'Proprietorship', 'Hindu Undivided Family', 'Society', 'PSU/ Govt bodies', 'Others']]),
             ]]]],
 
-            ['title' => 'Bank Account Details', 'blocks' => [
+            ['id' => 'bank_account_details', 'title' => 'Bank Account Details', 'blocks' => [
                 ['grid', 2, [
                     self::field('bank.account_name', 'Account Name'),
                     self::field('bank.bank_name_address', 'Bank Name and Address', 'text', ['maxlength' => 500]),
@@ -156,7 +157,7 @@ final class TotLayout
                 ['documents', ['cancelled_cheque', 'rtgs_form']],
             ]],
 
-            ['title' => 'Regions & Outlets', 'blocks' => [
+            ['id' => 'regions_outlets', 'title' => 'Regions & Outlets', 'blocks' => [
                 ['note', 'Add one row per state. Store codes are optional; tick "All" for every state.'],
                 ['list_table', 'outlets', 1, ['State', 'All', 'Store 1', 'Store 2', 'Store 3', 'Store 4', 'Store 5', 'Store 6', 'Store 7'], [
                     'state' => ['select', ['master' => 'states']], 'is_all' => ['check'],
@@ -165,12 +166,12 @@ final class TotLayout
                 ]],
             ]],
 
-            ['title' => 'Accounting Information', 'blocks' => [['grid', 2, [
+            ['id' => 'accounting_information', 'title' => 'Accounting Information', 'blocks' => [['grid', 2, [
                 self::field('payment_terms.accounting_info_type', 'Accounting Information Type', 'select', ['options' => ['Monthly', 'Quarterly', 'Half Yearly', 'Yearly'], 'help' => 'Frequency of financial reconciliation.']),
                 self::field('payment_terms.reconciliation_type', 'Reconciliation of Accounts Type', 'select', ['options' => ['Merchandise Payable', 'Merchandise Payable Import', 'Non-Merchandise Payable', 'Tenant Payable', 'Consignment /SOA Vendor Payable', 'Project Payable']]),
             ]]]],
 
-            ['title' => 'Vendor Payment Terms', 'blocks' => [
+            ['id' => 'vendor_payment_terms', 'title' => 'Vendor Payment Terms', 'blocks' => [
                 ['payment_terms_note'],
                 ['grid', 2, [
                     self::field('payment_terms.days_from_statement', 'Days from Statement / Month End', 'number'),
@@ -192,14 +193,14 @@ final class TotLayout
                 ]],
             ]],
 
-            ['title' => 'Lulu Receipt Terms', 'blocks' => [['grid', 2, [
+            ['id' => 'lulu_receipt_terms', 'title' => 'Lulu Receipt Terms', 'blocks' => [['grid', 2, [
                 self::field('trade_terms.receipt_terms', 'Terms', 'text', ['placeholder' => 'As per the agreed terms.']),
                 self::field('trade_terms.receipt_mode', 'Mode', 'select', ['options' => $modes]),
             ]]]],
 
-            ['title' => 'Category', 'blocks' => [['note', 'Select "Yes" for every category this agreement applies to.'], ['categories']]],
+            ['id' => 'category', 'title' => 'Category', 'blocks' => [['note', 'Select "Yes" for every category this agreement applies to.'], ['categories']]],
 
-            ['title' => 'Expenses Liability', 'blocks' => [['grid', 2, [
+            ['id' => 'expenses_liability', 'title' => 'Expenses Liability', 'blocks' => [['grid', 2, [
                 $abc('trade_terms.transportation', 'Transportation'), $abc('trade_terms.loading_unloading', 'Loading / Unloading'),
                 $abc('trade_terms.pilferage', 'Pilferage'), $abc('trade_terms.ullage', 'Ullage'),
                 $abc('trade_terms.packing_forwarding', 'Packing / Forwarding'), $abc('trade_terms.insurance_in_transit', 'Insurance of Goods in Transit'),
@@ -208,7 +209,7 @@ final class TotLayout
                 self::field('trade_terms.return_type', 'Return Type', 'select', ['options' => ['B to B Invoice', 'Delivery Challan (Debit Note)', 'Credit Note', 'NA']]),
             ]]]],
 
-            ['title' => 'Business Development Terms', 'blocks' => [
+            ['id' => 'business_development_terms', 'title' => 'Business Development Terms', 'blocks' => [
                 ['grid', 2, [
                     self::field('business_terms.period_from', 'Business Agreement Period From', 'date'),
                     self::field('business_terms.period_to', 'Business Agreement Period To', 'date'),
@@ -247,39 +248,39 @@ final class TotLayout
                 ]],
             ]],
 
-            ['title' => 'Growth Rebate Slab', 'blocks' => [
+            ['id' => 'growth_rebate_slab', 'title' => 'Growth Rebate Slab', 'blocks' => [
                 ['table', ['Slab', 'Target', 'Rebate'], array_map(fn ($n) => ["Slab $n", ...self::numbers("growth_slabs.$n", ['target', 'rebate'])], [1, 2, 3, 4, 5])],
                 ['note', 'Any Brand/Product discontinued during the agreement period would result in the revision of the base target.'],
             ]],
 
-            ['title' => 'Margin & Rebate', 'blocks' => [
+            ['id' => 'margin_rebate', 'title' => 'Margin & Rebate', 'blocks' => [
                 ['list_table', 'margins', 4, ['Material Category / Brand', 'Front End Margin', 'Back End Margin'], [
                     'material_category_brand' => ['text'], 'front_end_margin' => ['text'], 'back_end_margin' => ['text'],
                 ]],
                 ['table', ['', ''], [['Others', self::cell('business_terms.margin_others', 'text', 1, ['maxlength' => 1000])]]],
             ]],
 
-            ['title' => 'Merchandising Manpower Support', 'blocks' => [['grid', 2, [
+            ['id' => 'merchandising_manpower_support', 'title' => 'Merchandising Manpower Support', 'blocks' => [['grid', 2, [
                 self::field('business_terms.promoters_count', 'No of Promoters', 'number'),
                 self::field('business_terms.promoters_sharing_value', 'Sharing Value (Lumpsum)', 'text', ['maxlength' => 1000]),
                 self::field('business_terms.promoters_payroll', 'Pay Roll', 'select', ['options' => ['LuLu', 'Vendor/Brand']]),
                 self::field('business_terms.promoters_uniform_cost', 'Uniform Cost', 'select', ['options' => ['LuLu', 'Vendor/Brand']]),
             ]]]],
 
-            ['title' => 'Payment Deduction', 'blocks' => [['grid', 2, [
+            ['id' => 'payment_deduction', 'title' => 'Payment Deduction', 'blocks' => [['grid', 2, [
                 self::field('business_terms.payment_deduction', 'Payment Deduction', 'select', ['options' => ['Debit', 'Cheque/RTGS']]),
             ]]]],
 
-            ['title' => 'Deliverables / Secondary Visibility', 'blocks' => [['deliverables']]],
+            ['id' => 'deliverables', 'title' => 'Deliverables / Secondary Visibility', 'blocks' => [['deliverables']]],
 
-            ['title' => 'Single Point of Contact - Lulu', 'blocks' => [['table', ['Dept', '1st POC', 'Mobile', 'Email', '2nd POC', 'Mobile', 'Email'], array_map(
+            ['id' => 'single_point_of_contact', 'title' => 'Single Point of Contact - Lulu', 'blocks' => [['table', ['Dept', '1st POC', 'Mobile', 'Email', '2nd POC', 'Mobile', 'Email'], array_map(
                 fn ($d) => [$d, ...array_map(fn ($c) => self::cell("pocs.$d.$c", 'text'), ['first_poc', 'first_mobile', 'email', 'second_poc', 'second_mobile', 'second_email'])],
                 ['Buying', 'Logistics', 'Finance', 'GST'],
             ), 'poc-table']]],
 
             ['title' => 'E-Sign', 'blocks' => [['esign']]],
 
-            ['title' => 'Signatories - Business Development Agreement', 'blocks' => [
+            ['id' => 'signatories_bda', 'title' => 'Signatories - Business Development Agreement', 'blocks' => [
                 ['heading', 'Lulu Signatory'],
                 ['grid', 2, self::signatory('bda_lulu', 'Lulu')],
                 ['heading', 'Vendor Signatory'],
@@ -290,7 +291,7 @@ final class TotLayout
 
             ['divider' => 'Annexures'],
 
-            ['title' => "Annexure A - Company's Privacy Notice", 'blocks' => [
+            ['id' => 'annexure_a', 'title' => "Annexure A - Company's Privacy Notice", 'blocks' => [
                 ['view', 'tot._annexure_a_text'],
                 ['heading', 'Grievance Redressal'],
                 ['grid', 2, [
@@ -301,7 +302,7 @@ final class TotLayout
                 ['note', 'If the grievance is not redressed, the Vendor may make a complaint to the Data Protection Board of India established by the Central Government.'],
             ]],
 
-            ['title' => 'Annexure B - Board Resolution / Authorisation Letter of the Vendor', 'blocks' => [['documents', ['board_resolution']]]],
+            ['id' => 'annexure_b', 'title' => 'Annexure B - Board Resolution / Authorisation Letter of the Vendor', 'blocks' => [['documents', ['board_resolution']]]],
         ];
     }
 

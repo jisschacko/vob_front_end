@@ -86,6 +86,67 @@
     });
   }
 
+  // ---- Terms of Trade clauses: pencil opens the wording as a textarea ------------------------------------------------------
+  function clauseParts(card) {
+    return { view: card.querySelector('.clause-view'), edit: card.querySelector('.clause-edit'), ta: card.querySelector('textarea.clause-text'),
+             btn: card.querySelector('[data-clause-toggle]') };
+  }
+
+  function openClause(card) {
+    var c = clauseParts(card);
+    c.view.hidden = true;
+    c.edit.hidden = false;
+    c.ta.disabled = false; // only opened (or already edited) clauses are posted
+    c.ta.dataset.initial = c.ta.dataset.initial === undefined ? c.ta.value : c.ta.dataset.initial;
+    c.btn.setAttribute('aria-expanded', 'true');
+    grow(c.ta);
+    c.ta.focus();
+  }
+
+  function closeClause(card) {
+    var c = clauseParts(card);
+    var changed = c.ta.dataset.initial !== undefined && c.ta.value !== c.ta.dataset.initial;
+    if (!changed) { // nothing typed: leave the clause as it was
+      c.edit.hidden = true;
+      c.view.hidden = false;
+      c.btn.setAttribute('aria-expanded', 'false');
+      if (c.ta.dataset.initial === c.ta.dataset.original) c.ta.disabled = true;
+      return;
+    }
+    // typed something: save it, then reload so the view shows the saved wording
+    Promise.resolve(save()).then(function (ok) { if (ok) window.location.reload(); });
+  }
+
+  document.querySelectorAll('[data-clause-toggle]').forEach(function (btn) {
+    var card = btn.closest('[data-clause]');
+    var c = clauseParts(card);
+    c.ta.dataset.initial = c.ta.value;
+    btn.addEventListener('click', function () { if (c.edit.hidden) openClause(card); else closeClause(card); });
+  });
+
+  document.querySelectorAll('[data-clause-restore]').forEach(function (btn) {
+    var card = btn.closest('[data-clause]');
+    var c = clauseParts(card);
+    btn.addEventListener('click', function () {
+      if (!window.confirm('Restore the original wording of this section? Your edits to it will be removed.')) return;
+      c.ta.disabled = false;
+      c.ta.value = c.ta.dataset.original; // text identical to the original removes the edit at the Admin
+      grow(c.ta);
+      Promise.resolve(save()).then(function (ok) { if (ok) window.location.reload(); });
+    });
+  });
+
+  // the number fields of a clause appear twice (in the text and beside the textarea): keep both copies equal
+  form.addEventListener('input', function (e) {
+    var key = e.target.dataset && e.target.dataset.sync;
+    if (!key) return;
+    form.querySelectorAll('[data-sync="' + key + '"]').forEach(function (other) { if (other !== e.target) other.value = e.target.value; });
+  });
+
+  // sections the reviewer commented on: bring the first one into view
+  var flagged = document.querySelector('[data-flagged]');
+  if (flagged) flagged.scrollIntoView({ block: 'start' });
+
   // ---- document upload: save the draft first, then submit the upload form (a page reload would lose unsaved edits) -------
   document.querySelectorAll('[data-doc-input]').forEach(function (input) {
     input.addEventListener('change', function () {

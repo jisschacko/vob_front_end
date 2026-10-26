@@ -5,7 +5,7 @@
     $bare = $f['bare'] ?? false;
     $locked = $page->isLocked($path);
     $name = $page->name($path);
-    $id = $page->id($path);
+    $id = $page->id($path).($f['idsuffix'] ?? '');
     $val = $page->value($path);
     $err = $page->error($path);
     $max = $f['maxlength'] ?? 200;
@@ -67,6 +67,7 @@
             @if ($inputType === 'date') value="{{ substr((string) $val, 0, 10) }}" @else value="{{ $val }}" @endif
             @if ($masked) placeholder="{{ $page->raw($path) }} (leave blank to keep)" autocomplete="off" @endif
             @isset($f['aria']) aria-label="{{ $f['aria'] }}" @endisset
+            @isset($f['sync']) data-sync="{{ $f['sync'] }}" @endisset
             @if ($locked) disabled @endif>
 @endswitch
 
