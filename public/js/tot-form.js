@@ -143,6 +143,17 @@
     form.querySelectorAll('[data-sync="' + key + '"]').forEach(function (other) { if (other !== e.target) other.value = e.target.value; });
   });
 
+  // demo mode: PAN / GST / bank fields are never validated; when the vendor leaves a field that has a value it shows a green "Verified"
+  form.querySelectorAll('[data-demo-valid]').forEach(function (input) {
+    var badge = input.parentNode.querySelector('[data-demo-valid-badge]');
+    function show(on) {
+      input.classList.toggle('is-valid', on);
+      if (badge) badge.hidden = !on;
+    }
+    input.addEventListener('input', function () { show(false); });                        // typing: not shown yet
+    input.addEventListener('blur', function () { show(input.value.trim() !== ''); });     // lost focus: verified if filled in
+  });
+
   // sections the reviewer commented on: bring the first one into view
   var flagged = document.querySelector('[data-flagged]');
   if (flagged) flagged.scrollIntoView({ block: 'start' });

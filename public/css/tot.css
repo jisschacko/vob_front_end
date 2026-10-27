@@ -69,8 +69,10 @@
 .tot .error-summary ul { margin:6px 0 0 18px; padding:0; }
 .tot .actionbar { position:sticky; bottom:0; background:#fff; border:1px solid #e2e5ee; border-radius:12px; padding:12px 18px; display:flex; align-items:center; gap:12px; margin:20px 0; box-shadow:0 -2px 8px rgba(20,20,40,.06); }
 .tot .btn { padding:10px 20px; border:0; border-radius:8px; background:var(--navy); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
-.tot .btn:hover { background:var(--navy-deep); }
+.tot .btn:hover { background:var(--navy-deep); color:#fff; }
 .tot .btn-secondary { background:#fff; color:var(--navy); border:1px solid var(--navy); }
+.tot .btn-secondary:hover { background:var(--navy); color:#fff; border-color:var(--navy); }
+.tot .btn:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
 .tot .btn:disabled { opacity:.5; cursor:not-allowed; }
 .tot .footer-note { text-align:center; font-size:12px; color:var(--help-color); margin-top:30px; }
 .tot .inline-form button.link { background:none; border:0; color:var(--navy); text-decoration:underline; cursor:pointer; font:inherit; padding:0; }
@@ -96,3 +98,8 @@
 .tot .clause-fields .field-wrap { width:200px; }
 .tot .section-note { display:block; margin-top:6px; font-size:12.5px; font-style:italic; color:#7a3b00; }
 .tot .clause-view[hidden], .tot .clause-edit[hidden] { display:none; }
+
+/* Demo mode: PAN / GST / bank fields are not validated and show as verified */
+.tot input.f.is-valid, .tot textarea.f.is-valid { border-color:#2e9e4f; background:#f3fbf5; }
+.tot .valid-badge { margin:2px 0 0; font-size:12.5px; font-weight:700; color:#1d7a35; }
+.tot .valid-badge[hidden] { display:none; }

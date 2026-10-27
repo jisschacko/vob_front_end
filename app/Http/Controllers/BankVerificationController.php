@@ -44,14 +44,15 @@ class BankVerificationController extends Controller
             return back()->withErrors(['bank_verify' => 'This Terms of Trade can no longer be edited.']);
         }
 
+        if (EnforcementSwitches::skipThirdParty()) { // demo: bank fields are not validated, the account is simply shown as verified
+            return $this->simulate($tot['id']);
+        }
+
         $bank = (array) $detail->json('form.bank', []);
         foreach (['account_name', 'account_no', 'ifsc'] as $field) {
             if (blank($bank[$field] ?? null)) {
                 return back()->withErrors(['bank_verify' => 'Enter the account name, account number and IFS code, then verify.']);
             }
-        }
-        if (EnforcementSwitches::skipThirdParty()) {
-            return $this->simulate($tot['id']);
         }
         if (str_contains((string) $bank['account_no'], '*')) {
             return back()->withErrors(['bank_verify' => 'Please re-enter the full account number, then verify.']);

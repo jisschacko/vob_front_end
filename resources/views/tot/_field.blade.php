@@ -12,7 +12,8 @@
     $masked = $page->isMasked($path);
     $listed = in_array($path, (array) ($page->detail['required_fields'] ?? []), true);
     $inputType = ['line' => 'text', 'tel' => 'tel', 'email' => 'email', 'number' => 'number', 'date' => 'date'][$type] ?? 'text';
-    $class = 'f'.(($f['inline'] ?? false) ? ' inline-f' : '');
+    $demoVerified = $page->demoVerified($path);
+    $class = 'f'.(($f['inline'] ?? false) ? ' inline-f' : '').($demoVerified && filled($val) ? ' is-valid' : '');
 @endphp
 @unless ($bare)
 <div class="field-wrap {{ $locked && $page->editable() ? 'locked' : '' }} {{ $type === 'company_codes' ? 'span-all' : '' }}">
@@ -34,7 +35,7 @@
         @break
 
     @case('text')
-        <textarea class="{{ $class }} autogrow" id="{{ $id }}" name="{{ $name }}" rows="1" maxlength="{{ $max }}"
+        <textarea class="{{ $class }} autogrow" id="{{ $id }}" name="{{ $name }}" rows="1" maxlength="{{ $max }}" @if ($demoVerified) data-demo-valid @endif
             @if ($locked) disabled @endif @isset($f['placeholder']) placeholder="{{ $f['placeholder'] }}" @endisset>{{ $val }}</textarea>
         @break
 
@@ -68,10 +69,12 @@
             @if ($masked) placeholder="{{ $page->raw($path) }} (leave blank to keep)" autocomplete="off" @endif
             @isset($f['aria']) aria-label="{{ $f['aria'] }}" @endisset
             @isset($f['sync']) data-sync="{{ $f['sync'] }}" @endisset
+            @if ($demoVerified) data-demo-valid @endif
             @if ($locked) disabled @endif>
 @endswitch
 
-@if ($err)<p class="error" role="alert">{{ $err }}</p>@endif
+@if ($demoVerified)<p class="valid-badge" data-demo-valid-badge @unless (filled($val)) hidden @endunless>&#10003; Verified</p>@endif
+@if ($err && ! $demoVerified)<p class="error" role="alert">{{ $err }}</p>@endif
 @unless ($bare)
     @isset($f['help'])<p class="help">{{ $f['help'] }}</p>@endisset
 </div>

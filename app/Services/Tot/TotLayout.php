@@ -151,7 +151,7 @@ final class TotLayout
                 ]],
                 ['bank_status'],
                 ['grid', 1, [
-                    self::field('bank.validation_failed_override', 'Bank details validation failed.', 'check', ['help' => 'Check this to proceed on manual vendor approval if automated bank account validation fails or is unavailable.']),
+                    self::field('bank.validation_failed_override', 'For failed validations.', 'check', ['help' => 'Check this to proceed on manual vendor approval if automated bank account validation fails or is unavailable.']),
                 ]],
                 ['note', 'A copy of the cancelled cheque, bank letter, and RTGS form is mandatory.'],
                 ['documents', ['cancelled_cheque', 'rtgs_form']],

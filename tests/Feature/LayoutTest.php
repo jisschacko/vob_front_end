@@ -108,3 +108,11 @@ describe('page header', function () {
             ->toContain('TOT initiated')->toContain('Buyer review')->toContain('E-Sign');
     });
 });
+
+it('keeps white text on the Submit / Resubmit and Save Draft buttons when hovered', function () {
+    $css = file_get_contents(public_path('css/tot.css'));
+
+    // a dark hover background must always come with white text (the secondary button has navy text by default)
+    expect($css)->toMatch('/\.tot \.btn:hover \{[^}]*color:\s*#fff/')
+        ->toMatch('/\.tot \.btn-secondary:hover \{[^}]*background:\s*var\(--navy\);[^}]*color:\s*#fff/');
+});

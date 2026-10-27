@@ -190,6 +190,27 @@ should return only real return comments.
 
 ---
 
+## 7. Demo: do not format-validate PAN, GST number and bank details - Status: OPEN
+
+In demo mode (`VOB_SKIP_THIRD_PARTY=true`) the VOB form shows PAN No, GST Regn. No, Account Name, Account No and IFS Code as **verified (green) whatever the vendor types**.
+VOB itself checks nothing, but the Admin validates their formats on every draft save and rejects the whole draft (all-or-nothing) over a bad PAN or IFSC.
+Until the Admin changes, VOB works around it **in demo mode only**: it remembers what the vendor typed for these five fields in the server-side session, and when the Admin
+refuses only these fields it saves the rest of the form without them. The consequence is that those values are **not stored at the Admin**, so a reviewer would see them empty.
+
+**Prompt for the Admin Panel repo:**
+
+```
+When TOT_SKIP_THIRD_PARTY=true (never in production), skip the FORMAT validation of these five fields everywhere they are validated (PUT /api/v1/tots/{id}/draft,
+POST /tots/{id}/submit, and the owner edit pages in the Admin Panel) and store whatever value is sent, trimmed, without upper-casing or rejecting it:
+  vendor_details.pan_no, vendor_details.gst_regn_no, bank.account_name, bank.account_no, bank.ifsc.
+Keep the maximum length. Presence (required) follows TOT_ENFORCE_REQUIRED as before. Do not change anything when the flag is off.
+Add Pest tests: with the flag on, a draft with pan_no "x", ifsc "nope" and gst_regn_no "123" is saved and returned unchanged by GET /tots/{id}; with the flag off the same draft is
+rejected with 422; production ignores the flag. Mention it in docs/API_CONTRACT.md next to skip_third_party.
+Afterwards VOB can drop its demo workaround (App\Support\DemoLenientFields) and the reviewer sees the real typed values.
+```
+
+---
+
 ## 5. Demo run-book (both apps on one machine)
 
 **Admin Panel `.env`** (names as above; values are yours): `APP_URL=http://127.0.0.1:8000`, `VOB_URL=http://127.0.0.1:8001`, `VOB_ALLOWED_IPS=127.0.0.1`,

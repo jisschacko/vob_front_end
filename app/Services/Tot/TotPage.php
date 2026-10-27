@@ -2,6 +2,7 @@
 
 namespace App\Services\Tot;
 
+use App\Support\DemoLenientFields;
 use App\Support\EnforcementSwitches;
 use Illuminate\Support\MessageBag;
 
@@ -138,7 +139,24 @@ class TotPage
             return $old;
         }
 
+        // demo mode: what the vendor typed in PAN / GST / bank fields, even if the Admin refused to store it
+        if (($typed = DemoLenientFields::override($path)) !== null) {
+            return $typed;
+        }
+
         return $this->isMasked($path) ? null : $this->raw($path);
+    }
+
+    /** Demo mode: this field is not validated and shows a green "Verified" once it has a value. */
+    public function demoVerified(string $path): bool
+    {
+        return DemoLenientFields::is($path);
+    }
+
+    /** Demo mode: the vendor typed a value for this field in this session (counts as filled even if the Admin did not keep it). */
+    public function hasDemoValue(string $path): bool
+    {
+        return DemoLenientFields::override($path) !== null;
     }
 
     public function name(string $path): string

@@ -29,8 +29,7 @@
         Changing the account name, number or IFS code resets it; on a renewal the account is always verified again.</p>
     @if ($page->editable())
         <div class="field-row">
-            <button type="submit" class="file-btn" form="bank-verify" data-bank-verify>{{ $status === 'verified' ? 'Verify again' : 'Verify bank account' }}</button>
-            <span class="help">You pay Rs 1 by UPI from this account; it is refunded within 48 hours.</span>
+            <button type="submit" class="file-btn" form="bank-verify" data-bank-verify>{{ $status === 'verified' ? 'Verify again' : 'Verify bank account' }}</button>            
         </div>
     @endif
 

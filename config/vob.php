@@ -9,6 +9,9 @@ return [
     // Demo / testing: skip every third-party integration (Cashfree bank verification, S3 uploads). Ignored in production.
     'skip_third_party' => filter_var(env('VOB_SKIP_THIRD_PARTY', false), FILTER_VALIDATE_BOOLEAN),
 
+    // Demo mode only (VOB_SKIP_THIRD_PARTY): these fields are not validated and always show as verified. See AppSupportDemoLenientFields.
+    'demo_unvalidated_fields' => ['vendor_details.pan_no', 'vendor_details.gst_regn_no', 'bank.account_name', 'bank.account_no', 'bank.ifsc'],
+
     // Display-only wording for steps of the status tracker, by the step key the Admin sends (order, states and dates always come from the
     // API). Remove an entry once the Admin's own label says the same.
     'tracker_labels' => [

@@ -23,7 +23,7 @@ Application column: **VOB** = this app (vendor front end), **Both** = a value th
 |---|---|---|---|
 | `VOB_ENFORCE_REQUIRED` | VOB | `false` = VOB does not block Submit on missing mandatory fields | Admin counterpart: `TOT_ENFORCE_REQUIRED`. Always on when `APP_ENV=production`. Formats are always validated |
 | `VOB_ENFORCE_DOCUMENTS` | VOB | `false` = VOB does not block Submit on missing documents / unverified bank | Admin counterpart: `TOT_ENFORCE_DOCUMENTS`. Always on in production |
-| `VOB_SKIP_THIRD_PARTY` | VOB | `true` = skip every third-party service: Cashfree bank verification (reported to the Admin as verified with a `DEMO-` reference) and S3 (documents stored on the local disk). Yellow banner on every page | Demo / testing only. Always off in production. Admin counterpart: `TOT_SKIP_THIRD_PARTY` (to be added) |
+| `VOB_SKIP_THIRD_PARTY` | VOB | `true` = skip every third-party service: Cashfree bank verification (reported to the Admin as verified with a `DEMO-` reference) and S3 (documents stored on the local disk). Also: PAN, GST number and bank details are not validated and show a green "Verified" (see DemoLenientFields). Yellow banner on every page | Demo / testing only. Always off in production. Admin counterpart: `TOT_SKIP_THIRD_PARTY` (to be added) |
 | `VOB_DISPLAY_TIMEZONE` | VOB | Timezone for "Draft saved ..." and submitted times | default `Asia/Kolkata` |
 | `VOB_SESSION_IDLE_MINUTES` | VOB | Vendor signed out after this many minutes without a request | default 30 (the Admin token also has a 30 minute idle limit) |
 | `VOB_SESSION_ABSOLUTE_MINUTES` | VOB | Vendor signed out this long after signing in, even if active | default 480 (Admin token: 8 h) |

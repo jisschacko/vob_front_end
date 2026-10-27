@@ -275,9 +275,9 @@ describe('demo mode (VOB_SKIP_THIRD_PARTY)', function () {
         expect(CashfreeVerification::count())->toBe(0)->and(ApiLog::where('service', 'cashfree')->count())->toBe(0);
     });
 
-    it('still needs the bank fields to be filled in and reports an Admin failure', function () {
-        T::fake([], readyDetail(['form' => ['bank' => ['account_no' => null]]]));
-        $this->withSession(T::session())->from('/home')->post('/bank/verify')->assertSessionHasErrors('bank_verify');
+    it('does not need the bank fields to be filled in (they are not validated in demo mode) but reports an Admin failure', function () {
+        T::fake(['POST tots/'.T::TOT_ID.'/bank-verification' => Http::response(['saved' => true])], readyDetail(['form' => ['bank' => ['account_no' => null, 'ifsc' => null]]]));
+        $this->withSession(T::session())->from('/home')->post('/bank/verify')->assertRedirect(route('home'))->assertSessionDoesntHaveErrors();
 
         T::fake(['POST tots/'.T::TOT_ID.'/bank-verification' => Http::response([], 500)], readyDetail());
         $this->from('/home')->post('/bank/verify')->assertSessionHasErrors(['bank_verify' => 'We could not record the verification right now. Please try again.']);
