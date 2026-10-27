@@ -31,10 +31,11 @@ final class TotLayout
 
         return [
             'vendor_details' => ['kind' => 'single', 'fields' => $text(
-                'registration_type', 'agreement_no', 'scope_type', 'scope_state', 'purchase_org', 'vendor_accounting_group', 'vendor_name',
+                'registration_type', 'agreement_no', 'scope_type', 'scope_state', 'vendor_accounting_group', 'vendor_name',
                 'vendor_code', 'brand', 'parent_code', 'address', 'city', 'state', 'pin', 'pan_no', 'gst_type', 'gst_regn_no',
                 'msme_type', 'msme_regn_no', 'entity_type')],
             'company_codes' => ['kind' => 'pivot'],
+            'purchase_orgs' => ['kind' => 'pivot'], // several codes, buyer-only like company_codes
             'contacts' => ['kind' => 'keyed', 'key' => ['type'], 'keys' => ['sales', 'finance', 'logistics'],
                 'fields' => $text('name', 'phone', 'email')],
             'bank' => ['kind' => 'single', 'fields' => $text('account_name', 'bank_name_address', 'account_no', 'ifsc') + ['validation_failed_override' => 'bool']],
@@ -105,7 +106,7 @@ final class TotLayout
                 self::field('vendor_details.scope_type', 'Scope Type', 'select', ['options' => ['PAN India', 'Regional', 'State'], 'help' => 'Whether this agreement applies across India, to a region, or a single state.']),
                 self::field('vendor_details.scope_state', 'State', 'text', ['help' => 'Required only when Scope Type is Regional or State.']),
                 ['type' => 'company_codes', 'path' => 'company_codes', 'label' => 'Company Code', 'help' => 'SAP company codes linked to this agreement (set by Lulu).'],
-                self::field('vendor_details.purchase_org', 'Purchase Organization', 'select', ['master' => 'purchase_orgs', 'help' => 'Purchase organization for this agreement (set by Lulu).']),
+                ['type' => 'purchase_orgs', 'path' => 'purchase_orgs', 'label' => 'Purchase Organization', 'help' => 'Purchase organizations linked to this agreement (set by Lulu).'],
             ]]]],
 
             ['id' => 'vendor_details', 'title' => 'Vendor Details', 'blocks' => [

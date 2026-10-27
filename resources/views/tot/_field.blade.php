@@ -13,10 +13,10 @@
     $listed = in_array($path, (array) ($page->detail['required_fields'] ?? []), true);
     $inputType = ['line' => 'text', 'tel' => 'tel', 'email' => 'email', 'number' => 'number', 'date' => 'date'][$type] ?? 'text';
     $demoVerified = $page->demoVerified($path);
-    $class = 'f'.(($f['inline'] ?? false) ? ' inline-f' : '').($demoVerified && filled($val) ? ' is-valid' : '');
+    $class = 'f'.(($f['inline'] ?? false) ? ' inline-f' : '').($demoVerified && filled($val) && ! $err ? ' is-valid' : '');
 @endphp
 @unless ($bare)
-<div class="field-wrap {{ $locked && $page->editable() ? 'locked' : '' }} {{ $type === 'company_codes' ? 'span-all' : '' }}">
+<div class="field-wrap {{ $locked && $page->editable() ? 'locked' : '' }} {{ in_array($type, ['company_codes', 'purchase_orgs'], true) ? 'span-all' : '' }}">
     <label class="flabel" for="{{ $id }}">{{ $f['label'] }}
         @if ($listed)<span class="req" @if ($path === 'vendor_details.gst_regn_no') id="gst-regn-req" @endif @unless ($page->isRequired($path)) hidden @endunless>*</span>@endif
         @if ($locked && $page->editable())<span class="tag-readonly">(set by Lulu)</span>@endif
@@ -25,9 +25,10 @@
 
 @switch($type)
     @case('company_codes')
+    @case('purchase_orgs')
         <div class="chip-box disabled" id="{{ $id }}">
-            @forelse ($page->selectedCodes('company_codes') as $code)
-                <span class="chip" title="{{ $page->masterOptions('company_codes')[$code] ?? '' }}"><span class="chip-code">{{ $code }}</span></span>
+            @forelse ($page->selectedCodes($type) as $code)
+                <span class="chip" title="{{ $page->masterOptions($type)[$code] ?? '' }}"><span class="chip-code">{{ $code }}</span></span>
             @empty
                 <span class="muted">Not assigned yet.</span>
             @endforelse
@@ -73,8 +74,8 @@
             @if ($locked) disabled @endif>
 @endswitch
 
-@if ($demoVerified)<p class="valid-badge" data-demo-valid-badge @unless (filled($val)) hidden @endunless>&#10003; Verified</p>@endif
-@if ($err && ! $demoVerified)<p class="error" role="alert">{{ $err }}</p>@endif
+@if ($demoVerified)<p class="valid-badge" data-demo-valid-badge @if (! filled($val) || $err) hidden @endif>&#10003; Verified</p>@endif
+@if ($err)<p class="error" role="alert">{{ $err }}</p>@endif
 @unless ($bare)
     @isset($f['help'])<p class="help">{{ $f['help'] }}</p>@endisset
 </div>

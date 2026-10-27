@@ -51,7 +51,7 @@
             <div class="card-header">Reviewer comments</div>
             <div class="card-body">
                 @foreach ($page->reviewerComments() as $comment)
-                    <blockquote>{{ $comment['comments'] ?? '' }}@if (! empty($comment['section_note']))<span class="section-note">{{ $comment['section_note'] }}</span>@endif<footer>{{ $comment['by'] ?? '' }}{{ ! empty($comment['at']) ? ', '.$comment['at'] : '' }}</footer></blockquote>
+                    <blockquote>{{ $comment['comments'] ?? '' }}@if (! empty($comment['section_note']))<span class="section-note">{{ $comment['section_note'] }}</span>@endif<footer>{{ $comment['by'] ?? '' }}@if (! empty($comment['stage'])), rejected at {{ $comment['stage'] }}@endif @if (! empty($comment['at'])), {{ \Illuminate\Support\Carbon::parse($comment['at'])->setTimezone(config('vob.display_timezone'))->format('d-M-Y, h:i A') }}@endif @if (! empty($comment['status']))&middot; now: {{ $comment['status'] }}@endif</footer></blockquote>
                 @endforeach
             </div>
         </div>

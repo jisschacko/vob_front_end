@@ -105,12 +105,12 @@ $header = rtrim(strtr(base64_encode(json_encode(['kid'=>$kid,'ek'=>base64_encode
 ```json
 { "tot": { ...summary... },
   "form": { "vendor_details": {...}, "company_codes": [...], "contacts": [...], "bank": {...}, "outlets": [...], "payment_terms": {...}, "trade_terms": {...},
-            "categories": [...], "business_terms": {...}, "rebate_lines": [...], "growth_slabs": [...], "margins": [...], "deliverables": [...], "pocs": [...], "signatories": [...],
+            "purchase_orgs": ["9000","9100"], "categories": [...], "business_terms": {...}, "rebate_lines": [...], "growth_slabs": [...], "margins": [...], "deliverables": [...], "pocs": [...], "signatories": [...],
             "clauses": { "termination": "<edited text>" } },
   "clause_templates": [{ "key": "supply_invoicing", "number": 1, "title": "Supply & Invoicing", "text": "a) ...", "placeholders": [] }, "... 14 ..."],
   "comment_sections": [{ "key": "vendor_details", "label": "Vendor Details" }, "..."],
   "flagged_sections": [{ "key": "vendor_details", "label": "Vendor Details" }],
-  "locked_fields": ["company_codes","vendor_details.purchase_org","vendor_details.vendor_accounting_group","payment_terms.reconciliation_type"],
+  "locked_fields": ["company_codes","purchase_orgs","vendor_details.vendor_accounting_group","payment_terms.reconciliation_type"],
   "required_fields": ["vendor_details.vendor_name", "..."],
   "documents": [{ "id","type","name","size","uploaded_at" }],
   "required_documents": ["pan_certificate","cancelled_cheque","rtgs_form", "gst_certificate (when GST Registered)", "msme_certificate (when MSME Registered)"],
@@ -118,7 +118,7 @@ $header = rtrim(strtr(base64_encode(json_encode(['kid'=>$kid,'ek'=>base64_encode
 ```
 - `locked_fields` are **greyed out** in VOB; the API also ignores them if sent.
 - `required_fields` are the 18 vendor-mandatory fields (asterisks). `payment_terms.terms` means "at least one of the six payment-day fields". GST Regn. No is not required when `gst_type` is `GST Unregistered`.
-- `reviewer_comments` are what reviewers wrote when the TOT was returned to the vendor, with the sections they pointed at (see "Reviewer comments per section" below).
+- `reviewer_comments` are the comments reviewers wrote when they rejected the TOT (also KAM / Finance / Audit / Director rejections back to the buyer), with the sections they pointed at (see "Reviewer comments per section" below).
 - `bank.verification_status` is `pending|verified|failed`; any later change to account name, number or IFSC resets it to `pending`. **On renewals the bank account is always re-verified**, even when unchanged.
 
 **`PUT /tots/{id}/draft`**  body `{ "form": { "<section>": ... } }` - only the sections sent are touched. Returns `{ "saved": ["vendor_details", ...], "ignored": ["company_codes", ...] }` or 422 `{ "errors": { "vendor_details.pan_no": ["..."] } }`.
@@ -129,7 +129,7 @@ Section kinds (full field list, formats and allowed values: `config/tot_form.php
 | single (`vendor_details`, `bank`, `payment_terms`, `trade_terms`, `business_terms`) | object | merges: only fields sent change; `null` clears |
 | keyed (`contacts` by `type` sales/finance/logistics, `pocs` by `dept`, `signatories` by `kind`, `growth_slabs` by `slab_no` 1-5, `rebate_lines` by `group`+`kind`, `deliverables` by `asset` code) | list of objects each carrying its key | upsert per row; other rows kept |
 | list (`outlets`, `margins`) | list of objects | **replaces** the whole list |
-| pivot (`categories` = category codes; `company_codes` buyer-only) | list of codes | **replaces** the whole list |
+| pivot (`categories` = category codes; `company_codes` and `purchase_orgs` buyer-only, several codes each) | list of codes | **replaces** the whole list |
 | clauses (`clauses`) | object `{ clause_key: text }` | only the clauses sent change; `null` / original text removes an edit (see "Terms of Trade clauses") |
 
 Masters are sent/returned as **codes** (`state: "KL"`, `deliverables[].asset: "end_cap"`), never ids. PAN, GSTIN, IFSC are upper-cased and phone numbers stripped of spaces by the server. PAN `ABCDE1234F`, GSTIN 15 chars, IFSC `HDFC0001234`, PIN 6 digits, phone `+?` 7-15 digits.
@@ -194,7 +194,7 @@ Steps are in travel order: `initiated, vendor, buyer, kam, legal, finance, audit
 
 - Admin switches are ignored (always on) when `APP_ENV=production`; VOB must do the same.
 - Formats (PAN, GSTIN, IFSC, PIN, phone, email, allowed values) are **always** validated, switches or not.
-- `GET /tots/{id}` returns `validation: { required_fields: bool, documents: bool, skip_third_party: bool }` with the Admin side state (`skip_third_party` = Admin demo mode `TOT_SKIP_THIRD_PARTY`: mail goes to the log and vendor documents are read from the VOB machine instead of S3; VOB should warn when its own `VOB_SKIP_THIRD_PARTY` differs), so VOB can show a "development mode" banner and see when the two sides disagree. A submit that went through while a switch was off returns `warnings` (same shape as `errors`) listing what was missing.
+- `GET /tots/{id}` returns `validation: { required_fields: bool, documents: bool, skip_third_party: bool }` with the Admin side state (`skip_third_party` = Admin demo mode `TOT_SKIP_THIRD_PARTY`: mail goes to the log and vendor documents are read from the VOB machine instead of S3; VOB should warn when its own `VOB_SKIP_THIRD_PARTY` differs), so VOB can show a "development mode" banner and see when the two sides disagree. **While `skip_third_party` is `true` (never in production) the Admin does not check the FORMAT of `vendor_details.pan_no`, `vendor_details.gst_regn_no`, `bank.account_name`, `bank.account_no` and `bank.ifsc`**: whatever is sent is stored trimmed (not upper-cased) and returned unchanged by `GET /tots/{id}`; only the maximum lengths (10, 15, 200, 34, 11) still apply. With the flag off they are validated and upper-cased as described above. VOB no longer needs a demo workaround for them. A submit that went through while a switch was off returns `warnings` (same shape as `errors`) listing what was missing.
 - The Admin Panel shows a yellow "Development mode" banner on every page while a switch is off.
 
 ## 5B. Answers to VOB questions (entry 2 of ADMIN_PANEL_CHANGES.md, points confirmed while building the demo)
@@ -213,7 +213,7 @@ Steps are in travel order: `initiated, vendor, buyer, kam, legal, finance, audit
 - **Sensitive values** (PAN, GSTIN, MSME no, account no) are returned in clear to the signed-in vendor who owns the TOT. Omitting a field in a draft keeps the stored value; a value containing `*` is rejected with 422 and never saved.
 - **Dates** are `Y-m-d`.
 - **`locked_fields`** entries are a whole section (`company_codes`) or `section.field`; an entry covers everything below it.
-- **`reviewer_comments`** holds ONLY the comments reviewers wrote when they rejected the TOT back to the vendor (status `pending_vendor`), newest first, each `{status, comments, by, at, sections, section_note}`. It is empty for a TOT that was never returned, and never contains system history ("TOT initiated", first login, edits, resends) or approvals / internal rejections between reviewers. `tot.submitted_at` stays set after a return, so the vendor front end can offer **Resubmit**.
+- **`reviewer_comments`** holds what reviewers wrote when they **rejected** the TOT (Buyer, KAM, Legal, Finance, Audit, Director - to the vendor or back to the buyer), newest first (max 20), each `{status, action, stage, comments, by, at, sections, section_note}`: `action` is always `reject`, `stage` the stage the reviewer rejected at (e.g. "Pending with KAM"), `status` where the TOT went next. Approval comments are **not** listed, and neither is system history ("TOT initiated", first login, vendor submission, edits, resends, resets). It is empty for a TOT nobody rejected. `tot.submitted_at` stays set after a return, so the vendor front end can offer **Resubmit**.
 - **Unexpected failures**: with `APP_DEBUG=false` a 500 answers `{"error":"server_error","message":"..."}` with no SQL, file path or stack trace (details go to the Admin log). 401, 404 and 422 answers are unchanged.
 
 ## 5D. The agreement PDF (Admin Panel only)

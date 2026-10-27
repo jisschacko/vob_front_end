@@ -42,7 +42,10 @@ describe('the form page', function () {
         // company code chips (read-only) and the three locked selects/fields are disabled, others are not
         expect($html)->toContain('chip-code">9000')->toContain('chip-code">9001')->toContain('title="9000 - Lulu Regional Office (Kochi)"');
 
-        foreach (['f-vendor-details-purchase-org', 'f-vendor-details-vendor-accounting-group', 'f-payment-terms-reconciliation-type'] as $id) {
+        // Purchase Organization is now a read-only list of codes (form.purchase_orgs), like Company Code
+        expect($html)->toContain('id="f-purchase-orgs"')->toContain('chip-code">9000')->toContain('Purchase Organization');
+
+        foreach (['f-vendor-details-vendor-accounting-group', 'f-payment-terms-reconciliation-type'] as $id) {
             expect($html)->toMatch('/<select[^>]*id="'.$id.'"[^>]*disabled/');
         }
         expect($html)->not->toMatch('/id="f-vendor-details-vendor-name"[^>]*disabled/')
@@ -159,12 +162,13 @@ describe('Save Draft', function () {
 
         post_form([
             'company_codes' => ['1234'],
-            'vendor_details' => ['vendor_name' => 'Acme', 'purchase_org' => '9999', 'vendor_accounting_group' => 'SOR'],
+            'purchase_orgs' => ['9999'],
+            'vendor_details' => ['vendor_name' => 'Acme', 'vendor_accounting_group' => 'SOR'],
             'payment_terms' => ['reconciliation_type' => 'Tenant Payable', 'payment_mode' => 'ePayment'],
         ])->assertRedirect();
 
         $form = T::sent('PUT', 'tots/'.T::TOT_ID.'/draft')['form'];
-        expect($form)->not->toHaveKey('company_codes')
+        expect($form)->not->toHaveKey('company_codes')->not->toHaveKey('purchase_orgs')
             ->and($form['vendor_details'])->toBe(['vendor_name' => 'Acme'])
             ->and($form['payment_terms'])->toBe(['payment_mode' => 'ePayment']);
     });

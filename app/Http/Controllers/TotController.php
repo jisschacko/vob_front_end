@@ -9,7 +9,6 @@ use App\Services\Tot\Masters;
 use App\Services\Tot\SubmitReadiness;
 use App\Services\Tot\TotFormMapper;
 use App\Services\Tot\TotPage;
-use App\Support\DemoLenientFields;
 use App\Support\EnforcementSwitches;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -153,20 +152,7 @@ class TotController extends Controller
             return ['ok' => true, 'status' => 200, 'message' => '', 'errors' => []];
         }
 
-        if (DemoLenientFields::active()) {
-            DemoLenientFields::remember($payload['form']); // shown again on the form even if the Admin refuses them
-        }
-
         $response = $this->api->put('tots/'.$tot['id'].'/draft', ['form' => $payload['form']]);
-
-        // Demo mode: the Admin refused only the unvalidated fields (PAN, GST, bank details): save everything else without them.
-        if ($response->status() === 422 && DemoLenientFields::active() && DemoLenientFields::onlyThese((array) $response->json('errors', []))) {
-            $rest = DemoLenientFields::strip($payload['form'], array_keys((array) $response->json('errors', [])));
-            $response = $rest === [] ? null : $this->api->put('tots/'.$tot['id'].'/draft', ['form' => $rest]);
-            if ($response === null) {
-                return ['ok' => true, 'status' => 200, 'message' => '', 'errors' => []];
-            }
-        }
 
         if ($response->successful()) {
             return ['ok' => true, 'status' => 200, 'message' => '', 'errors' => [], 'saved_at' => $response->json('draft_saved_at')];
@@ -174,7 +160,7 @@ class TotController extends Controller
 
         return match ($response->status()) {
             422 => ['ok' => false, 'status' => 422, 'message' => 'Some values need correcting. Nothing was saved.',
-                'errors' => $this->mapper->errorsByPath(DemoLenientFields::active() ? DemoLenientFields::withoutThese((array) $response->json('errors', [])) : (array) $response->json('errors', []), $payload['keyed'])],
+                'errors' => $this->mapper->errorsByPath((array) $response->json('errors', []), $payload['keyed'])],
             409 => ['ok' => false, 'status' => 409, 'message' => 'This Terms of Trade can no longer be edited.', 'errors' => []],
             default => ['ok' => false, 'status' => 502, 'message' => 'We could not save right now. Please try again.', 'errors' => []],
         };

@@ -52,11 +52,12 @@ it('builds the draft body: blanks become null, Yes/No become booleans, rows carr
 });
 
 it('never sends locked fields or sections', function () {
-    $locked = ['company_codes', 'vendor_details.purchase_org', 'payment_terms.reconciliation_type'];
+    $locked = ['company_codes', 'purchase_orgs', 'payment_terms.reconciliation_type'];
 
     $payload = $this->mapper->payload([
         'company_codes' => ['9999'],
-        'vendor_details' => ['vendor_name' => 'Acme', 'purchase_org' => '9000'],
+        'purchase_orgs' => ['9000'],
+        'vendor_details' => ['vendor_name' => 'Acme'],
         'payment_terms' => ['reconciliation_type' => 'Tenant Payable', 'payment_mode' => 'ePayment'],
     ], $locked, [], [])['form'];
 
@@ -108,7 +109,7 @@ it('lets a locked entry cover everything below it', function () {
     expect(TotFormMapper::isLocked('company_codes', ['company_codes']))->toBeTrue()
         ->and(TotFormMapper::isLocked('company_codes.x', ['company_codes']))->toBeTrue()
         ->and(TotFormMapper::isLocked('company_codes_extra', ['company_codes']))->toBeFalse()
-        ->and(TotFormMapper::isLocked('vendor_details.vendor_name', ['vendor_details.purchase_org']))->toBeFalse();
+        ->and(TotFormMapper::isLocked('vendor_details.vendor_name', ['vendor_details.vendor_accounting_group']))->toBeFalse();
 });
 
 it('has a layout whose every field belongs to a known API section field', function () {
@@ -132,7 +133,7 @@ it('has a layout whose every field belongs to a known API section field', functi
         $parts = explode('.', $path);
         $section = $parts[0];
         $field = end($parts);
-        if ($section === 'company_codes') {
+        if (in_array($section, ['company_codes', 'purchase_orgs'], true)) { // pivot lists have no fields
             continue;
         }
         expect($sections)->toHaveKey($section);

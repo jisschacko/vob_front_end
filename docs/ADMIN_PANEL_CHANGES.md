@@ -190,7 +190,7 @@ should return only real return comments.
 
 ---
 
-## 7. Demo: do not format-validate PAN, GST number and bank details - Status: OPEN
+## 7. Demo: do not format-validate PAN, GST number and bank details - Status: DONE (API_CONTRACT.md 5A; VOB workaround removed)
 
 In demo mode (`VOB_SKIP_THIRD_PARTY=true`) the VOB form shows PAN No, GST Regn. No, Account Name, Account No and IFS Code as **verified (green) whatever the vendor types**.
 VOB itself checks nothing, but the Admin validates their formats on every draft save and rejects the whole draft (all-or-nothing) over a bad PAN or IFSC.

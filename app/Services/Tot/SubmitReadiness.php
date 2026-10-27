@@ -42,7 +42,7 @@ class SubmitReadiness
                 if ($path === 'vendor_details.gst_regn_no' && $page->raw('vendor_details.gst_type') === 'GST Unregistered') {
                     continue;
                 }
-                if (blank($page->raw($path)) && ! $page->isMasked($path) && ! $page->hasDemoValue($path)) {
+                if (blank($page->raw($path)) && ! $page->isMasked($path)) {
                     $problems[$path] = ($labels[$path] ?? Str::headline(Str::afterLast($path, '.'))).' is required.';
                 }
             }

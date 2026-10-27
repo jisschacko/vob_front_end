@@ -235,3 +235,45 @@ it('tells a vendor whose old invitation link was replaced to use the newest emai
 
     test()->get('/onboard/SOME-OLD-LINK-TOKEN-12345')->assertStatus(410)->assertSee('newer invitation email');
 });
+
+describe('purchase organizations (API_CONTRACT: form.purchase_orgs, buyer-only list)', function () {
+    it('shows every purchase organization code the buyer assigned, read-only, with its name on hover', function () {
+        $html = clausePage(['form' => ['purchase_orgs' => ['9000', '9100']]]);
+        $block = $html;
+
+        expect($block)->toMatch('/for="f-purchase-orgs">Purchase Organization\s*<span class="tag-readonly">\(set by Lulu\)/')
+            ->toContain('chip-code">9000')->toContain('chip-code">9100')->toContain('title="9000 - Lulu Kerala"')
+            ->not->toContain('name="form[purchase_orgs]')->not->toContain('name="form[vendor_details][purchase_org]');
+    });
+
+    it('says so while none is assigned yet', function () {
+        $detail = T::detail();
+        $detail['form']['purchase_orgs'] = []; // an empty list replaces, it does not merge
+        T::fake([], $detail);
+
+        expect(test()->withSession(T::session())->get('/home')->getContent())->toContain('Not assigned yet.');
+    });
+
+    it('is never sent back (the whole section is locked)', function () {
+        T::fake();
+        $this->withSession(T::session())->get('/home');
+
+        $this->post('/tot/draft', ['form' => ['purchase_orgs' => ['1111'], 'vendor_details' => ['vendor_name' => 'A']]]);
+
+        expect(T::sent('PUT', 'tots/'.T::TOT_ID.'/draft')['form'])->not->toHaveKey('purchase_orgs');
+    });
+});
+
+describe('reviewer_comments with stage (API_CONTRACT 5C)', function () {
+    it('shows where each rejection happened and where the TOT went next, newest first', function () {
+        T::fake([], T::detail(['tot' => ['submitted_at' => '2026-10-21T05:00:00+00:00'], 'reviewer_comments' => [
+            ['status' => 'Pending with buyer', 'action' => 'reject', 'stage' => 'Pending with KAM', 'comments' => 'Margins look wrong.', 'by' => 'Kim', 'at' => '2026-10-27T09:30:00+00:00', 'sections' => [], 'section_note' => null],
+            ['status' => 'Pending with vendor', 'action' => 'reject', 'stage' => 'Pending with buyer', 'comments' => 'PAN missing.', 'by' => 'Asha', 'at' => '2026-10-26T09:30:00+00:00', 'sections' => [], 'section_note' => null],
+        ]]));
+        $html = test()->withSession(T::session())->get('/home')->getContent();
+
+        expect($html)->toContain('Margins look wrong.')->toContain('Kim, rejected at Pending with KAM')->toContain('27-Oct-2026, 03:00 PM')
+            ->toContain('now: Pending with buyer')->toContain('Asha, rejected at Pending with buyer')->toContain('now: Pending with vendor')
+            ->and(strpos($html, 'Margins look wrong.'))->toBeLessThan(strpos($html, 'PAN missing.'));
+    });
+});
