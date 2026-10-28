@@ -5,7 +5,7 @@ has been changed and `docs/API_CONTRACT.md` re-copied into this repo.
 
 ---
 
-## 1. Admin "Unblock vendor sign-in" (immediate lockout reset) - Status: OPEN
+## 1. Admin "Unblock vendor sign-in" (immediate lockout reset) - Status: DONE (implemented in the Admin panel, confirmed by the owner)
 
 Raised in VOB Phase 2. The Admin API locks a vendor out after 5 failed `POST /vendor/login` attempts for 15 minutes (`429 too_many_attempts`).
 VOB no longer adds a lockout of its own, so this Admin lockout is the only one, and an Admin user must be able to clear it at once
@@ -104,7 +104,7 @@ Link the file from the README.
 
 ---
 
-## 4. Admin changes needed for the vendor submit + owner review demo - Status: OPEN
+## 4. Admin changes needed for the vendor submit + owner review demo - Status: DONE (implemented in the Admin panel, confirmed by the owner)
 
 Demo on one machine: (1) initiate a TOT in the Admin, (2) the vendor signs in to VOB, (3) the vendor fills in and submits, (4) the TOT owner reviews it.
 Step 1 is done. Everything below is what VOB expects from the Admin API (endpoints are described in `docs/API_CONTRACT.md`).
