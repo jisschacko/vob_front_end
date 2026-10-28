@@ -241,7 +241,7 @@ describe('purchase organizations (API_CONTRACT: form.purchase_orgs, buyer-only l
         $html = clausePage(['form' => ['purchase_orgs' => ['9000', '9100']]]);
         $block = $html;
 
-        expect($block)->toMatch('/for="f-purchase-orgs">Purchase Organization\s*<span class="tag-readonly">\(set by Lulu\)/')
+        expect($block)->toMatch('/for="f-purchase-orgs">Purchase Organization\s*<span class="tag-readonly">\((Filled by Lulu)\)/')
             ->toContain('chip-code">9000')->toContain('chip-code">9100')->toContain('title="9000 - Lulu Kerala"')
             ->not->toContain('name="form[purchase_orgs]')->not->toContain('name="form[vendor_details][purchase_org]');
     });

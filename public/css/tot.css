@@ -94,7 +94,8 @@
 .tot .clause-edit textarea.clause-text { min-height:200px; line-height:1.5; white-space:pre-wrap; resize:vertical; overflow:auto; }
 .tot .clause-edit .flabel { display:block; margin:0 0 6px; }
 .tot .clause-edit .help { margin:6px 0 10px; }
-.tot .clause-fields { display:flex; flex-wrap:wrap; gap:14px; margin:10px 0 4px; }
+.tot .clause-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
+.tot .clause-fields {display:flex; flex-wrap:wrap; gap:14px; margin:10px 0 4px; }
 .tot .clause-fields .field-wrap { width:200px; }
 .tot .section-note { display:block; margin-top:6px; font-size:12.5px; font-style:italic; color:#7a3b00; }
 .tot .clause-view[hidden], .tot .clause-edit[hidden] { display:none; }

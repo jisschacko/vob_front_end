@@ -55,7 +55,10 @@
                     </div>
                 @endif
                 <p class="help">Keep the markers (for example <code>{refund_within_days}</code>) where a number should appear. Text identical to the original wording is saved as "not edited".</p>
-                <button type="button" class="file-btn" data-clause-restore>Restore original wording</button>
+                <div class="clause-actions">
+                    <button type="button" class="file-btn" data-clause-save>Save</button>
+                    <button type="button" class="file-btn" data-clause-restore>Restore original wording</button>
+                </div>
                 @if ($error)<p class="error" role="alert">{{ $error }}</p>@endif
             </div>
         @endif

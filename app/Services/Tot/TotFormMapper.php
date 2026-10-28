@@ -223,10 +223,23 @@ class TotFormMapper
         return str_replace(["\r\n", "\r"], "\n", $text);
     }
 
+    /**
+     * Filled in by the Lulu buyer only. Locked for the vendor whatever the API's `locked_fields` says (for example after a
+     * reviewer sent the TOT back and it became editable again); the API list can only add to these.
+     */
+    public const BUYER_ONLY = [
+        'company_codes',
+        'purchase_orgs',
+        'vendor_details.vendor_accounting_group',
+        'payment_terms.reconciliation_type',
+        'vendor_details.agreement_no',
+        'vendor_details.vendor_code',
+    ];
+
     /** A locked entry covers itself and everything below it ("company_codes" covers "company_codes.x"). */
     public static function isLocked(string $path, array $locked): bool
     {
-        foreach ($locked as $entry) {
+        foreach ([...self::BUYER_ONLY, ...$locked] as $entry) {
             if ($path === $entry || str_starts_with($path, $entry.'.')) {
                 return true;
             }

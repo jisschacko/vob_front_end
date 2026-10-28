@@ -207,6 +207,22 @@ describe('saving clauses (PUT /draft form.clauses)', function () {
     });
 });
 
+describe('saving and restoring a clause', function () {
+    it('has a Save button beside Restore in every clause editor', function () {
+        $html = clausePage();
+
+        expect(substr_count($html, 'data-clause-save'))->toBe(substr_count($html, 'data-clause-restore'))
+            ->and(substr_count($html, 'data-clause-save'))->toBeGreaterThanOrEqual(14);
+    });
+
+    it('saves and restores in place: no page reload, the clause is refreshed from the server', function () {
+        $js = file_get_contents(public_path('js/tot-form.js'));
+
+        expect($js)->not->toContain('location.reload')
+            ->toContain('data-clause-save')->toContain('refreshClause')->toContain('saveClause');
+    });
+});
+
 describe('the browser side', function () {
     it('has the pencil, restore and number-sync behaviour in the form script, with no inline code on the page', function () {
         $js = file_get_contents(public_path('js/tot-form.js'));

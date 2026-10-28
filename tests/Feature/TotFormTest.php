@@ -36,7 +36,7 @@ describe('the form page', function () {
             ->toContain('Status:')->toContain('Pending with vendor');
     });
 
-    it('greys out the locked fields and shows them as set by Lulu', function () {
+    it('greys out the locked fields and shows them as (Filled by Lulu)', function () {
         $html = page()->getContent();
 
         // company code chips (read-only) and the three locked selects/fields are disabled, others are not
@@ -49,7 +49,50 @@ describe('the form page', function () {
             expect($html)->toMatch('/<select[^>]*id="'.$id.'"[^>]*disabled/');
         }
         expect($html)->not->toMatch('/id="f-vendor-details-vendor-name"[^>]*disabled/')
-            ->and(substr_count($html, '(set by Lulu)'))->toBeGreaterThanOrEqual(4);
+            ->and(substr_count($html, '(Filled by Lulu)'))->toBeGreaterThanOrEqual(4);
+    });
+
+    it('keeps the buyer-only fields disabled even when the API sends no locked_fields (TOT returned to the vendor)', function () {
+        $detail = T::detail();
+        $detail['locked_fields'] = [];
+        $html = page($detail)->getContent();
+
+        foreach (['f-vendor-details-vendor-accounting-group', 'f-payment-terms-reconciliation-type'] as $id) {
+            expect($html)->toMatch('/<select[^>]*id="'.$id.'"[^>]*disabled/');
+        }
+        foreach (['f-vendor-details-agreement-no', 'f-vendor-details-vendor-code'] as $id) {
+            expect($html)->toMatch('/<(?:input|textarea)[^>]*id="'.$id.'"[^>]*disabled/');
+        }
+        expect($html)->toMatch('/class="chip-box disabled" id="f-company-codes"/')
+            ->toMatch('/class="chip-box disabled" id="f-purchase-orgs"/')
+            ->not->toMatch('/id="f-vendor-details-vendor-name"[^>]*disabled/');
+    });
+
+    it('lists states for Scope Type State, regions for Regional and nothing for PAN India in the scope select', function () {
+        $select = function (string $scope) {
+            $html = page(T::detail(['form' => ['vendor_details' => ['scope_type' => $scope, 'scope_state' => '']]]))->getContent();
+            preg_match('/<select[^>]*id="f-vendor-details-scope-state"[^>]*>(.*?)<\/select>/s', $html, $m);
+
+            return [$m[1] ?? '', $html];
+        };
+
+        [$state, $html] = $select('State');
+        expect($state)->toContain('>Kerala<')->toContain('>Karnataka<')->not->toContain('>South<');
+        expect($html)->toContain('data-scope-state')->toContain('data-scope-type')
+            ->toContain('State / Region');
+
+        [$regional] = $select('Regional');
+        expect($regional)->toContain('>South<')->not->toContain('>Kerala<');
+
+        [$panIndia] = $select('PAN India');
+        expect($panIndia)->not->toContain('>South<')->not->toContain('>Kerala<');
+    });
+
+    it('carries both lists to the script so the choices follow the Scope Type', function () {
+        $html = page()->getContent();
+
+        expect($html)->toMatch('/data-scope-options="[^"]*Kerala[^"]*South/')
+            ->and(file_get_contents(public_path('js/tot-form.js')))->toContain('data-scope-type');
     });
 
     it('puts asterisks only on the fields the API lists as required', function () {

@@ -66,6 +66,21 @@ it('never sends locked fields or sections', function () {
         ->and($payload['payment_terms'])->toEqual(['payment_mode' => 'ePayment']);
 });
 
+it('never sends the buyer-only fields even when the API reports no locked fields', function () {
+    $payload = $this->mapper->payload([
+        'company_codes' => ['9999'],
+        'purchase_orgs' => ['9000'],
+        'vendor_details' => [
+            'vendor_name' => 'Acme', 'vendor_accounting_group' => 'X', 'agreement_no' => 'AG-1', 'vendor_code' => 'V-1',
+        ],
+        'payment_terms' => ['reconciliation_type' => 'Tenant Payable', 'payment_mode' => 'ePayment'],
+    ], [], [], [])['form'];
+
+    expect($payload)->not->toHaveKey('company_codes')->and($payload)->not->toHaveKey('purchase_orgs')
+        ->and($payload['vendor_details'])->toBe(['vendor_name' => 'Acme'])
+        ->and($payload['payment_terms'])->toEqual(['payment_mode' => 'ePayment']);
+});
+
 it('drops blank rows from replaced lists but still sends an empty list so it can be cleared', function () {
     $payload = $this->mapper->payload([
         'outlets' => [['state' => 'KL', 'is_all' => '0', 'store_1' => ''], ['state' => '', 'is_all' => '0', 'store_1' => ''], []],

@@ -29,6 +29,21 @@
     gstType.addEventListener('change', function () { gstStar.hidden = gstType.value === 'GST Unregistered'; });
   }
 
+  // ---- Scope State / Region: states for "State", regions for "Regional", nothing for "PAN India" ---------------------------
+  var scopeType = form.querySelector('[data-scope-type]');
+  var scopeState = form.querySelector('[data-scope-state]');
+  if (scopeType && scopeState) {
+    var scopeLists = {};
+    try { scopeLists = JSON.parse(scopeState.dataset.scopeOptions || '{}'); } catch (e) { scopeLists = {}; }
+    scopeType.addEventListener('change', function () {
+      var list = scopeLists[scopeType.value] || {};
+      scopeState.innerHTML = '';
+      scopeState.appendChild(new Option('', ''));
+      Object.keys(list).forEach(function (code) { scopeState.appendChild(new Option(list[code], code)); });
+      scopeState.value = '';
+    });
+  }
+
   // ---- autosave (same call as Save Draft, answered as JSON) -----------------------------------------------------------
   function save() {
     if (saving) return saving;
@@ -113,8 +128,40 @@
       if (c.ta.dataset.initial === c.ta.dataset.original) c.ta.disabled = true;
       return;
     }
-    // typed something: save it, then reload so the view shows the saved wording
-    Promise.resolve(save()).then(function (ok) { if (ok) window.location.reload(); });
+    saveClause(card); // typed something: save it, then show the saved wording
+  }
+
+  // Save the draft, then refresh just this clause's wording from the server (no page reload).
+  function refreshClause(card) {
+    var key = card.id;
+    return fetch(window.location.href, { credentials: 'same-origin', headers: { 'Accept': 'text/html' } })
+      .then(function (r) { return r.ok ? r.text() : ''; })
+      .then(function (html) {
+        var fresh = html ? new DOMParser().parseFromString(html, 'text/html').getElementById(key) : null;
+        if (!fresh) return;
+        card.querySelector('.clause-view').innerHTML = fresh.querySelector('.clause-view').innerHTML;
+        card.querySelector('.clause-header > span').innerHTML = fresh.querySelector('.clause-header > span').innerHTML;
+      })
+      .catch(function () { /* the wording is saved; the view just keeps what it showed */ });
+  }
+
+  function saveClause(card) {
+    var c = clauseParts(card);
+    var buttons = card.querySelectorAll('[data-clause-save],[data-clause-restore]');
+    buttons.forEach(function (b) { b.disabled = true; });
+    c.ta.disabled = false;
+    return Promise.resolve(saving).then(function () { return save(); }).then(function (ok) {
+      if (!ok) { buttons.forEach(function (b) { b.disabled = false; }); return false; }
+      return refreshClause(card).then(function () {
+        c.ta.dataset.initial = c.ta.value;
+        c.edit.hidden = true;
+        c.view.hidden = false;
+        c.btn.setAttribute('aria-expanded', 'false');
+        if (c.ta.value === c.ta.dataset.original) c.ta.disabled = true;
+        buttons.forEach(function (b) { b.disabled = false; });
+        return true;
+      });
+    });
   }
 
   document.querySelectorAll('[data-clause-toggle]').forEach(function (btn) {
@@ -132,8 +179,13 @@
       c.ta.disabled = false;
       c.ta.value = c.ta.dataset.original; // text identical to the original removes the edit at the Admin
       grow(c.ta);
-      Promise.resolve(save()).then(function (ok) { if (ok) window.location.reload(); });
+      saveClause(card);
     });
+  });
+
+  document.querySelectorAll('[data-clause-save]').forEach(function (btn) {
+    var card = btn.closest('[data-clause]');
+    btn.addEventListener('click', function () { saveClause(card); });
   });
 
   // the number fields of a clause appear twice (in the text and beside the textarea): keep both copies equal

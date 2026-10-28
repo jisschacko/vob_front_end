@@ -19,7 +19,7 @@
 <div class="field-wrap {{ $locked && $page->editable() ? 'locked' : '' }} {{ in_array($type, ['company_codes', 'purchase_orgs'], true) ? 'span-all' : '' }}">
     <label class="flabel" for="{{ $id }}">{{ $f['label'] }}
         @if ($listed)<span class="req" @if ($path === 'vendor_details.gst_regn_no') id="gst-regn-req" @endif @unless ($page->isRequired($path)) hidden @endunless>*</span>@endif
-        @if ($locked && $page->editable())<span class="tag-readonly">(set by Lulu)</span>@endif
+        @if ($locked && $page->editable())<span class="tag-readonly">(Filled by Lulu)</span>@endif
     </label>
 @endunless
 
@@ -41,9 +41,18 @@
         @break
 
     @case('select')
-        <select class="{{ $class }}" id="{{ $id }}" name="{{ $name }}" @if ($locked) disabled @endif @if ($path === 'vendor_details.gst_type') data-gst-type @endif>
+        <select class="{{ $class }}" id="{{ $id }}" name="{{ $name }}" @if ($locked) disabled @endif @if ($path === 'vendor_details.gst_type') data-gst-type @endif @if ($path === 'vendor_details.scope_type') data-scope-type @endif>
             <option value=""></option>
             @foreach ($page->options($f) as $code => $label)
+                <option value="{{ $code }}" @selected((string) $val === (string) $code)>{{ $label }}</option>
+            @endforeach
+        </select>
+        @break
+
+    @case('scope_state')
+        <select class="{{ $class }}" id="{{ $id }}" name="{{ $name }}" data-scope-state data-scope-options="{{ json_encode($page->scopeOptions(), JSON_UNESCAPED_UNICODE) }}" @if ($locked) disabled @endif>
+            <option value=""></option>
+            @foreach ($page->scopeStateOptions($path) as $code => $label)
                 <option value="{{ $code }}" @selected((string) $val === (string) $code)>{{ $label }}</option>
             @endforeach
         </select>

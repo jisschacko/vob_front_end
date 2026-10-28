@@ -182,6 +182,28 @@ class TotPage
         return $options;
     }
 
+    /**
+     * Scope State / Region choices per Scope Type: State => states master, Regional => regions master, PAN India => none.
+     *
+     * @return array{State: array<string,string>, Regional: array<string,string>}
+     */
+    public function scopeOptions(): array
+    {
+        return ['State' => $this->masters->options('states'), 'Regional' => $this->masters->options('regions')];
+    }
+
+    /** Options for the Scope State / Region select for the Scope Type currently chosen (plus a stored value no longer listed). */
+    public function scopeStateOptions(string $path): array
+    {
+        $options = $this->scopeOptions()[(string) $this->raw('vendor_details.scope_type')] ?? [];
+        $current = $this->raw($path);
+        if (is_string($current) && $current !== '' && $options !== [] && ! isset($options[$current])) {
+            $options[$current] = $current;
+        }
+
+        return $options;
+    }
+
     /** @return array<string,string> */
     public function masterOptions(string $master): array
     {

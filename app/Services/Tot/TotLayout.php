@@ -104,9 +104,9 @@ final class TotLayout
 
             ['id' => 'tot_scope', 'title' => 'TOT Scope', 'blocks' => [['grid', 2, [
                 self::field('vendor_details.scope_type', 'Scope Type', 'select', ['options' => ['PAN India', 'Regional', 'State'], 'help' => 'Whether this agreement applies across India, to a region, or a single state.']),
-                self::field('vendor_details.scope_state', 'State', 'text', ['help' => 'Required only when Scope Type is Regional or State.']),
-                ['type' => 'company_codes', 'path' => 'company_codes', 'label' => 'Company Code', 'help' => 'SAP company codes linked to this agreement (set by Lulu).'],
-                ['type' => 'purchase_orgs', 'path' => 'purchase_orgs', 'label' => 'Purchase Organization', 'help' => 'Purchase organizations linked to this agreement (set by Lulu).'],
+                self::field('vendor_details.scope_state', 'State / Region', 'scope_state', ['help' => 'The state when Scope Type is State, the region when it is Regional. Not needed for PAN India.']),
+                ['type' => 'company_codes', 'path' => 'company_codes', 'label' => 'Company Code', 'help' => 'SAP company codes linked to this agreement.'],
+                ['type' => 'purchase_orgs', 'path' => 'purchase_orgs', 'label' => 'Purchase Organization', 'help' => 'Purchase organizations linked to this agreement.'],
             ]]]],
 
             ['id' => 'vendor_details', 'title' => 'Vendor Details', 'blocks' => [
