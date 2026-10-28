@@ -7,6 +7,7 @@ use App\Http\Controllers\OnboardController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\TotController;
 use App\Http\Controllers\TotDocumentController;
+use App\Http\Controllers\TotListController;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -21,6 +22,10 @@ Route::get('/onboard/{token}', [OnboardController::class, 'show'])
     ->where('token', '.{10,2000}')->middleware('throttle:30,1')->name('onboard');
 Route::get('/link-invalid', [OnboardController::class, 'invalid'])->name('link.invalid');
 
+// Returning vendors: e-mail + password, no invitation link
+Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'loginStore'])->middleware('throttle:sign-in');
+
 Route::get('/sign-in', [AuthController::class, 'create'])->name('sign-in');
 Route::post('/sign-in', [AuthController::class, 'store'])->middleware('throttle:sign-in');
 
@@ -34,6 +39,8 @@ Route::post('/webhooks/cashfree', CashfreeWebhookController::class)->middleware(
 ])->name('webhooks.cashfree');
 
 Route::middleware('vendor')->group(function () {
+    Route::get('/tots', [TotListController::class, 'index'])->name('tots.index');
+    Route::post('/tots/select', [TotListController::class, 'select'])->name('tots.select');
     Route::post('/bank/verify', [BankVerificationController::class, 'create'])->middleware('throttle:6,1')->name('bank.create');
     Route::get('/bank/verify', [BankVerificationController::class, 'show'])->name('bank.verify');
     Route::post('/bank/verify/status', [BankVerificationController::class, 'status'])->middleware('throttle:60,1')->name('bank.status');

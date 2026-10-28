@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureVendorSession;
 use App\Http\Middleware\SecurityHeaders;
 use App\Services\AdminApi\AdminApiException;
 use App\Services\AdminApi\AdminApiUnauthenticatedException;
+use App\Services\AdminApi\AdminSession;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -26,7 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Admin session ended (idle 30 min / 8 h absolute / token replaced): back to sign-in. The invitation link stays in the session.
         $exceptions->render(fn (AdminApiUnauthenticatedException $e, Request $request) => $request->expectsJson()
             ? response()->json(['error' => 'session_ended'], 401)
-            : redirect()->route('sign-in')->with('status', 'Your session has ended. Please sign in again.'));
+            : redirect()->route(app(AdminSession::class)->loginRoute())->with('status', 'Your session has ended. Please sign in again.'));
 
         // Admin unreachable or VOB mis-configured: a neutral page, never the reason.
         $exceptions->render(fn (AdminApiException $e, Request $request) => response()->view('errors.service-unavailable', [], 503));

@@ -125,7 +125,7 @@ describe('submitting', function () {
 
     it('is POST only, needs a signed-in vendor and is rate limited', function () {
         $this->get('/tot/submit')->assertStatus(405);
-        $this->post('/tot/submit')->assertRedirect(route('sign-in'));
+        $this->post('/tot/submit')->assertRedirect(route('login'));
 
         T::fake(submitRoutes(), readyDetail());
         foreach (range(1, 9) as $i) {

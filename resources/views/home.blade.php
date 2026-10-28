@@ -6,7 +6,7 @@
     <div class="card">
         @if ($tot === null)
             <h1>Welcome</h1>
-            <p>No Terms of Trade is linked to this sign-in. Please open the link in your invitation email.</p>
+            <p>No Terms of Trade yet. Please contact your Lulu buyer.</p>
         @else
             <h1>Terms of Trade {{ $tot['financial_year'] ?? '' }}</h1>
             <p><strong>Status:</strong> {{ $tot['status_label'] ?? $tot['status'] ?? '' }}</p>

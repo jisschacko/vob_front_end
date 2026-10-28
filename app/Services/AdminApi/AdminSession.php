@@ -16,6 +16,8 @@ class AdminSession
 
     private const LINK = 'admin_api.link';
 
+    private const TOTS = 'admin_api.tots';
+
     private const STARTED = 'admin_api.started_at';
 
     private const SEEN = 'admin_api.last_seen';
@@ -27,6 +29,7 @@ class AdminSession
         session()->put(self::TOKEN, (string) $login['access_token']);
         session()->put(self::USER, $login['user'] ?? []);
         session()->put(self::TOT, $login['tot'] ?? null);
+        session()->put(self::TOTS, array_values((array) ($login['tots'] ?? [])));
         session()->put(self::STARTED, time());
         session()->put(self::SEEN, time());
     }
@@ -81,6 +84,42 @@ class AdminSession
         session()->put(self::USER.'.must_change_password', false);
     }
 
+    /** @return list<array<string,mixed>> every TOT of the vendor (login answer / GET /tots), newest first */
+    public function tots(): array
+    {
+        return array_values((array) session(self::TOTS, []));
+    }
+
+    /** @param list<array<string,mixed>> $tots */
+    public function rememberTots(array $tots): void
+    {
+        session()->put(self::TOTS, array_values($tots));
+    }
+
+    /**
+     * Work on one of the vendor's TOTs. The browser only ever names it by its position in the list (never by id).
+     *
+     * @return array<string,mixed>|null the chosen TOT, or null when there is no such position
+     */
+    public function selectTot(int $index): ?array
+    {
+        $tot = $this->tots()[$index] ?? null;
+        if (! is_array($tot) || ! isset($tot['id'])) {
+            return null;
+        }
+
+        session()->put(self::TOT, $tot);
+        session()->forget(['tot.locked', 'cashfree.pending']); // belonged to the previous TOT
+
+        return $tot;
+    }
+
+    /** Where a signed-out vendor goes: back to the invitation sign-in when they came by link, otherwise the login page. */
+    public function loginRoute(): string
+    {
+        return $this->link() !== null ? 'sign-in' : 'login';
+    }
+
     /** @return array<string,mixed>|null the TOT behind the invitation link used to sign in */
     public function tot(): ?array
     {
@@ -118,7 +157,7 @@ class AdminSession
     /** Drop the token and vendor data (logout, 401, expiry). */
     public function forget(): void
     {
-        session()->forget([self::TOKEN, self::USER, self::TOT, self::STARTED, self::SEEN]);
+        session()->forget([self::TOKEN, self::USER, self::TOT, self::TOTS, self::STARTED, self::SEEN]);
         session()->regenerate();
     }
 }

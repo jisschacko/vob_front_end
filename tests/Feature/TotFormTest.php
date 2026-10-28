@@ -219,7 +219,7 @@ describe('Save Draft', function () {
 
     it('is POST only and needs a signed-in vendor', function () {
         $this->get('/tot/draft')->assertStatus(405);
-        $this->post('/tot/draft', ['form' => []])->assertRedirect(route('sign-in'));
+        $this->post('/tot/draft', ['form' => []])->assertRedirect(route('login'));
     });
 
     it('logs the draft calls without account, PAN or password values', function () {

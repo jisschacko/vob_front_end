@@ -15,7 +15,7 @@ class EnsureVendorSession
     public function handle(Request $request, Closure $next): Response
     {
         if (! $this->session->check()) {
-            return $request->expectsJson() ? response()->json(['error' => 'session_ended'], 401) : redirect()->route('sign-in');
+            return $request->expectsJson() ? response()->json(['error' => 'session_ended'], 401) : redirect()->route($this->session->loginRoute());
         }
 
         if ($this->session->expired()) {
@@ -25,7 +25,7 @@ class EnsureVendorSession
                 return response()->json(['error' => 'session_ended'], 401);
             }
 
-            return redirect()->route('sign-in')->with('status', 'Your session has ended. Please sign in again.');
+            return redirect()->route($this->session->loginRoute())->with('status', 'Your session has ended. Please sign in again.');
         }
         $this->session->touch();
 

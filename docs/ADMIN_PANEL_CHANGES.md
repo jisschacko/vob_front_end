@@ -68,7 +68,7 @@ docs/API_CONTRACT.md as appropriate, with Pest tests):
 
 ---
 
-## 3. .env settings: mirror the VOB switches and list every setting - Status: OPEN
+## 3. .env settings: mirror the VOB switches and list every setting - Status: DONE (implemented in the Admin panel, confirmed by the owner)
 
 VOB now has these development / demo settings. The Admin Panel needs the matching ones so both applications behave the same in a demo, and both
 repos should keep one readable list of every `.env` setting (VOB's list is `docs/ENV_SETTINGS.md`).

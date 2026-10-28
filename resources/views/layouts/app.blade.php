@@ -34,6 +34,9 @@
         @if (session('admin_api.token'))
             <header class="page-header">
                 <span class="page-header-user">{{ session('admin_api.user.name') }}</span>
+                @if (count((array) session('admin_api.tots', [])) > 1)
+                    <a class="header-link" href="{{ route('tots.index') }}">My Terms of Trade</a>
+                @endif
                 <form method="POST" action="{{ route('logout') }}" class="signout-form">
                     @csrf
                     <button type="submit" class="signout">Sign out</button>

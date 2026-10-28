@@ -33,8 +33,15 @@ class TotController extends Controller
     public function show(Request $request)
     {
         $tot = $this->session->tot();
-        if ($tot === null) {
-            return view('home', ['tot' => null]);
+        if ($tot === null) { // signed in without an invitation link: choose among the vendor's TOTs
+            $count = count($this->session->tots());
+            if ($count === 1) {
+                $this->session->selectTot(0);
+
+                return redirect()->route('home');
+            }
+
+            return $count > 1 ? redirect()->route('tots.index') : view('home', ['tot' => null]);
         }
 
         $this->bank->reconcile($tot['id']); // a payment made while the page was closed is reported to the Admin first

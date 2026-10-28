@@ -160,8 +160,8 @@ describe('starting a verification', function () {
     });
 
     it('needs a signed-in vendor and POST, and no ids appear in the URLs', function () {
-        $this->post('/bank/verify')->assertRedirect(route('sign-in'));
-        $this->get('/bank/verify')->assertRedirect(route('sign-in'));
+        $this->post('/bank/verify')->assertRedirect(route('login'));
+        $this->get('/bank/verify')->assertRedirect(route('login'));
         expect(route('bank.verify').route('bank.status').route('bank.create'))->not->toContain('vob');
     });
 

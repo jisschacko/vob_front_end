@@ -78,10 +78,24 @@ $header = rtrim(strtr(base64_encode(json_encode(['kid'=>$kid,'ek'=>base64_encode
 ```json
 { "access_token": "...64 chars...", "token_type": "Bearer", "expires_in": 1800,
   "user": { "id": "<public id>", "name": "...", "email": "...", "must_change_password": true },
-  "tot": { "id": "...", "tot_number": 12, "financial_year": "2026-27", "type": "new", "vendor_name": "...", "status": "pending_vendor", "status_label": "Pending with vendor", "editable": true, "submitted_at": null } }
+  "tot": { "id": "...", "tot_number": 12, "financial_year": "2026-27", "type": "new", "vendor_name": "...", "status": "pending_vendor", "status_label": "Pending with vendor", "editable": true, "submitted_at": null },
+  "tots": [ { "id": "...", "tot_number": 12, "financial_year": "2026-27", "type": "new", "vendor_name": "...", "status": "pending_vendor", "status_label": "Pending with vendor", "editable": true, "submitted_at": null } ] }
 ```
-`tot` is the TOT behind `link_token` (null when no link). A valid link on a TOT in "TOT Initiated" moves it to **Pending with vendor**.
+`tot` is the TOT behind `link_token` (null when no link). A valid link on a TOT in "TOT Initiated" moves it to **Pending with vendor**. `tots` is always returned: every TOT of the vendor, newest first, same rows as `GET /tots` (see "Returning vendors" below).
 401 `invalid_credentials` (identical for wrong password / unknown / inactive / internal accounts) - 429 `too_many_attempts` after 5 failures (15 min; one counter per vendor email, the VOB IP is not part of the key; an Admin can clear it at once from User Administration > Vendors or the TOT page, which also lets the next login through) - 422 `link_invalid` (credentials were right, link wrong/for another vendor; no token issued) - 404 bad envelope.
+
+### Returning vendors: a login page without the invitation link
+
+The invitation link is only needed for the **first** sign-in (temporary password, "TOT Initiated" -> "Pending with vendor"). Add a normal **login page** (for example `/login`) that vendors can use at any time:
+
+1. Fields: email and password. Call **`POST /vendor/login`** exactly as above (`X-Auth-Data` = `{ "email", "password" }`) and **leave `link_token` out**. No other endpoint, header or setting is needed; the first-login flow with the link stays as it is.
+2. On 200 you get the `access_token`, `user` and **`tots`** (`tot` is `null` without a link). If `user.must_change_password` is `true` (temporary password) send the vendor to the change-password page first: every other call answers 403 `password_change_required` until `POST /vendor/password` succeeded.
+3. Then choose the TOT: no entry in `tots` -> "No Terms of Trade yet, contact your Lulu buyer"; one entry -> open it; several -> a list of `financial_year`, `type`, `status_label` and `editable`, newest first (the same rows `GET /tots` returns later). Open the chosen one with `GET /tots/{id}` (which moves a TOT in "TOT Initiated" to "Pending with vendor"). `editable = false` TOTs (with a reviewer or approved) open read-only with the tracker and the reviewer comments.
+4. Errors are the same as for the link sign-in, and deliberately identical for wrong password, unknown, inactive and internal accounts: 401 `invalid_credentials`, 429 `too_many_attempts` (5 failures per email in 15 minutes; an Admin can unblock the vendor), 404 for a bad / replayed / stale `X-Auth-Data`. Do not tell the vendor which part was wrong. `link_invalid` (422) only exists for the link sign-in.
+5. A vendor who never signed in can also use this page with the emailed temporary password; the link sign-in remains the documented first-login path.
+6. The session is the same bearer token (30 minutes idle, 8 hours absolute); when it ends, send the vendor back to this login page.
+
+Postman: **1. Before login > Login - returning vendor (email + password only, no link)**. Header for it: `php artisan api:auth-header login <email> <password>` (no `--link`).
 
 ### After login (signature + bearer)
 

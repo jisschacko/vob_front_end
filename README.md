@@ -63,6 +63,12 @@ A missing key/secret/URL raises a clear "not configured" error before any reques
 - Save Draft (POST) and autosave (POST, JSON) both call `PUT /tots/{id}/draft`. The TOT id never appears in a URL: it is kept in the server-side session.
 - Documents: PDF only, max 5 MB, PDF signature checked, `DocumentScanner` hook for antivirus (no-op by default), stored at `tots/{tot id}/{random}.pdf` in the private bucket, then registered with the Admin; the object is removed again if registration fails.
 
+## Login page for returning vendors (`/login`)
+
+- E-mail + password only, no invitation link: `POST /vendor/login` without `link_token`. The first sign-in from the emailed link (`/onboard/{token}` then `/sign-in`) is unchanged, and a new vendor can also use `/login` with the temporary password.
+- After sign-in a temporary password goes to the change-password page first. Then: no Terms of Trade -> "No Terms of Trade yet. Please contact your Lulu buyer."; one -> opened directly; several -> `/tots` (financial year, type, status, editable; newest first), chosen with a POST by list position (never by id). Approved / read-only TOTs open with the tracker and reviewer comments. The header shows "My Terms of Trade" to switch when there are several.
+- Failures are one generic message (401, 429, 404 look alike, no hint about which part was wrong); attempts are limited to 10 a minute per IP. When the session ends a vendor who came by link returns to the link sign-in, everyone else to `/login`.
+
 ## Terms of Trade clauses (editable by the vendor)
 
 - The 14 clauses are not stored in VOB: their original wording comes from the Admin on every load (`clause_templates`), the vendor's edits are `form.clauses` (`{ key: complete edited text }`, only edited clauses).

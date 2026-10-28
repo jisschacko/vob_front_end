@@ -39,6 +39,7 @@ body { margin:0; font-family:var(--font); background:var(--bg); color:#1c2433; }
 .card h1 { margin:0 0 12px; font-size:22px; }
 .card h2 { font-size:16px; margin:20px 0 8px; }
 .brand { height:34px; margin-bottom:16px; }
+.brand-login { display:block; height:72px; max-width:100%; margin:0 auto 20px; }
 .muted { color:#5d6a85; font-size:13px; line-height:1.5; }
 .hint { background:#f4f1e8; border-left:3px solid var(--gold); padding:8px 12px; font-size:13px; }
 .flash { background:#e6f2e8; border:1px solid #b9d8bf; color:#1d5b2a; padding:10px 14px; border-radius:8px; max-width:760px; width:100%; font-size:14px; }
@@ -66,3 +67,15 @@ blockquote footer { color:#5d6a85; font-size:12px; margin-top:4px; }
 .signout-form { margin:0; }
 .signout { background:#fff; border:1px solid #c5cad6; border-radius:6px; padding:6px 14px; font:inherit; font-size:13px; font-weight:600; color:var(--navy); cursor:pointer; }
 .signout:hover { background:var(--navy); color:#fff; border-color:var(--navy); }
+
+/* Returning vendors: header link and the list of Terms of Trade */
+.header-link { color:var(--navy); font-weight:600; text-decoration:none; }
+.header-link:hover { text-decoration:underline; }
+.tot-list { max-width:760px; }
+.tot-table { width:100%; border-collapse:collapse; font-size:14px; margin-top:10px; }
+.tot-table th { text-align:left; padding:8px 10px; background:#f5f6fa; border-bottom:1px solid #d7dae3; color:#4b4f5a; font-weight:600; }
+.tot-table td { padding:10px; border-bottom:1px solid #eef0f4; vertical-align:middle; }
+.tot-table .current-row td { background:#f4f9f5; }
+.tot-table .row-form { margin:0; }
+.tot-table .row-open { background:var(--navy); color:#fff; border:0; border-radius:6px; padding:6px 16px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; }
+.tot-table .row-open:hover { background:var(--navy-deep); color:#fff; }

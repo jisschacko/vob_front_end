@@ -105,8 +105,8 @@ describe('invitation link', function () {
     });
 
     it('sends someone without a link back to the landing page', function () {
-        $this->get('/sign-in')->assertRedirect('/');
-        $this->post('/sign-in', ['email' => 'a@b.test', 'password' => 'x'])->assertRedirect('/');
+        $this->get('/sign-in')->assertRedirect(route('login'));
+        $this->post('/sign-in', ['email' => 'a@b.test', 'password' => 'x'])->assertRedirect(route('login'));
     });
 });
 
@@ -196,8 +196,8 @@ describe('forced password change', function () {
     });
 
     it('requires a signed-in vendor', function () {
-        $this->get('/home')->assertRedirect(route('sign-in'));
-        $this->get('/password')->assertRedirect(route('sign-in'));
+        $this->get('/home')->assertRedirect(route('login'));
+        $this->get('/password')->assertRedirect(route('login'));
     });
 
     it('rejects weak or unchanged passwords locally, without calling the Admin', function (string $new, ?string $confirm) {
@@ -315,17 +315,17 @@ describe('after sign-in', function () {
     it('signs out: ends the Admin session and wipes the browser session', function () {
         Http::fake(['admin.test/*' => Http::response(['message' => 'bye'])]);
 
-        $this->withSession(signedInSession())->post('/logout')->assertRedirect('/');
+        $this->withSession(signedInSession())->post('/logout')->assertRedirect(route('login'));
 
         Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/vendor/logout') && $r->hasHeader('Authorization', 'Bearer '.ACCESS));
         expect(app(AdminSession::class)->check())->toBeFalse()->and(app(AdminSession::class)->link())->toBeNull();
-        $this->get('/home')->assertRedirect(route('sign-in'));
+        $this->get('/home')->assertRedirect(route('login'));
     });
 
     it('still signs out locally when the Admin is unreachable', function () {
         Http::fake(fn () => throw new ConnectionException('down'));
 
-        $this->withSession(signedInSession())->post('/logout')->assertRedirect('/');
+        $this->withSession(signedInSession())->post('/logout')->assertRedirect(route('login'));
         expect(app(AdminSession::class)->check())->toBeFalse();
     });
 

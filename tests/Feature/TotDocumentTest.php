@@ -118,7 +118,7 @@ describe('upload to S3', function () {
 
     it('is POST only, signed in only, and keeps ids out of the URL', function () {
         $this->get('/tot/documents')->assertStatus(405);
-        $this->post('/tot/documents', ['type' => 'pan_certificate', 'file' => pdf()])->assertRedirect(route('sign-in'));
+        $this->post('/tot/documents', ['type' => 'pan_certificate', 'file' => pdf()])->assertRedirect(route('login'));
         expect(route('tot.documents.store'))->not->toContain(T::TOT_ID);
     });
 
