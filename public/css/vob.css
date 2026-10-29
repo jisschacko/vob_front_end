@@ -15,6 +15,15 @@ body { margin:0; font-family:var(--font); background:var(--bg); color:#1c2433; }
 .tracker .logo img { height:74px; width:auto; max-width:100%; object-fit:contain; display:inline-block; vertical-align:middle; }
 .tracker h2 { margin:0 0 4px; font-size:17px; font-weight:600; }
 .tracker .sub { margin:0 0 30px; font-size:12px; color:var(--muted); line-height:1.5; }
+/* Everything under the logo stays in view while the page scrolls (the logo scrolls away; the block scrolls inside itself if the window is very short) */
+.tracker-float { position:sticky; top:16px; max-height:calc(100vh - 32px); overflow-y:auto; }
+/* thin, subtle scrollbar for that block */
+.tracker-float { scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.22) transparent; }
+.tracker-float::-webkit-scrollbar { width:4px; }
+.tracker-float::-webkit-scrollbar-track { background:transparent; }
+.tracker-float::-webkit-scrollbar-thumb { background:rgba(255,255,255,.22); border-radius:4px; }
+.tracker-float::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,.4); }
+.tracker .steps-title { margin:0 0 16px; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
 .steps { list-style:none; margin:0; padding:0; }
 .step { position:relative; display:flex; align-items:center; gap:14px; padding-bottom:30px; font-size:13.5px; color:var(--muted); }
 .step:last-child { padding-bottom:0; }
@@ -31,7 +40,7 @@ body { margin:0; font-family:var(--font); background:var(--bg); color:#1c2433; }
 .step.current .dot::after { content:attr(data-n); }
 .step.pending .dot::after { content:attr(data-n); }
 
-@media (max-width:800px) { .layout { flex-direction:column; } .tracker { width:auto; flex:none; } .content { padding:20px; } }
+@media (max-width:800px) { .layout { flex-direction:column; } .tracker { width:auto; flex:none; } .tracker-float { position:static; max-height:none; overflow:visible; } .content { padding:20px; } }
 
 /* Forms and pages */
 .main-inner { width:100%; display:flex; flex-direction:column; align-items:center; gap:16px; }

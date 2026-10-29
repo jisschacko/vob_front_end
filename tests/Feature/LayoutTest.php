@@ -44,6 +44,15 @@ it('shows the left tracker in the layout only when progress is supplied', functi
         ->and($without)->not->toContain('class="tracker"');
 });
 
+it('titles the steps "Status" and keeps everything but the logo in a floating block', function () {
+    $html = view('landing', ['progress' => sampleProgress(), 'vendorName' => 'Acme'])->render();
+
+    expect($html)->toMatch('/<div class="logo">.*?<\/div>\s*<div class="tracker-float">.*<h3 class="steps-title">Status<\/h3>\s*<ol class="steps">/s');
+
+    $css = file_get_contents(public_path('css/vob.css'));
+    expect($css)->toMatch('/\.tracker-float\s*\{[^}]*position:sticky/');
+});
+
 it('serves the landing page with hardening headers and no inline script', function () {
     $response = $this->get('/');
 

@@ -12,6 +12,7 @@
 @endphp
 <aside class="tracker" aria-label="Onboarding progress">
     <div class="logo"><img src="{{ asset('images/lulu-hypermarket.jpg') }}" alt="Lulu"></div>
+    <div class="tracker-float">
     @if ($vendorName)
         <h2>{{ $vendorName }}</h2>
     @endif
@@ -22,6 +23,7 @@
         @endif
     </p>
 
+    <h3 class="steps-title">Status</h3>
     <ol class="steps">
         @foreach ($steps as $i => $step)
             @php($state = in_array($step['state'] ?? '', ['done', 'current', 'pending'], true) ? $step['state'] : 'pending')
@@ -37,4 +39,5 @@
             </li>
         @endforeach
     </ol>
+    </div>
 </aside>

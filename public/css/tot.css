@@ -88,8 +88,33 @@
 .tot .pencil:hover, .tot .pencil[aria-expanded="true"] { background:#1c3a26; color:#fff; }
 .tot .badge { display:inline-block; margin-left:8px; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:0; text-transform:none; vertical-align:middle; }
 .tot .badge-edited { background:#fff3a8; color:#5b4600; }
-.tot .badge-flag { background:#ffe0b3; color:#7a3b00; }
-.tot [data-flagged] { box-shadow:0 0 0 2px #f0a54a; }
+
+/* Reviewer comments: collapsible, long lists scroll inside the card */
+.tot .comments-card > summary { display:flex; align-items:center; gap:6px; cursor:pointer; list-style:none; user-select:none; }
+.tot .comments-card > summary::-webkit-details-marker { display:none; }
+.tot .comments-card > summary::after { content:""; margin-left:auto; width:8px; height:8px; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg); transition:transform .15s; }
+.tot .comments-card[open] > summary::after { transform:rotate(-135deg); }
+.tot .comments-card > summary:focus-visible { outline:2px solid currentColor; outline-offset:-2px; }
+.tot .comments-count { font-weight:400; opacity:.75; }
+.tot .comments-card .card-body { max-height:420px; overflow:auto; }
+@media (prefers-reduced-motion: reduce) { .tot .comments-card > summary::after { transition:none; } }
+
+/* A section a reviewer commented on: brighter than a normal card and pulsing to draw the eye (still, for people who prefer reduced motion) */
+.tot [data-flagged] { background:#fff6e0; border-color:#dc2626; animation:flag-pulse 1.8s ease-in-out infinite; }
+.tot [data-flagged] > .card-header { background:#ffe8b8; }
+.tot .badge-flag { background:#ff9800; color:#fff; font-weight:700; animation:flag-badge 1.8s ease-in-out infinite; }
+@keyframes flag-pulse {
+  0%   { box-shadow:0 0 0 0 rgba(220,38,38,.6); }
+  70%  { box-shadow:0 0 0 12px rgba(220,38,38,0); }
+  100% { box-shadow:0 0 0 0 rgba(220,38,38,0); }
+}
+@keyframes flag-badge {
+  0%, 100% { transform:scale(1); background:#ff9800; }
+  50%      { transform:scale(1.08); background:#ff7a00; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tot [data-flagged], .tot .badge-flag { animation:none; }
+}
 .tot .card { scroll-margin-top:60px; }
 .tot .clause-edit textarea.clause-text { min-height:200px; line-height:1.5; white-space:pre-wrap; resize:vertical; overflow:auto; }
 .tot .clause-edit .flabel { display:block; margin:0 0 6px; }
