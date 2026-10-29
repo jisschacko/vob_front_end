@@ -211,6 +211,40 @@ Afterwards VOB can drop its demo workaround (App\Support\DemoLenientFields) and 
 
 ---
 
+## 8. Forgot password for vendors - Status: OPEN
+
+The VOB login page (`/login`) needs a "Forgot password?" link. `docs/API_CONTRACT.md` has no endpoint for it, and VOB has no user store, so the Admin must
+own the reset (token, email, password rule check). VOB will build its two pages (request, then set a new password) once the contract below is confirmed.
+
+**Prompt for the Admin Panel repo:**
+
+```
+Add a password reset for vendors to the vendor API, with Pest tests, and document it in docs/API_CONTRACT.md. Proposed contract (change it if
+something here clashes with the existing design, and tell me what you changed):
+
+1. POST /api/v1/vendor/password/forgot
+   Same envelope as login: HMAC signature headers, credentials ONLY in the encrypted X-Auth-Data header ({ "email": "..." }), random decoy JSON body.
+   ALWAYS answers 200 {"message":"If the address belongs to a vendor account, an email with a reset link has been sent."} whether the email is unknown,
+   inactive or an internal account, so nobody can discover which emails exist. Same timing for known and unknown as far as practical.
+   Rate limit: 3 requests per email per hour and 20 per IP per hour (429 too_many_attempts).
+   For a real active vendor: create a single-use random token (store only its hash), valid 60 minutes, replacing any earlier unused token, and email the
+   vendor a link {VOB_URL}/reset-password/{token}. The email must say the link expires in 60 minutes and can be ignored if the vendor did not ask.
+   Honour TOT_SKIP_THIRD_PARTY (log mailer) and TOT_DEMO_SHOW_LINK (show the link in the log / Admin for demos).
+
+2. POST /api/v1/vendor/password/reset
+   X-Auth-Data { "token": "...", "new_password": "..." } (decoy body again). On success: 200 {"message":"..."}, the token is consumed, the new password
+   follows the same rules as POST /vendor/password (>= 10 chars, upper and lower case, number, symbol), must_change_password becomes false, every existing
+   access token of that vendor is revoked, and any sign-in lockout for the vendor is cleared. Errors: 422 {"error":"token_invalid"} for a wrong, used or
+   expired token (one error for all three), 422 with errors.new_password for a weak password (token NOT consumed in that case), 404 for a bad envelope.
+   Rate limit: 10 attempts per IP per hour.
+
+3. Record both steps in activity_logs (requested / completed / failed), never the token or the password. Redact X-Auth-Data in api_logs as for login.
+4. The reset email is the only place the token appears; it must never be returned by the API (except through the demo switch above).
+5. Update docs/API_CONTRACT.md (new section "Forgot password") and README. Tell me when it is done so the VOB front end can be built against it.
+```
+
+---
+
 ## 5. Demo run-book (both apps on one machine)
 
 **Admin Panel `.env`** (names as above; values are yours): `APP_URL=http://127.0.0.1:8000`, `VOB_URL=http://127.0.0.1:8001`, `VOB_ALLOWED_IPS=127.0.0.1`,

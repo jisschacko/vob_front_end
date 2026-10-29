@@ -10,7 +10,7 @@
         @endif
         <p class="muted">At least 10 characters, with upper and lower case letters, a number and a symbol, and different from your current password.</p>
 
-        <form method="POST" action="{{ route('password.update') }}" autocomplete="off">
+        <form method="POST" action="{{ route('password.update') }}" autocomplete="on">
             @csrf
             <label for="current_password">Current password</label>
             <input id="current_password" name="current_password" type="password" required autocomplete="current-password" maxlength="200">

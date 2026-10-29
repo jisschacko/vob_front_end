@@ -25,7 +25,6 @@ Route::get('/link-invalid', [OnboardController::class, 'invalid'])->name('link.i
 // Returning vendors: e-mail + password, no invitation link
 Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'loginStore'])->middleware('throttle:sign-in');
-
 Route::get('/sign-in', [AuthController::class, 'create'])->name('sign-in');
 Route::post('/sign-in', [AuthController::class, 'store'])->middleware('throttle:sign-in');
 

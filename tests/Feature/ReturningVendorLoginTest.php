@@ -55,6 +55,26 @@ describe('the login page', function () {
             ->toContain('invitation email')->not->toContain('link_token');
     });
 
+    it('leaves remembering the password to the browser or password manager: standard field types and autocomplete, no cookie of ours', function () {
+        $response = $this->get('/login')->assertOk();
+        $html = $response->getContent();
+
+        expect($html)->toMatch('/<input id="email" name="email" type="email"[^>]*autocomplete="username"/')
+            ->toMatch('/<input id="password" name="password" type="password"[^>]*autocomplete="current-password"/')
+            ->toMatch('/<form method="POST" action="[^"]+\/login" autocomplete="on"/')
+            ->not->toContain('name="remember"');
+        expect(collect($response->headers->getCookies())->map(fn ($c) => $c->getName())->all())->not->toContain('vob_remember_login')->not->toContain('vob_remember_email');
+    });
+
+    it('does not store the password or the e-mail in any cookie after signing in', function () {
+        rvFake(rvLogin([rvRow(T::TOT_ID, '2026-27')]));
+
+        $response = test()->post('/login', ['email' => 'sales@acme.test', 'password' => 'Own#Pass-123', 'remember' => '1']);
+
+        $names = collect($response->headers->getCookies())->map(fn ($c) => $c->getName())->all();
+        expect($names)->not->toContain('vob_remember_login')->not->toContain('vob_remember_email');
+    });
+
     it('needs no invitation link and is linked from the landing page', function () {
         $this->get('/')->assertOk()->assertSee(route('login'), false)->assertSee('Already registered?');
         $this->get('/login')->assertOk();
