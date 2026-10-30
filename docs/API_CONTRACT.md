@@ -97,6 +97,27 @@ The invitation link is only needed for the **first** sign-in (temporary password
 
 Postman: **1. Before login > Login - returning vendor (email + password only, no link)**. Header for it: `php artisan api:auth-header login <email> <password>` (no `--link`).
 
+### Forgot password
+
+VOB has no user store; the Admin owns the whole reset (token, email, password rules). Two calls, both **before login** (signature only, no bearer), credentials only in the encrypted `X-Auth-Data` header, JSON body is a decoy and ignored, exactly like `POST /vendor/login`.
+
+**1. `POST /vendor/password/forgot`**  `X-Auth-Data` = `{ "email": "..." }`
+- **Always** `200 { "message": "If the address belongs to a vendor account, an email with a reset link has been sent." }`: identical for an unknown address, an inactive vendor and an internal (non-vendor) account, so nobody can discover which emails exist. Show that message as is ("If the address belongs..."), never "email not found". The Admin does the same work either way.
+- For an active vendor the Admin creates a single-use random token (only its hash is stored), valid **60 minutes**, replacing any earlier unused token, and emails `{VOB_URL}/reset-password/{token}` (`VOB_URL` = the Admin's `.env` value, so it must be the VOB base URL). The email says the link expires in 60 minutes and can be ignored. The token is never returned by the API.
+- Rate limit: **3 per email per hour and 20 per IP per hour**: `429 { "error": "too_many_attempts", "retry_after": <seconds> }` (show a neutral "Too many requests, try again later").
+- 404 for a bad / missing / stale / replayed envelope (same as login).
+
+**2. `POST /vendor/password/reset`**  `X-Auth-Data` = `{ "token": "<from the link>", "new_password": "..." }`
+- 200 `{ "message": "..." }`: the password is changed, the token is consumed, `must_change_password` becomes `false`, **every access token of the vendor is revoked** and any sign-in lockout is cleared. Send the vendor to the login page (they are not signed in).
+- 422 `{ "error": "token_invalid" }` for a wrong, already used or expired token - one error for all three ("This link is invalid or has expired. Ask for a new one", with a link back to the forgot-password page).
+- 422 `{ "message", "errors": { "new_password": ["..."] } }` for a weak password: >= 10 chars, upper and lower case, a number and a symbol (same rules as `POST /vendor/password`). **The token is not consumed**, so the vendor can type another password on the same page.
+- Rate limit: **10 attempts per IP per hour** (429 `too_many_attempts`).
+- 404 for a bad envelope or a missing `token`.
+
+**VOB pages**: `/login` gets a "Forgot password?" link; `/forgot-password` (email field -> call 1 -> always show the neutral message); `/reset-password/{token}` (new password + confirm, the confirm check is VOB's; call 2 with the token from the URL; on success go to `/login` with "Password changed"; on `token_invalid` show the expired-link message). Do not log or display the token anywhere else, and remove it from the browser URL / history after the call if you can.
+
+Audit and logs: the Admin records `vendor.password_reset_requested`, `vendor.password_reset_completed` and `vendor.password_reset_failed` in `activity_logs` (never the token or the password) and redacts `X-Auth-Data` in `api_logs`. Demo: with `TOT_SKIP_THIRD_PARTY=true` the email goes to the log mailer, and with `TOT_DEMO_SHOW_LINK=true` the link is also written to `storage/logs/laravel.log` on its own line. Postman: **1. Before login > Forgot password** and **Reset password**; headers: `php artisan api:auth-header forgot <email>` and `php artisan api:auth-header reset <token> <new password>`.
+
 ### After login (signature + bearer)
 
 | Method & path | Purpose |

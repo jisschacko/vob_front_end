@@ -211,7 +211,7 @@ Afterwards VOB can drop its demo workaround (App\Support\DemoLenientFields) and 
 
 ---
 
-## 8. Forgot password for vendors - Status: OPEN
+## 8. Forgot password for vendors - Status: DONE (Admin built it, see API_CONTRACT.md "Forgot password"; VOB pages /forgot-password and /reset-password built)
 
 The VOB login page (`/login`) needs a "Forgot password?" link. `docs/API_CONTRACT.md` has no endpoint for it, and VOB has no user store, so the Admin must
 own the reset (token, email, password rule check). VOB will build its two pages (request, then set a new password) once the contract below is confirmed.

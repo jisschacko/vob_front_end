@@ -57,6 +57,8 @@ body { margin:0; font-family:var(--font); background:var(--bg); color:#1c2433; }
 .card-narrow form input:focus { outline:2px solid var(--gold); border-color:var(--gold); }
 .card-narrow form button { margin-top:18px; width:100%; padding:11px; border:0; border-radius:6px; background:var(--navy); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
 .card-narrow form button:hover { background:var(--navy-deep); }
+.form-links { margin:16px 0 0; text-align:center; font-size:13px; }
+.form-links a { color:var(--navy); }
 .inline-form button.link { background:none; color:var(--navy); text-decoration:underline; width:auto; padding:0; margin-top:12px; font-weight:400; }
 .inline-form { margin-top:12px; }
 .error { color:#b3261e; font-size:13px; margin:4px 0 0; }

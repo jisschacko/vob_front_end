@@ -55,6 +55,21 @@ class AdminApiClient
         return $response;
     }
 
+    /** POST /vendor/password/forgot (before login). The e-mail goes only in X-Auth-Data; the answer is the same for every address. */
+    public function forgotPassword(string $email): Response
+    {
+        return $this->send('POST', 'vendor/password/forgot', $this->decoyBody(), bearer: false, authData: $this->envelope->encrypt(['email' => $email]));
+    }
+
+    /** POST /vendor/password/reset (before login). The token from the emailed link and the new password go only in X-Auth-Data. */
+    public function resetPassword(string $token, string $newPassword): Response
+    {
+        return $this->send('POST', 'vendor/password/reset', $this->decoyBody(), bearer: false, authData: $this->envelope->encrypt([
+            'token' => $token,
+            'new_password' => $newPassword,
+        ]));
+    }
+
     // ---- After login (signature + Bearer) ----------------------------------------------------------------------------
 
     /** POST /vendor/password. Credentials only in X-Auth-Data. */

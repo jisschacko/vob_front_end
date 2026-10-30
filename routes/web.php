@@ -5,6 +5,7 @@ use App\Http\Controllers\BankVerificationController;
 use App\Http\Controllers\CashfreeWebhookController;
 use App\Http\Controllers\OnboardController;
 use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\TotController;
 use App\Http\Controllers\TotDocumentController;
 use App\Http\Controllers\TotListController;
@@ -25,6 +26,13 @@ Route::get('/link-invalid', [OnboardController::class, 'invalid'])->name('link.i
 // Returning vendors: e-mail + password, no invitation link
 Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'loginStore'])->middleware('throttle:sign-in');
+// Forgot password. The emailed token is moved into the session at once (like /onboard/{token}); the Admin does the rest.
+Route::get('/forgot-password', [PasswordResetController::class, 'forgotForm'])->name('password.forgot');
+Route::post('/forgot-password', [PasswordResetController::class, 'forgotStore'])->middleware('throttle:10,1')->name('password.email');
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'link'])->where('token', '.{10,2000}')->middleware('throttle:30,1')->name('password.reset.link');
+Route::get('/reset-password', [PasswordResetController::class, 'resetForm'])->name('password.reset');
+Route::post('/reset-password', [PasswordResetController::class, 'resetStore'])->middleware('throttle:10,1')->name('password.reset.store');
+
 Route::get('/sign-in', [AuthController::class, 'create'])->name('sign-in');
 Route::post('/sign-in', [AuthController::class, 'store'])->middleware('throttle:sign-in');
 
