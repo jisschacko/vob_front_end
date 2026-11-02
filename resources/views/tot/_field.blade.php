@@ -50,7 +50,7 @@
         @break
 
     @case('scope_state')
-        <select class="{{ $class }}" id="{{ $id }}" name="{{ $name }}" data-scope-state data-scope-options="{{ json_encode($page->scopeOptions(), JSON_UNESCAPED_UNICODE) }}" @if ($locked) disabled @endif>
+        <select class="{{ $class }}" id="{{ $id }}" name="{{ $name }}" data-scope-state data-scope-options="{{ json_encode($page->scopeOptions(), JSON_UNESCAPED_UNICODE) }}" @if ($locked || $page->raw('vendor_details.scope_type') === 'PAN India') disabled @endif>
             <option value=""></option>
             @foreach ($page->scopeStateOptions($path) as $code => $label)
                 <option value="{{ $code }}" @selected((string) $val === (string) $code)>{{ $label }}</option>

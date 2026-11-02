@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PartnerOne — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EAF4EE}
+a{color:#0E7A3B;text-decoration:none}a:hover{color:#0A5C2C;text-decoration:underline}
+input:focus{outline:none;border-color:#0E7A3B !important;box-shadow:0 0 0 3px rgba(14,122,59,0.18)}
+button:focus-visible,a:focus-visible{outline:2px solid #0E7A3B;outline-offset:2px}
+</style>
+</head>
+<body>
+<div style="font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif; color: #1F1A1B; min-height: 900px; display: flex; flex-wrap: wrap; background: #EAF4EE">
+
+  <!-- Brand panel -->
+  <section style="flex: 1 1 520px; background: #0E7A3B; color: #FFFFFF; padding: 56px 64px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; gap: 48px; position: relative; overflow: hidden; min-height: 560px">
+    <svg aria-hidden="true" width="560" height="560" viewBox="0 0 560 560" style="position: absolute; right: -180px; bottom: -180px; opacity: 0.12">
+      <circle cx="280" cy="280" r="270" fill="none" stroke="#FFFFFF" stroke-width="1.5"></circle>
+      <circle cx="280" cy="280" r="210" fill="none" stroke="#FFFFFF" stroke-width="1.5"></circle>
+      <circle cx="280" cy="280" r="150" fill="none" stroke="#FFFFFF" stroke-width="1.5"></circle>
+      <circle cx="280" cy="280" r="90" fill="none" stroke="#FFFFFF" stroke-width="1.5"></circle>
+    </svg>
+
+    <div style="display: flex; align-items: center; gap: 14px; position: relative">
+      <div style="width: 56px; height: 56px; border-radius: 15px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><img src="assets/lulu-emblem.png" alt="PartnerOne logo" style="width: 44px; height: 44px; display: block"></div>
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.3px">PartnerOne</div>
+        <div style="font-size: 13px; font-weight: 300; color: #CDEBD8">by LGI – One Platform. One Partnership.</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 20px; position: relative; max-width: 520px">
+      <div style="width: 48px; height: 4px; border-radius: 2px; background: #F2B636"></div>
+      <p style="margin: 0; font-size: 20px; line-height: 1.45; font-weight: 300; letter-spacing: 0; color: #E3F1EA"><span style="font-weight: 700; color: #F2B636">PartnerOne by LGI –</span><br>One Platform. One Partnership.</p>
+      <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 8px">
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 500">
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F2B636" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          Self-service onboarding &amp; document management
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 500">
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F2B636" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          Real-time collaboration between Lulu teams and vendors
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size: 13px; color: #CDEBD8; position: relative">© 2026 Powered by LuLu IT &amp; Innovation Team. All rights reserved.</div>
+  </section>
+
+  <!-- Form panel -->
+  <section style="flex: 999 1 480px; display: flex; flex-direction: column; padding: 40px 48px; box-sizing: border-box; gap: 32px; min-width: 0">
+    <div style="display: flex; justify-content: flex-end; align-items: center">
+      <img src="assets/lulu-logo.png" alt="LuLu – Where the world comes to shop" style="height: 64px; width: auto; max-width: 100%; display: block">
+    </div>
+
+    <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center">
+      <form id="loginForm" novalidate style="margin: 0; width: 100%; max-width: 440px; background: #FFFFFF; border: 1px solid #D7E8DD; border-radius: 20px; padding: 40px; box-sizing: border-box; box-shadow: 0 1px 2px rgba(10,60,30,0.04), 0 12px 32px rgba(10,60,30,0.06); display: flex; flex-direction: column; gap: 24px">
+
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h2 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px">Welcome back</h2>
+          <p style="margin: 0; font-size: 15px; color: #5A4F51">Sign in to your PartnerOne account</p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <label for="uid" style="font-size: 14px; font-weight: 600">Email</label>
+            <input id="uid" type="email" placeholder="name@company.com" autocomplete="username" style="height: 48px; padding: 0 14px; font-size: 15px; font-family: inherit; color: #1F1A1B; border: 1.5px solid #C9DACF; border-radius: 10px; background: #FFFFFF; box-sizing: border-box; width: 100%">
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline">
+              <label for="pwd" style="font-size: 14px; font-weight: 600">Password</label>
+              <a href="#forgot" style="font-size: 13px; font-weight: 600">Forgot password?</a>
+            </div>
+            <div style="position: relative">
+              <input id="pwd" type="password" placeholder="Enter your password" autocomplete="current-password" style="height: 48px; padding: 0 52px 0 14px; font-size: 15px; font-family: inherit; color: #1F1A1B; border: 1.5px solid #C9DACF; border-radius: 10px; background: #FFFFFF; box-sizing: border-box; width: 100%">
+              <button type="button" id="togglePwd" aria-label="Show password" style="position: absolute; right: 2px; top: 2px; width: 44px; height: 44px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #5A4F51; border-radius: 8px">
+                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </button>
+            </div>
+          </div>
+
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #443A3C; cursor: pointer; min-height: 24px">
+            <input type="checkbox" style="width: 18px; height: 18px; accent-color: #0E7A3B; margin: 0">
+            Keep me signed in
+          </label>
+        </div>
+
+        <div id="msg" role="alert" style="display: none;"></div>
+
+        <button type="submit" id="signIn" style="height: 52px; border: none; border-radius: 12px; background: #0E7A3B; color: #FFFFFF; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px">
+          <span id="signInLabel">Sign in</span>
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg>
+        </button>
+
+      </form>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; color: #6A5F61">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg>
+        Secured connection · Authorised users only
+      </div>
+      <div style="display: flex; gap: 20px">
+        <a href="#privacy">Privacy</a>
+        <a href="#terms">Terms</a>
+        <a href="#support">Support</a>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+(function () {
+  var form = document.getElementById('loginForm');
+  var email = document.getElementById('uid');
+  var pwd = document.getElementById('pwd');
+  var toggle = document.getElementById('togglePwd');
+  var msg = document.getElementById('msg');
+  var label = document.getElementById('signInLabel');
+  var base = 'padding: 12px 14px; border-radius: 10px; font-size: 14px; font-weight: 600;';
+  function show(type, text) {
+    msg.textContent = text;
+    msg.style.cssText = base + (type === 'error'
+      ? ' background: #FDECEC; color: #9B1C1C; border: 1px solid #F5C2C2;'
+      : ' background: #E7F5EE; color: #0B5A37; border: 1px solid #B7DFC9;');
+  }
+  function clear() { msg.style.cssText = 'display: none;'; msg.textContent = ''; }
+  email.addEventListener('input', clear);
+  pwd.addEventListener('input', clear);
+  toggle.addEventListener('click', function () {
+    var hidden = pwd.type === 'password';
+    pwd.type = hidden ? 'text' : 'password';
+    toggle.setAttribute('aria-label', hidden ? 'Hide password' : 'Show password');
+  });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var id = email.value.trim(), p = pwd.value;
+    if (!id || !p) { show('error', 'Please enter your email and password.'); return; }
+    if (p.length < 6) { show('error', 'Password must be at least 6 characters.'); return; }
+    clear();
+    label.textContent = 'Signing in\u2026';
+    // TODO: replace this demo with a call to your authentication service
+    setTimeout(function () {
+      label.textContent = 'Sign in';
+      show('success', 'Signed in to PartnerOne as ' + id + '. Redirecting to your dashboard\u2026');
+    }, 900);
+  });
+})();
+</script>
+</body>
+</html>

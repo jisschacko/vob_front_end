@@ -61,7 +61,7 @@ describe('the login page', function () {
 
         expect($html)->toMatch('/<input id="email" name="email" type="email"[^>]*autocomplete="username"/')
             ->toMatch('/<input id="password" name="password" type="password"[^>]*autocomplete="current-password"/')
-            ->toMatch('/<form method="POST" action="[^"]+\/login" autocomplete="on"/')
+            ->toMatch('/<form method="POST" action="[^"]+\/login"[^>]*autocomplete="on"/')
             ->not->toContain('name="remember"');
         expect(collect($response->headers->getCookies())->map(fn ($c) => $c->getName())->all())->not->toContain('vob_remember_login')->not->toContain('vob_remember_email');
     });

@@ -53,6 +53,20 @@ it('titles the steps "Status" and keeps everything but the logo in a floating bl
     expect($css)->toMatch('/\.tracker-float\s*\{[^}]*position:sticky/');
 });
 
+it('draws the sign-in pages in the PartnerOne design, with no inline script or style', function (string $path) {
+    $session = $path === '/sign-in'
+        ? ['admin_api.link' => ['token' => str_repeat('x', 40), 'financial_year' => '2026-27', 'type' => 'new', 'vendor_name' => 'Acme Foods', 'email_hint' => 'sa***@acme.test', 'first_time_login' => true]]
+        : [];
+    $html = $this->withSession($session)->get($path)->assertOk()->getContent();
+
+    expect($html)->toContain('css/auth.css')->toContain('class="auth-brand"')->toContain('images/lulu-emblem.png')->toContain('images/lulu-logo.png')
+        ->toContain('PartnerOne')->toContain('Secured connection')
+        ->not->toMatch('/<script(?![^>]*\ssrc=)/i')->not->toMatch('/\sstyle="/i')->not->toMatch('/\son(click|change|input|submit)=/i');
+    foreach (['css/auth.css', 'images/lulu-emblem.png', 'images/lulu-logo.png', 'js/auth.js'] as $asset) {
+        expect(public_path($asset))->toBeFile();
+    }
+})->with(['/login', '/forgot-password', '/sign-in']);
+
 it('serves the landing page with hardening headers and no inline script', function () {
     $response = $this->get('/');
 

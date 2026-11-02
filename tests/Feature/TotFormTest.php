@@ -88,6 +88,29 @@ describe('the form page', function () {
         expect($panIndia)->not->toContain('>South<')->not->toContain('>Kerala<');
     });
 
+    it('disables the State / Region select for PAN India only', function () {
+        $tag = function (string $scope) {
+            $html = page(T::detail(['form' => ['vendor_details' => ['scope_type' => $scope, 'scope_state' => '']]]))->getContent();
+            preg_match('/<select[^>]*id="f-vendor-details-scope-state"[^>]*>/', $html, $m);
+
+            return $m[0] ?? '';
+        };
+
+        expect($tag('PAN India'))->toContain('disabled')
+            ->and($tag('State'))->not->toContain('disabled')
+            ->and($tag('Regional'))->not->toContain('disabled');
+
+        $js = file_get_contents(public_path('js/tot-form.js'));
+        expect($js)->toContain("scopeType.value === 'PAN India'");
+    });
+
+    it('keeps the reviewer comments open on every page load, even if the browser restores a collapsed one', function () {
+        $html = page(T::detail(['tot' => ['submitted_at' => '2026-10-21T05:00:00+00:00'], 'reviewer_comments' => [['status' => 'pending_vendor', 'comments' => 'Fix it', 'by' => 'Buyer', 'at' => '2026-10-21']]]))->getContent();
+
+        expect($html)->toMatch('/<details class="card comments-card" open>/')
+            ->and(file_get_contents(public_path('js/tot-form.js')))->toContain('details.comments-card')->toContain('pageshow');
+    });
+
     it('carries both lists to the script so the choices follow the Scope Type', function () {
         $html = page()->getContent();
 

@@ -29,6 +29,11 @@
     gstType.addEventListener('change', function () { gstStar.hidden = gstType.value === 'GST Unregistered'; });
   }
 
+  // ---- Reviewer comments: always expanded when the page opens (some browsers restore a collapsed <details> on reload / Back) ----
+  function openComments() { document.querySelectorAll('details.comments-card').forEach(function (d) { d.open = true; }); }
+  openComments();
+  window.addEventListener('pageshow', openComments);
+
   // ---- Scope State / Region: states for "State", regions for "Regional", nothing for "PAN India" ---------------------------
   var scopeType = form.querySelector('[data-scope-type]');
   var scopeState = form.querySelector('[data-scope-state]');
@@ -41,6 +46,7 @@
       scopeState.appendChild(new Option('', ''));
       Object.keys(list).forEach(function (code) { scopeState.appendChild(new Option(list[code], code)); });
       scopeState.value = '';
+      scopeState.disabled = scopeType.value === 'PAN India'; // PAN India: nothing to choose (the Admin saves it empty)
     });
   }
 
