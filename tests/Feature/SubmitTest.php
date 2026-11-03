@@ -230,7 +230,7 @@ describe('status and resubmit', function () {
 
         expect($html)->toMatch('/data-submit[^>]*>\s*Resubmit\s*<\/button>/s')->toContain('data-confirm="Resubmit this Terms of Trade for review?')
             ->toContain('A reviewer sent this Terms of Trade back to you')->toContain('GST number is wrong')
-            ->toContain('Action needed: see reviewer comments')->toContain('Save Draft');
+            ->not->toContain('Action needed')->toContain('Save Draft');
     });
 
     it('lets a returned TOT be resubmitted through the same endpoint', function () {
@@ -256,11 +256,11 @@ describe('demo mode (VOB_SKIP_THIRD_PARTY)', function () {
         Storage::fake('s3');
     });
 
-    it('shows a banner on every page', function () {
+    it('shows no banner (it is commented out in the layout for now)', function () {
         T::fake([], readyDetail());
 
-        expect($this->withSession(T::session())->get('/home')->getContent())->toContain('DEMO: third-party services are skipped');
-        $this->get('/')->assertSee('DEMO: third-party services are skipped');
+        expect($this->withSession(T::session())->get('/home')->getContent())->not->toContain('DEMO: third-party services are skipped');
+        $this->get('/')->assertDontSee('DEMO: third-party services are skipped');
     });
 
     it('marks the bank account verified at the Admin without calling Cashfree', function () {
