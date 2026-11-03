@@ -245,6 +245,27 @@ something here clashes with the existing design, and tell me what you changed):
 
 ---
 
+## 9. Vendor Type mandatory, GST number / certificate only for GST Registered - Status: OPEN
+
+Raised from VOB. VOB now treats `vendor_details.entity_type` (Vendor Type) as mandatory, and `vendor_details.gst_regn_no` and the GST certificate as
+mandatory **only when `gst_type` is `GST Registered`** (not for `GST Unregistered` or `GST Compounding`). VOB adds `vendor_details.entity_type` to the
+API's `required_fields` itself until the Admin lists it. VOB also validates the IFS Code (`^[A-Z]{4}0[A-Z0-9]{6}$`) and asks for the account number twice
+(the confirmation is never sent to the Admin).
+
+**Prompt for the Admin Panel repo:**
+
+```
+In the TOT API (GET /tots/{id}) and in the submit checks:
+1. Add "vendor_details.entity_type" to `required_fields` (Vendor Type is mandatory) and reject a submit when it is empty.
+2. Require "vendor_details.gst_regn_no" and the gst_certificate document only when vendor_details.gst_type == "GST Registered".
+   For "GST Unregistered" and "GST Compounding" neither is required (remove them from `required_fields` / `required_documents` in that case).
+3. Keep validating bank.ifsc with regex:/^[A-Z]{4}0[A-Z0-9]{6}$/ (11 characters, 5th character 0).
+4. Lock "signatories.bda_lulu" (every field of the Lulu signatory) for the vendor: add it to `locked_fields`; ignore values sent for it.
+Then update docs/API_CONTRACT.md and tell the VOB owner to re-copy it.
+```
+
+---
+
 ## 5. Demo run-book (both apps on one machine)
 
 **Admin Panel `.env`** (names as above; values are yours): `APP_URL=http://127.0.0.1:8000`, `VOB_URL=http://127.0.0.1:8001`, `VOB_ALLOWED_IPS=127.0.0.1`,

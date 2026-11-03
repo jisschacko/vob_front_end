@@ -137,7 +137,7 @@ describe('the form page', function () {
         $html = page()->getContent(); // GST Registered, no MSME type
 
         expect($html)->toMatch('/PAN Certificate<span class="req">/')
-            ->and($html)->toMatch('/GST Certificate<span class="req">/')
+            ->and($html)->toMatch('/GST Certificate<span class="req"\s+id="gst-cert-req"\s*>/')
             ->and($html)->not->toMatch('/MSME Certificate<span class="req">/')
             ->and($html)->toContain('Uploaded: pan.pdf (2 KB)');
     });
@@ -346,4 +346,56 @@ it('sends form posts to the Admin signed and with the bearer token', function ()
     $this->post('/tot/draft', ['form' => ['vendor_details' => ['vendor_name' => 'A']]]);
 
     Http::assertSent(fn (Request $r) => $r->method() === 'PUT' && $r->hasHeader('Authorization', 'Bearer '.T::TOKEN) && $r->hasHeader('X-Signature'));
+});
+
+describe('bank details, mandatory rules and signatories', function () {
+    it('shows Account No twice (the second masked) and the IFS Code limited to 11 characters', function () {
+        $html = page()->getContent();
+
+        expect($html)->toMatch('/<input[^>]*type="password"[^>]*id="f-bank-account-no-confirm"/')
+            ->toMatch('/<input[^>]*id="f-bank-ifsc"[^>]*maxlength="11"[^>]*data-ifsc/')
+            ->toContain('importance-box');
+    });
+
+    it('rejects a badly formed IFS Code and capitalises a good one', function () {
+        T::fake();
+        $this->withSession(T::session())->get('/home');
+
+        $this->from('/home')->post('/tot/draft', ['form' => ['bank' => ['ifsc' => 'HDFC1001234']]])->assertSessionHasErrors('bank.ifsc');
+        foreach (['HDFC0001234', 'hdfc0abc123'] as $ok) {
+            $this->post('/tot/draft', ['form' => ['bank' => ['ifsc' => $ok]]])->assertSessionDoesntHaveErrors();
+        }
+        $sent = collect(Http::recorded())->filter(fn ($p) => $p[0]->method() === 'PUT')->map(fn ($p) => $p[0]->data()['form']['bank']['ifsc'])->values()->all();
+        expect($sent)->toBe(['HDFC0001234', 'HDFC0ABC123']);
+    });
+
+    it('rejects an account number that differs from its confirmation', function () {
+        T::fake();
+        $this->withSession(T::session())->get('/home');
+
+        $this->from('/home')->post('/tot/draft', ['form' => ['bank' => ['account_no' => '123456789', 'account_no_confirm' => '123456780']]])
+            ->assertSessionHasErrors('bank.account_no_confirm');
+        $this->post('/tot/draft', ['form' => ['bank' => ['account_no' => '123456789', 'account_no_confirm' => '123456789']]])->assertSessionDoesntHaveErrors();
+    });
+
+    it('marks Vendor Type mandatory, and GST Regn. No only for GST Registered', function () {
+        $html = page()->getContent();
+        expect($html)->toMatch('/for="f-vendor-details-entity-type">Vendor Type\s*<span class="req"\s*>/')
+            ->toMatch('/for="f-vendor-details-gst-regn-no">GST Regn\. No\s*<span class="req"\s+id="gst-regn-req"\s*>/');
+
+        foreach (['GST Unregistered', 'GST Compounding'] as $type) {
+            $detail = T::detail();
+            $detail['form']['vendor_details']['gst_type'] = $type;
+            expect(page($detail)->getContent())->toMatch('/id="gst-regn-req"\s*hidden/');
+        }
+    });
+
+    it('keeps the Lulu signatory fields inactive for the vendor', function () {
+        $html = page()->getContent();
+
+        foreach (['name', 'designation', 'contact-no', 'signed-date', 'company-stamp'] as $f) {
+            expect($html)->toMatch('/<(?:input|textarea)[^>]*id="f-signatories-bda-lulu-'.$f.'"[^>]*disabled/');
+        }
+        expect($html)->not->toMatch('/<(?:input|textarea)[^>]*id="f-signatories-bda-vendor-name"[^>]*disabled/');
+    });
 });

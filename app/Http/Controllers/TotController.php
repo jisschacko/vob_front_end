@@ -9,6 +9,7 @@ use App\Services\Tot\Masters;
 use App\Services\Tot\SubmitReadiness;
 use App\Services\Tot\TotFormMapper;
 use App\Services\Tot\TotPage;
+use App\Support\DemoLenientFields;
 use App\Support\EnforcementSwitches;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -155,6 +156,11 @@ class TotController extends Controller
             array_keys($this->masters->options('deliverable_assets')),
         );
 
+        $errors = $this->bankFormatErrors(is_array($input) ? $input : [], $payload);
+        if ($errors !== []) {
+            return ['ok' => false, 'status' => 422, 'message' => 'Some values need correcting. Nothing was saved.', 'errors' => $errors];
+        }
+
         if ($payload['form'] === []) {
             return ['ok' => true, 'status' => 200, 'message' => '', 'errors' => []];
         }
@@ -171,5 +177,34 @@ class TotController extends Controller
             409 => ['ok' => false, 'status' => 409, 'message' => 'This Terms of Trade can no longer be edited.', 'errors' => []],
             default => ['ok' => false, 'status' => 502, 'message' => 'We could not save right now. Please try again.', 'errors' => []],
         };
+    }
+
+    /**
+     * IFS Code format (11 characters: 4 capital letters, a 0, 6 letters/digits; typed letters are capitalised) and the account number
+     * typed twice. The ifsc in $payload is replaced by its capitalised form.
+     *
+     * @param  array<string,mixed>  $input
+     * @param  array{form:array<string,mixed>}  $payload
+     * @return array<string,string>
+     */
+    private function bankFormatErrors(array $input, array &$payload): array
+    {
+        $errors = [];
+
+        if (! DemoLenientFields::is('bank.ifsc') && isset($payload['form']['bank']['ifsc']) && is_string($payload['form']['bank']['ifsc'])) {
+            $ifsc = strtoupper(preg_replace('/\s+/', '', $payload['form']['bank']['ifsc']));
+            $payload['form']['bank']['ifsc'] = $ifsc;
+            if ($ifsc !== '' && ! preg_match('/^[A-Z]{4}0[A-Z0-9]{6}$/', $ifsc)) {
+                $errors['bank.ifsc'] = 'IFS Code must be 11 characters: 4 capital letters, then 0, then 6 letters or digits.';
+            }
+        }
+
+        $account = $payload['form']['bank']['account_no'] ?? null;
+        $confirm = $input['bank']['account_no_confirm'] ?? null;
+        if (is_string($account) && is_string($confirm) && $confirm !== '' && $confirm !== $account) {
+            $errors['bank.account_no_confirm'] = 'The account numbers do not match.';
+        }
+
+        return $errors;
     }
 }

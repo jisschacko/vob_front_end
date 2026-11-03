@@ -14,11 +14,12 @@
 
             <table class="tot-table">
                 <thead>
-                    <tr><th>Financial year</th><th>Type</th><th>Status</th><th>Editable</th><th></th></tr>
+                    <tr><th>TOT NO</th><th>Financial year</th><th>Type</th><th>Status</th><th>Editable</th><th></th></tr>
                 </thead>
                 <tbody>
                     @foreach ($tots as $i => $row)
                         <tr @if (($row['id'] ?? null) === $current) class="current-row" @endif>
+                            <td>{{ $row['agreement_no'] ?? $row['vendor_details']['agreement_no'] ?? '' }}</td>
                             <td>{{ $row['financial_year'] ?? '' }}</td>
                             <td>{{ ($row['type'] ?? '') === 'renew' ? 'Renewal' : 'New' }}</td>
                             <td>{{ $row['status_label'] ?? $row['status'] ?? '' }}</td>

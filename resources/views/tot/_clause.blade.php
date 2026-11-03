@@ -7,6 +7,7 @@
     $current = $page->clauseText($key, $original);
     $edited = $page->clauseIsEdited($key);
     $flagged = $page->isFlagged($sectionKey);
+    $diff = $page->clauseDiff($key);
     $error = $page->error('clauses.'.$key);
     $open = $error || is_string(old('form.clauses.'.$key));
     $canEdit = $page->editable();
@@ -15,7 +16,8 @@
 <div class="card clause-card" id="{{ $sectionKey }}" data-clause @if ($flagged) data-flagged @endif>
     <div class="card-header clause-header">
         <span>{{ $tpl['number'] ?? '' }}. {{ $tpl['title'] ?? $key }}
-            @if ($edited)<span class="badge badge-edited">Edited by you</span>@endif
+            @if ($edited && ! $diff)<span class="badge badge-edited">Edited by you</span>@endif
+            @if ($diff)<span class="badge badge-buyer">Changed by the buyer</span>@endif
             @if ($flagged)<span class="badge badge-flag">Comment added</span>@endif
         </span>
         @if ($canEdit)
@@ -26,6 +28,10 @@
         @endif
     </div>
     <div class="card-body text-body">
+        @if ($diff)
+            <div class="clause-diff">@foreach ($diff as $piece)<{{ ['del' => 'del', 'ins' => 'ins'][$piece['op']] ?? 'span' }}@if ($piece['op'] !== 'same') class="diff-{{ $piece['op'] }}"@endif>{{ $piece['text'] }}</{{ ['del' => 'del', 'ins' => 'ins'][$piece['op']] ?? 'span' }}>@endforeach</div>
+            <p class="help">The buyer changed this clause: deleted words are struck through in green, new words are on a yellow background.</p>
+        @endif
         <div class="clause-view" @if ($open) hidden @endif>
             @foreach (\App\Services\Tot\ClauseText::paragraphs($current, $placeholders) as $segments)
                 <p>

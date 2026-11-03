@@ -234,6 +234,7 @@ class TotFormMapper
         'payment_terms.reconciliation_type',
         'vendor_details.agreement_no',
         'vendor_details.vendor_code',
+        'signatories.bda_lulu',
     ];
 
     /** A locked entry covers itself and everything below it ("company_codes" covers "company_codes.x"). */

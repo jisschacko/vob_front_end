@@ -323,3 +323,38 @@ describe('mapper', function () {
             ->and($mapper->values(['clauses' => []]))->not->toHaveKey('clauses');
     });
 });
+
+describe('clauses the buyer changed (API_CONTRACT: clause_changes)', function () {
+    $changes = ['termination' => ['by' => 'buyer', 'diff' => [
+        ['op' => 'same', 'text' => 'a) Notice of '],
+        ['op' => 'del', 'text' => '45 '],
+        ['op' => 'ins', 'text' => '{refund_within_days} <b>days</b> '],
+        ['op' => 'same', 'text' => "written notice.\n"],
+    ]]];
+
+    it('renders the pieces in order with del in green and ins highlighted, escaped, placeholders filled', function () use ($changes) {
+        $html = clausePage(['clause_changes' => $changes, 'form' => ['business_terms' => ['refund_within_days' => 60]]]);
+        $card = clauseCard($html, 'termination');
+
+        expect($card)->toContain('<span>a) Notice of </span><del class="diff-del">45 </del><ins class="diff-ins">60 &lt;b&gt;days&lt;/b&gt; </ins><span>written notice.'."\n".'</span>')
+            ->toContain('Changed by the buyer')
+            ->and($html)->toContain('Changes made by the buyer:')
+            ->and(clauseCard($html, 'audit'))->not->toContain('clause-diff');
+    });
+
+    it('shows no legend and no marking when the buyer changed nothing', function () {
+        $html = clausePage(['clause_changes' => []]);
+
+        expect($html)->not->toContain('Changes made by the buyer')->not->toContain('diff-ins');
+    });
+});
+
+it('does not label a clause "Edited by you" when the stored wording is the buyer\'s change', function () {
+    $html = clausePage([
+        'clause_changes' => ['termination' => ['by' => 'buyer', 'diff' => [['op' => 'del', 'text' => 'old '], ['op' => 'ins', 'text' => 'new ']]]],
+        'form' => ['clauses' => ['termination' => 'new ', 'audit' => 'Vendor wording']],
+    ]);
+
+    expect(clauseCard($html, 'termination'))->toContain('Changed by the buyer')->not->toContain('Edited by you')
+        ->and(clauseCard($html, 'audit'))->toContain('Edited by you');
+});

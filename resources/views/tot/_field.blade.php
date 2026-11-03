@@ -10,7 +10,7 @@
     $err = $page->error($path);
     $max = $f['maxlength'] ?? 200;
     $masked = $page->isMasked($path);
-    $listed = in_array($path, (array) ($page->detail['required_fields'] ?? []), true);
+    $listed = in_array($path, $page->requiredFields(), true);
     $inputType = ['line' => 'text', 'tel' => 'tel', 'email' => 'email', 'number' => 'number', 'date' => 'date'][$type] ?? 'text';
     $demoVerified = $page->demoVerified($path);
     $class = 'f'.(($f['inline'] ?? false) ? ' inline-f' : '').($demoVerified && filled($val) && ! $err ? ' is-valid' : '');
@@ -69,7 +69,13 @@
     @case('check')
         @unless ($locked)<input type="hidden" name="{{ $name }}" value="0">@endunless
         <label class="checkbox-row"><input type="checkbox" id="{{ $id }}" name="{{ $name }}" value="1" @checked(in_array($val, ['Yes', '1', 1, true], true)) @if ($locked) disabled @endif>
-            @if ($bare) <span class="sr-only">{{ $f['label'] ?? '' }}</span> @endif</label>
+            @if ($bare) <span class="sr-only">{{ $f['label'] ?? '' }}</span> @endif
+            @if (! $bare && isset($f['help']))<span class="help">{{ $f['help'] }}</span>@endif</label>
+        @break
+
+    @case('confirm')
+        {{-- Typed again to catch mistakes; masked, never pre-filled and never sent to the Admin (it is not a form field there). --}}
+        <input class="{{ $class }}" type="password" id="{{ $id }}" name="{{ $name }}" maxlength="{{ $max }}" autocomplete="off" data-confirm-of="{{ $page->id('bank.account_no') }}" @if ($locked) disabled @endif>
         @break
 
     @default
@@ -77,6 +83,7 @@
             @if ($inputType === 'number') min="0" @isset($f['max']) max="{{ $f['max'] }}" @endisset step="any" @endif
             @if ($inputType === 'date') value="{{ substr((string) $val, 0, 10) }}" @else value="{{ $val }}" @endif
             @if ($masked) placeholder="{{ $page->raw($path) }} (leave blank to keep)" autocomplete="off" @endif
+            @isset($f['ifsc']) data-ifsc autocapitalize="characters" spellcheck="false" @endisset
             @isset($f['aria']) aria-label="{{ $f['aria'] }}" @endisset
             @isset($f['sync']) data-sync="{{ $f['sync'] }}" @endisset
             @if ($demoVerified) data-demo-valid @endif
@@ -85,7 +92,8 @@
 
 @if ($demoVerified)<p class="valid-badge" data-demo-valid-badge @if (! filled($val) || $err) hidden @endif>&#10003; Verified</p>@endif
 @if ($err)<p class="error" role="alert">{{ $err }}</p>@endif
+@if (isset($f['ifsc']) || $type === 'confirm')<p class="error" role="alert" data-live-error hidden></p>@endif
 @unless ($bare)
-    @isset($f['help'])<p class="help">{{ $f['help'] }}</p>@endisset
+    @if (isset($f['help']) && $type !== 'check')<p class="help">{{ $f['help'] }}</p>@endif
 </div>
 @endunless

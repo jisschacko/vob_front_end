@@ -1,6 +1,9 @@
   <div class="page-divider">Terms of Trade (TOT)</div>
 
   {{-- The 14 clauses come from the Admin (`clause_templates` = the original wording); the vendor's edits are `form.clauses`. --}}
+  @if ($page->hasClauseChanges())
+    <p class="clause-legend">Changes made by the buyer: <span class="clause-diff"><del class="diff-del">deleted</del></span> (green, struck through) / <span class="clause-diff"><ins class="diff-ins">new</ins></span> (yellow)</p>
+  @endif
   @forelse ($page->clauseTemplates() as $tpl)
     @include('tot._clause', ['tpl' => $tpl])
   @empty

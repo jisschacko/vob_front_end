@@ -87,7 +87,7 @@ b) Original paragraph b of clause $n.";
             'tot' => ['id' => self::TOT_ID, 'tot_number' => 12, 'financial_year' => '2026-27', 'type' => 'new', 'vendor_name' => 'Acme Foods Pvt Ltd',
                 'status' => 'pending_vendor', 'status_label' => 'Pending with vendor', 'editable' => true, 'submitted_at' => null],
             'form' => [
-                'vendor_details' => ['vendor_name' => 'Acme Foods Pvt Ltd', 'pan_no' => 'ABCDE1234F', 'gst_type' => 'GST Registered', 'state' => 'KL', 'vendor_accounting_group' => 'MERCH'],
+                'vendor_details' => ['vendor_name' => 'Acme Foods Pvt Ltd', 'entity_type' => 'Company', 'pan_no' => 'ABCDE1234F', 'gst_type' => 'GST Registered', 'state' => 'KL', 'vendor_accounting_group' => 'MERCH'],
                 'company_codes' => ['9000', '9001'],
                 'purchase_orgs' => ['9000'],
                 'contacts' => [['type' => 'sales', 'name' => 'Sam', 'phone' => '+919999999999', 'email' => 'sam@acme.test'], ['type' => 'finance', 'name' => 'Fin', 'phone' => null, 'email' => null]],

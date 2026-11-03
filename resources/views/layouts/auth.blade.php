@@ -39,7 +39,7 @@
 
         <div class="auth-pitch">
             <div class="auth-rule"></div>
-            <p class="auth-tagline"><strong>PartnerOne by LGI –</strong><br>One Platform. One Partnership.</p>
+            <p class="auth-tagline"><strong>PartnerOne by LGI</strong><br>One Platform. One Partnership.</p>
             <ul class="auth-points">
                 <li>
                     <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F2B636" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>

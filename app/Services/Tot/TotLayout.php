@@ -144,16 +144,16 @@ final class TotLayout
             ]]]],
 
             ['id' => 'bank_account_details', 'title' => 'Bank Account Details', 'blocks' => [
-                ['grid', 2, [
+                ['split', [
                     self::field('bank.account_name', 'Account Name'),
                     self::field('bank.bank_name_address', 'Bank Name and Address', 'text', ['maxlength' => 500]),
                     self::field('bank.account_no', 'Account No', 'line'),
-                    self::field('bank.ifsc', 'IFS Code', 'line'),
-                ]],
-                ['bank_status'],
-                ['grid', 1, [
+                    self::field('bank.account_no_confirm', 'Confirm Account No', 'confirm', ['help' => 'Re-enter the account number to confirm it.']),
+                    self::field('bank.ifsc', 'IFS Code', 'line', ['maxlength' => 11, 'ifsc' => true, 'help' => '11 characters: 4 capital letters, then 0, then 6 letters or digits (for example HDFC0001234).']),
+                ], [
                     self::field('bank.validation_failed_override', 'For failed validations.', 'check', ['help' => 'Check this to proceed on manual vendor approval if automated bank account validation fails or is unavailable.']),
                 ]],
+                ['bank_status'],
                 ['note', 'A copy of the cancelled cheque, bank letter, and RTGS form is mandatory.'],
                 ['documents', ['cancelled_cheque', 'rtgs_form']],
             ]],

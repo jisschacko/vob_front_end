@@ -198,7 +198,7 @@ describe('status and resubmit', function () {
         T::fake([], readyDetail());
         $html = $this->withSession(T::session())->get('/home')->getContent();
 
-        expect($html)->toMatch('/<button type="submit" class="btn btn-secondary" formaction="[^"]+\/tot\/submit" data-submit/')
+        expect($html)->toMatch('/<button type="submit" class="btn btn-warm" formaction="[^"]+\/tot\/submit" data-submit/')
             ->toContain('data-confirm="Submit this Terms of Trade for review?')
             ->toMatch('/data-submit[^>]*>\s*Submit\s*<\/button>/s')
             ->not->toContain('Resubmit');

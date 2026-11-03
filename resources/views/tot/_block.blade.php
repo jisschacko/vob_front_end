@@ -7,6 +7,22 @@
         @endforeach
     </div>
 
+@elseif ($kind === 'split')
+    <div class="bank-split">
+        <div class="split-left">
+            @foreach ($b[1] as $f)
+                @include('tot._field', ['f' => $f])
+            @endforeach
+        </div>
+        <div class="split-right">
+            <div class="importance-box">
+                @foreach ($b[2] as $f)
+                    @include('tot._field', ['f' => $f])
+                @endforeach
+            </div>
+        </div>
+    </div>
+
 @elseif ($kind === 'note')
     <div class="card-note">{{ $b[1] }}</div>
 
@@ -27,11 +43,13 @@
         <strong>{{ ['verified' => 'Verified', 'failed' => 'Verification failed', 'pending' => 'Pending'][$status] ?? ucfirst($status) }}</strong>.
         @if ($status === 'verified' && ($ref = $page->bankVerification())['reference']) (reference {{ $ref['reference'] }}@if ($ref['verified_at']), {{ \Illuminate\Support\Carbon::parse($ref['verified_at'])->setTimezone(config('vob.display_timezone'))->format('d-M-Y, h:i A') }}@endif) @endif
         Changing the account name, number or IFS code resets it; on a renewal the account is always verified again.</p>
+    {{-- Verify bank account button disabled for now
     @if ($page->editable())
         <div class="field-row">
-            <button type="submit" class="file-btn" form="bank-verify" data-bank-verify>{{ $status === 'verified' ? 'Verify again' : 'Verify bank account' }}</button>            
+            <button type="submit" class="file-btn" form="bank-verify" data-bank-verify>{{ $status === 'verified' ? 'Verify again' : 'Verify bank account' }}</button>
         </div>
     @endif
+    --}}
 
 @elseif ($kind === 'table')
     <div class="table-scroll">
@@ -132,7 +150,7 @@
                 $required = $page->documentRequired($type);
             @endphp
             <div class="field-wrap">
-                <label class="flabel">{{ $label }}@if ($required)<span class="req">*</span>@endif</label>
+                <label class="flabel">{{ $label }}{!! $type === 'gst_certificate' ? '<span class="req" id="gst-cert-req"'.($required ? '' : ' hidden').'>*</span>' : ($required ? '<span class="req">*</span>' : '') !!}</label>
                 <p class="help-top">
                     @if ($doc) Uploaded: {{ $doc['name'] ?? '' }}@if (! empty($doc['size'])) ({{ number_format($doc['size'] / 1024, 0) }} KB)@endif
                     @else No file uploaded yet. @endif

@@ -26,7 +26,56 @@
   var gstType = form.querySelector('[data-gst-type]');
   var gstStar = document.getElementById('gst-regn-req');
   if (gstType && gstStar) {
-    gstType.addEventListener('change', function () { gstStar.hidden = gstType.value === 'GST Unregistered'; });
+    gstType.addEventListener('change', function () { gstStar.hidden = gstType.value !== 'GST Registered'; });
+  }
+
+  // ---- GST Certificate is mandatory only for GST Registered vendors (same rule as the GST Regn. No star) ----------------
+  var gstCertStar = document.getElementById('gst-cert-req');
+  if (gstType && gstCertStar) {
+    gstType.addEventListener('change', function () { gstCertStar.hidden = gstType.value !== 'GST Registered'; });
+  }
+
+  // ---- IFS Code: 11 characters, 4 capital letters, then 0, then 6 letters / digits ------------------------------------
+  var IFSC = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+  function liveError(input, message) {
+    var el = input.parentNode.querySelector('[data-live-error]');
+    if (!el) return;
+    el.textContent = message;
+    el.hidden = message === '';
+    input.setAttribute('aria-invalid', message === '' ? 'false' : 'true');
+  }
+  var ifsc = form.querySelector('[data-ifsc]');
+  if (ifsc && !ifsc.hasAttribute('data-demo-valid')) { // demo mode: not validated
+    var checkIfsc = function (final) {
+      ifsc.value = ifsc.value.toUpperCase().replace(/\s+/g, '');
+      var v = ifsc.value;
+      if (v === '' || IFSC.test(v)) return liveError(ifsc, '');
+      if (!final && v.length < 11) return liveError(ifsc, '');
+      liveError(ifsc, 'IFS Code must be 11 characters: 4 capital letters, then 0, then 6 letters or digits.');
+    };
+    ifsc.addEventListener('input', function () { checkIfsc(false); });
+    ifsc.addEventListener('blur', function () { checkIfsc(true); });
+  }
+
+  // ---- Confirm Account No must match Account No -----------------------------------------------------------------------
+  var confirmNo = form.querySelector('[data-confirm-of]');
+  var accountNo = confirmNo && document.getElementById(confirmNo.dataset.confirmOf);
+  if (confirmNo && accountNo) {
+    var checkConfirm = function () {
+      var mismatch = confirmNo.value !== '' && confirmNo.value !== accountNo.value;
+      liveError(confirmNo, mismatch ? 'The account numbers do not match.' : '');
+    };
+    confirmNo.addEventListener('input', checkConfirm);
+    accountNo.addEventListener('input', checkConfirm);
+    // a new or changed account number must be typed again before the form is posted
+    form.addEventListener('submit', function (e) {
+      var changed = accountNo.value !== '' && accountNo.value !== accountNo.defaultValue;
+      if (changed && confirmNo.value !== accountNo.value) {
+        e.preventDefault();
+        liveError(confirmNo, confirmNo.value === '' ? 'Re-enter the account number to confirm it.' : 'The account numbers do not match.');
+        confirmNo.focus();
+      }
+    });
   }
 
   // ---- Reviewer comments: always expanded when the page opens (some browsers restore a collapsed <details> on reload / Back) ----

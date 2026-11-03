@@ -21,7 +21,7 @@ describe('required documents (5C: already resolved by the Admin)', function () {
         $html = test()->withSession(T::session())->get('/home')->getContent(); // vendor is "GST Registered" in the fixture
 
         expect($html)->toMatch('/PAN Certificate<span class="req">/')->toMatch('/MSME Certificate<span class="req">/')
-            ->not->toMatch('/GST Certificate<span class="req">/');
+            ->toMatch('/GST Certificate<span class="req"\s+id="gst-cert-req"\s+hidden>/');
     });
 
     it('reads plain required_documents type strings (no "(when ...)" text)', function () {
@@ -91,7 +91,7 @@ describe('draft errors (5C: positions in the list VOB sent)', function () {
         T::fake(['PUT tots/'.T::TOT_ID.'/draft' => Http::response(['message' => 'x', 'errors' => ['bank.ifsc' => ['Bad IFSC']]], 422)]);
         $this->withSession(T::session())->get('/home');
 
-        $this->from('/home')->post('/tot/draft', ['form' => ['bank' => ['ifsc' => 'x']]]);
+        $this->from('/home')->post('/tot/draft', ['form' => ['bank' => ['ifsc' => 'HDFC0001234']]]);
         expect($this->get('/home')->getContent())->toContain('Nothing was saved')->toContain('Bad IFSC');
     });
 });

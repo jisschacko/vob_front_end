@@ -46,6 +46,19 @@ class ClauseText
         return self::INLINE_FIELDS[$field] ?? null;
     }
 
+    /** Replaces the `{name}` markers with the saved numbers (or `____` when empty); unknown markers stay as written. */
+    public static function fill(string $text, array $values): string
+    {
+        return preg_replace_callback('/\{([a-z0-9_]+)\}/', function ($m) use ($values) {
+            if (! array_key_exists($m[1], self::INLINE_FIELDS) && ! array_key_exists($m[1], $values)) {
+                return $m[0];
+            }
+            $value = $values[$m[1]] ?? null;
+
+            return is_scalar($value) && trim((string) $value) !== '' ? (string) $value : '____';
+        }, $text) ?? $text;
+    }
+
     /** The placeholders (names) that really occur in a clause text. */
     public static function fieldsIn(string $text, array $placeholders = []): array
     {

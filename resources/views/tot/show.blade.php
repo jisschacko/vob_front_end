@@ -17,6 +17,7 @@
         </div>
     </div>
 
+    @if ($page->totNo() !== '')<p class="tot-no"><strong>TOT NO:</strong> {{ $page->totNo() }}</p>@endif
     <p class="muted"><strong>Status:</strong> {{ $tot['status_label'] ?? $tot['status'] ?? '' }}</p>
 
     @if (! $page->editable())
@@ -92,7 +93,7 @@
         <div class="actionbar">
             @if ($page->editable())
                 <button type="submit" class="btn">Save Draft</button>
-                <button type="submit" class="btn btn-secondary" formaction="{{ route('tot.submit') }}" data-submit
+                <button type="submit" class="btn btn-warm" formaction="{{ route('tot.submit') }}" data-submit
                         data-confirm="{{ $page->isResubmission() ? 'Resubmit this Terms of Trade for review?' : 'Submit this Terms of Trade for review? You will not be able to edit it afterwards unless a reviewer sends it back.' }}">{{ $page->isResubmission() ? 'Resubmit' : 'Submit' }}</button>
             @endif
             <span id="autosave-status" class="muted" aria-live="polite">

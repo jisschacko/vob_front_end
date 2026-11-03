@@ -30,7 +30,7 @@ class SubmitReadiness
 
         if ($checkRequired) {
             $labels = $this->labels();
-            foreach ((array) ($detail['required_fields'] ?? []) as $path) {
+            foreach ($page->requiredFields() as $path) {
                 if ($path === 'payment_terms.terms') {
                     $filled = array_filter(self::PAYMENT_DAY_FIELDS, fn ($f) => filled($page->raw("payment_terms.$f")));
                     if ($filled === []) {
@@ -39,7 +39,7 @@ class SubmitReadiness
 
                     continue;
                 }
-                if ($path === 'vendor_details.gst_regn_no' && $page->raw('vendor_details.gst_type') === 'GST Unregistered') {
+                if ($path === 'vendor_details.gst_regn_no' && $page->raw('vendor_details.gst_type') !== 'GST Registered') {
                     continue;
                 }
                 if (blank($page->raw($path)) && ! $page->isMasked($path)) {

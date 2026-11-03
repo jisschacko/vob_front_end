@@ -28,7 +28,8 @@
 .tot select.f:disabled { background-image:none; }
 .tot input.inline-f { display:inline-block; width:70px; padding:2px 6px; text-align:center; }
 .tot .checkbox-row { display:flex; align-items:center; gap:8px; }
-.tot .checkbox-row input { width:16px; height:16px; }
+.tot .checkbox-row input { width:16px; height:16px; flex:none; }
+.tot .checkbox-row .help { font-size:12px; color:var(--help-color); line-height:1.4; }
 .tot p.help { font-size:12px; color:var(--help-color); line-height:1.4; margin:0; }
 .tot p.help-top { font-size:12px; color:var(--help-color); font-style:italic; margin:0 0 2px; }
 .tot .error { color:#b3261e; font-size:12.5px; margin:2px 0 0; }
@@ -87,6 +88,12 @@
 .tot .pencil { flex:0 0 auto; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #8fc79a; border-radius:8px; background:#fff; color:#1c3a26; cursor:pointer; padding:0; }
 .tot .pencil:hover, .tot .pencil[aria-expanded="true"] { background:#1c3a26; color:#fff; }
 .tot .badge { display:inline-block; margin-left:8px; padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700; letter-spacing:0; text-transform:none; vertical-align:middle; }
+.tot .badge-buyer { background:#e3f1e6; color:#1d7a34; }
+.tot .clause-diff { white-space:pre-wrap; line-height:1.7; }
+.tot .clause-diff del.diff-del { color:#1d7a34; text-decoration:line-through; background:none; }
+.tot .clause-diff ins.diff-ins { background:#fff176; color:#1f1f1f; text-decoration:none; }
+.tot .clause-legend { font-size:13px; margin:0 0 10px; }
+.tot .tot-no { font-size:14px; margin:0 0 6px; }
 .tot .badge-edited { background:#fff3a8; color:#5b4600; }
 
 /* Reviewer comments: collapsible, long lists scroll inside the card */
@@ -129,3 +136,17 @@
 .tot input.f.is-valid, .tot textarea.f.is-valid { border-color:#2e9e4f; background:#f3fbf5; }
 .tot .valid-badge { margin:2px 0 0; font-size:12.5px; font-weight:700; color:#1d7a35; }
 .tot .valid-badge[hidden] { display:none; }
+
+/* Action bar: Save Draft on the left, progress text in the middle, Submit / Resubmit on the right in a warm colour */
+.tot .actionbar #autosave-status { order:2; flex:1; }
+.tot .actionbar .btn-warm { order:3; margin-left:auto; background:#e8590c; color:#fff; border:1px solid #e8590c; }
+.tot .actionbar .btn-warm:hover { background:#c9480a; border-color:#c9480a; color:#fff; }
+.tot .actionbar .btn-warm:focus-visible { outline:2px solid #ffd8a8; outline-offset:2px; }
+
+/* Bank Account Details: text boxes stacked on the left, the manual-approval option boxed on the right */
+.tot .bank-split { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:20px 40px; align-items:start; }
+.tot .bank-split .split-left { display:flex; flex-direction:column; gap:20px; max-width:420px; }
+.tot .bank-split .split-right { justify-self:end; width:100%; max-width:420px; }
+.tot .importance-box { border:1px solid #c9a227; border-radius:8px; padding:14px 16px; background:#fffdf5; }
+.tot .importance-box .field-wrap { margin:0; }
+@media (max-width:760px) { .tot .bank-split { grid-template-columns:1fr; } .tot .bank-split .split-right { justify-self:stretch; max-width:none; } }
