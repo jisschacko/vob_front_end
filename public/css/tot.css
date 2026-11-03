@@ -150,3 +150,7 @@
 .tot .importance-box { border:1px solid #c9a227; border-radius:8px; padding:14px 16px; background:#fffdf5; }
 .tot .importance-box .field-wrap { margin:0; }
 @media (max-width:760px) { .tot .bank-split { grid-template-columns:1fr; } .tot .bank-split .split-right { justify-self:stretch; max-width:none; } }
+.tot .bank-split { grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:0 40px; align-items:stretch; }
+.tot .bank-split .split-right { display:flex; align-items:center; border-left:1px solid #e2e5ee; padding-left:40px; margin-left:-20px; justify-self:stretch; max-width:none; }
+.tot .bank-split .importance-box { width:100%; max-width:420px; }
+@media (max-width:760px) { .tot .bank-split .split-right { border-left:0; border-top:1px solid #e2e5ee; padding:16px 0 0; margin:16px 0 0; } }

@@ -39,10 +39,6 @@
 
 @elseif ($kind === 'bank_status')
     @php $status = $page->bankStatus() @endphp
-    <p class="help bank-status">Bank account verification:
-        <strong>{{ ['verified' => 'Verified', 'failed' => 'Verification failed', 'pending' => 'Pending'][$status] ?? ucfirst($status) }}</strong>.
-        @if ($status === 'verified' && ($ref = $page->bankVerification())['reference']) (reference {{ $ref['reference'] }}@if ($ref['verified_at']), {{ \Illuminate\Support\Carbon::parse($ref['verified_at'])->setTimezone(config('vob.display_timezone'))->format('d-M-Y, h:i A') }}@endif) @endif
-        Changing the account name, number or IFS code resets it; on a renewal the account is always verified again.</p>
     {{-- Verify bank account button disabled for now
     @if ($page->editable())
         <div class="field-row">

@@ -64,6 +64,8 @@
     var checkConfirm = function () {
       var mismatch = confirmNo.value !== '' && confirmNo.value !== accountNo.value;
       liveError(confirmNo, mismatch ? 'The account numbers do not match.' : '');
+      var ok = confirmNo.parentNode.querySelector('[data-live-ok]');
+      if (ok) ok.hidden = !(confirmNo.value !== '' && confirmNo.value === accountNo.value);
     };
     confirmNo.addEventListener('input', checkConfirm);
     accountNo.addEventListener('input', checkConfirm);

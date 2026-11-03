@@ -10,7 +10,8 @@
     $when = fn ($iso, $format) => $iso ? \Illuminate\Support\Carbon::parse($iso)->setTimezone($tz)->format($format) : null;
     $steps = $progress['steps'] ?? [];
 @endphp
-<aside class="tracker" aria-label="Onboarding progress">
+{{-- Left menu: logo, user, Terms of Trade, draft time. --}}
+<aside class="tracker" aria-label="Terms of Trade">
     <div class="logo"><img src="{{ asset('images/lulu-hypermarket.jpg') }}" alt="Lulu"></div>
     <div class="tracker-float">
     @if ($vendorName)
@@ -22,7 +23,10 @@
             <br>Draft saved {{ $when($draftSavedAt, 'd-M-Y, h:i A') }}
         @endif
     </p>
-
+    </div>
+</aside>
+{{-- Status: floats across the top of the page while it scrolls. --}}
+<nav class="status-bar" aria-label="Onboarding progress">
     <h3 class="steps-title">Status</h3>
     <ol class="steps">
         @foreach ($steps as $i => $step)
@@ -39,5 +43,4 @@
             </li>
         @endforeach
     </ol>
-    </div>
-</aside>
+</nav>

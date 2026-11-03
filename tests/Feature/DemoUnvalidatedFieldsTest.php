@@ -66,7 +66,7 @@ function refuseFields(array $paths, array $extraRoutes = []): void
 describe('demo mode OFF: nothing changes', function () {
     it('shows no green badge and keeps the Admin format errors', function () {
         $html = demoPage();
-        expect($html)->not->toContain('valid-badge')->not->toContain('data-demo-valid');
+        expect($html)->not->toContain('data-demo-valid-badge')->not->toContain('data-demo-valid');
 
         refuseFields(['vendor_details.pan_no']);
         $this->withSession(T::session())->get('/home');

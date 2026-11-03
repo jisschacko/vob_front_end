@@ -44,13 +44,13 @@ it('shows the left tracker in the layout only when progress is supplied', functi
         ->and($without)->not->toContain('class="tracker"');
 });
 
-it('titles the steps "Status" and keeps everything but the logo in a floating block', function () {
+it('keeps the logo, user and draft time in the left menu and the "Status" steps in a bar of their own', function () {
     $html = view('landing', ['progress' => sampleProgress(), 'vendorName' => 'Acme'])->render();
 
-    expect($html)->toMatch('/<div class="logo">.*?<\/div>\s*<div class="tracker-float">.*<h3 class="steps-title">Status<\/h3>\s*<ol class="steps">/s');
+    expect($html)->toMatch('/<aside class="tracker".*?<div class="logo">.*?<div class="tracker-float">.*?<\/aside>\s*<nav class="status-bar"[^>]*>\s*<h3 class="steps-title">Status<\/h3>\s*<ol class="steps">/s');
 
     $css = file_get_contents(public_path('css/vob.css'));
-    expect($css)->toMatch('/\.tracker-float\s*\{[^}]*position:sticky/');
+    expect($css)->toMatch('/\.status-bar\s*\{[^}]*position:sticky;\s*top:0/')->toMatch('/\.tracker-float\s*\{[^}]*position:sticky/');
 });
 
 it('draws the sign-in pages in the PartnerOne design, with no inline script or style', function (string $path) {
@@ -118,10 +118,10 @@ describe('page header', function () {
         $this->get('/')->assertDontSee('Sign out');
     });
 
-    it('shows the logo 74px high inside a narrower left menu', function () {
+    it('keeps the left menu and floats the status bar across the top while the page scrolls', function () {
         $css = file_get_contents(public_path('css/vob.css'));
 
-        expect($css)->toMatch('/.tracker .logo img {[^}]*height:s*74px/')->toMatch('/.tracker { width:230px; flex:0 0 230px;/');
+        expect($css)->toMatch('/\.tracker \.logo img \{[^}]*height:\s*74px/')->toMatch('/grid-template-columns:230px/')->toMatch('/\.status-bar \{[^}]*z-index:\d+/')->toMatch('/\.steps \{[^}]*display:flex/');
     });
 
     it('shows "Vendor Submission" for the vendor step, keeping every other label from the API', function () {

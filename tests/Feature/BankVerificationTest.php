@@ -418,20 +418,17 @@ describe('logging', function () {
 });
 
 describe('the form page', function () {
-    it('has a verify button that posts to its own form, and shows the current status', function () {
+    // The "Verify bank account" button is switched off in resources/views/tot/_block.blade.php for now, and the status / help line
+    // under the bank fields was removed. Re-enable these checks together with the button.
+    it('shows no verify button and no status line while bank verification is switched off', function () {
         T::fake();
         $html = $this->withSession(T::session())->get('/home')->getContent();
 
-        expect($html)->toContain('Verify bank account')->toContain('data-bank-verify')
-            ->toMatch('/<form id="bank-verify" method="POST" action="[^"]+\/bank\/verify">\s*<input type="hidden" name="_token"/')
-            ->toContain('Bank account verification:')->toContain('Pending');
-    });
+        expect($html)->not->toContain('data-bank-verify')->not->toContain('Bank account verification:')
+            ->not->toContain('Changing the account name, number or IFS code');
 
-    it('shows Verified and offers to verify again', function () {
         T::fake(detail: T::detail(['form' => ['bank' => ['verification_status' => 'verified']]]));
-        $html = $this->withSession(T::session())->get('/home')->getContent();
-
-        expect($html)->toContain('<strong>Verified</strong>')->toContain('Verify again');
+        expect($this->withSession(T::session())->get('/home')->getContent())->not->toContain('data-bank-verify')->not->toContain('Verify again');
     });
 
     it('hides the button when the TOT cannot be edited', function () {

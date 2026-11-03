@@ -105,7 +105,7 @@ final class TotLayout
             ['id' => 'tot_scope', 'title' => 'TOT Scope', 'blocks' => [['grid', 2, [
                 self::field('vendor_details.scope_type', 'Scope Type', 'select', ['options' => ['PAN India', 'Regional', 'State'], 'help' => 'Whether this agreement applies across India, to a region, or a single state.']),
                 self::field('vendor_details.scope_state', 'State / Region', 'scope_state', ['help' => 'The state when Scope Type is State, the region when it is Regional. Not needed for PAN India.']),
-                ['type' => 'company_codes', 'path' => 'company_codes', 'label' => 'Company Code', 'help' => 'SAP company codes linked to this agreement.'],
+                ['type' => 'company_codes', 'path' => 'company_codes', 'label' => 'Company Code', 'help' => 'Company codes linked to this agreement.'],
                 ['type' => 'purchase_orgs', 'path' => 'purchase_orgs', 'label' => 'Purchase Organization', 'help' => 'Purchase organizations linked to this agreement.'],
             ]]]],
 
@@ -149,7 +149,7 @@ final class TotLayout
                     self::field('bank.bank_name_address', 'Bank Name and Address', 'text', ['maxlength' => 500]),
                     self::field('bank.account_no', 'Account No', 'line'),
                     self::field('bank.account_no_confirm', 'Confirm Account No', 'confirm', ['help' => 'Re-enter the account number to confirm it.']),
-                    self::field('bank.ifsc', 'IFS Code', 'line', ['maxlength' => 11, 'ifsc' => true, 'help' => '11 characters: 4 capital letters, then 0, then 6 letters or digits (for example HDFC0001234).']),
+                    self::field('bank.ifsc', 'IFS Code', 'line', ['maxlength' => 11, 'ifsc' => true]),
                 ], [
                     self::field('bank.validation_failed_override', 'For failed validations.', 'check', ['help' => 'Check this to proceed on manual vendor approval if automated bank account validation fails or is unavailable.']),
                 ]],

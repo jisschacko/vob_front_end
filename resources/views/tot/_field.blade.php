@@ -93,6 +93,7 @@
 @if ($demoVerified)<p class="valid-badge" data-demo-valid-badge @if (! filled($val) || $err) hidden @endif>&#10003; Verified</p>@endif
 @if ($err)<p class="error" role="alert">{{ $err }}</p>@endif
 @if (isset($f['ifsc']) || $type === 'confirm')<p class="error" role="alert" data-live-error hidden></p>@endif
+@if ($type === 'confirm')<p class="valid-badge" data-live-ok hidden>&#10003; Account number matched</p>@endif
 @unless ($bare)
     @if (isset($f['help']) && $type !== 'check')<p class="help">{{ $f['help'] }}</p>@endif
 </div>
