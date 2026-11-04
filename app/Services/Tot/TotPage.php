@@ -13,7 +13,7 @@ class TotPage
     private const PAYMENT_DAY_FIELDS = ['days_from_statement', 'days_from_grn', 'y_days', 'z_days', 'b_days', 'sor_days'];
 
     /** Mandatory in VOB although the Admin's required_fields does not list it yet (docs/ADMIN_PANEL_CHANGES.md "9"). */
-    private const EXTRA_REQUIRED = ['vendor_details.entity_type'];
+    private const EXTRA_REQUIRED = ['vendor_details.entity_type', 'vendor_details.gst_regn_no']; // gst_regn_no: the Admin leaves it out of the list until the type is saved as GST Registered; isRequired() applies the GST Type rule
 
     /** @var array<string,mixed> */
     private array $values;

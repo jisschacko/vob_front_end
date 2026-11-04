@@ -408,3 +408,16 @@ it('has an arrow-only Back to top button floating outside the form', function ()
     expect(file_get_contents(public_path('js/tot-form.js')))->toContain('data-back-to-top')->toContain('scrollTo');
     expect(file_get_contents(public_path('css/tot.css')))->toMatch('/\.back-to-top \{ position:fixed; right:\d+px;/');
 });
+
+it('still renders the GST Regn. No asterisk (hidden) when the Admin did not list it, so choosing GST Registered can show it without a reload', function () {
+    $detail = T::detail(['form' => ['vendor_details' => ['gst_type' => 'GST Unregistered']]]);
+    $detail['required_fields'] = array_values(array_diff($detail['required_fields'], ['vendor_details.gst_regn_no']));
+
+    expect(page($detail)->getContent())->toMatch('/<span class="req"\s+id="gst-regn-req"\s+hidden\s*>/');
+
+    // submit also asks for it only for GST Registered
+    $registered = T::detail(['form' => ['vendor_details' => ['gst_type' => 'GST Registered', 'gst_regn_no' => null]]]);
+    $registered['required_fields'] = array_values(array_diff($registered['required_fields'], ['vendor_details.gst_regn_no']));
+    $missing = app(\App\Services\Tot\SubmitReadiness::class)->missing($registered, true, false);
+    expect($missing)->toHaveKey('vendor_details.gst_regn_no');
+});
