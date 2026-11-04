@@ -88,6 +88,51 @@ describe('the form page', function () {
         expect($panIndia)->not->toContain('>South<')->not->toContain('>Kerala<');
     });
 
+    it('has a SKU Data button on the Margin & Rebate header that opens a popup with the article list', function () {
+        config(['sku.articles' => [['article' => '100200', 'description' => 'Basmati Rice 5kg'], ['article' => '100201', 'description' => 'Sunflower Oil 1L']]]);
+        $html = page()->getContent();
+
+        expect($html)->toMatch('/<div class="card-header has-action"[^>]*>\s*<span>Margin &amp; Rebate<\/span>\s*<button type="button" class="sku-open" data-sku-open>SKU Data<\/button>/')
+            ->toContain('id="sku-dialog"')->toContain('<th>Article</th><th>Description</th><th>Front End Margin</th><th>Back End Margin</th>')
+            ->toContain('data-sku-add')->toContain('data-sku-cancel')->toContain('data-sku-confirm')
+            ->toContain('100200')->toContain('Basmati Rice 5kg')->toContain('js/sku-data.js');
+        // auto-suggest text box, not a dropdown
+        expect(file_get_contents(public_path('js/sku-data.js')))->toContain("'combobox'")->toContain('aria-autocomplete')->not->toContain('Select article');
+        // only the Margin & Rebate card gets it, and the popup's inputs are never posted (they have no name)
+        expect(substr_count($html, 'data-sku-open'))->toBe(1);
+        preg_match('/<dialog id="sku-dialog".*?<\/dialog>/s', $html, $m);
+        expect($m[0] ?? '')->not->toContain('name="');
+    });
+
+    it('suggests exactly the five configured articles with their descriptions', function () {
+        $articles = collect(config('sku.articles'))->pluck('description', 'article')->all();
+
+        expect($articles)->toBe([
+            '2592106' => 'Oppo M/P A6x 5G 4/128 Ice/Blue',
+            '2592108' => 'Oppo M/P A6x 5G 6/128 Ice/Blue',
+            '2778859' => 'Oppo M/P Reno 16C 5G 8/256 Wht',
+            '2592103' => 'Oppo M/P A6x 5G 4/64 Ice/Blue',
+            '2592107' => 'Oppo M/P A6x 5G 6/128 Olive/Green',
+        ]);
+
+        $html = page()->getContent();
+        expect($html)->toContain('2778859')->toContain('Oppo M/P Reno 16C 5G 8/256 Wht');
+    });
+
+    it('offers no SKU Data button when the TOT can no longer be edited', function () {
+        $html = page(T::detail(['tot' => ['editable' => false, 'status' => 'pending_buyer', 'status_label' => 'Pending with buyer']]))->getContent();
+
+        expect($html)->not->toContain('data-sku-open')->not->toContain('id="sku-dialog"');
+    });
+
+    it('puts the chosen articles into the margin table without a page reload (script contract)', function () {
+        $js = file_get_contents(public_path('js/sku-data.js'));
+
+        expect($js)->toContain('showModal')->toContain('form[margins][')->toContain('Select at least one article.')
+            ->toContain('data-sku-confirm-yes')->not->toContain('location.reload')
+            ->and(config('sku.articles'))->toBeArray();
+    });
+
     it('disables the State / Region select for PAN India only', function () {
         $tag = function (string $scope) {
             $html = page(T::detail(['form' => ['vendor_details' => ['scope_type' => $scope, 'scope_state' => '']]]))->getContent();

@@ -5,6 +5,7 @@
 @push('head')
     <link rel="stylesheet" href="{{ asset('css/tot.css') }}">
     <script src="{{ asset('js/tot-form.js') }}" defer></script>
+    <script src="{{ asset('js/sku-data.js') }}" defer></script>
 @endpush
 
 @section('content')
