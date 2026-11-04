@@ -275,4 +275,13 @@
       Promise.resolve(save()).then(function () { if (target) target.submit(); });
     });
   });
+
+  // ---- Back to top: shown once the page is scrolled -----------------------------------------------------------------------
+  var toTop = document.querySelector('[data-back-to-top]');
+  if (toTop) {
+    var toggleTop = function () { toTop.hidden = window.pageYOffset < 300; };
+    window.addEventListener('scroll', toggleTop, { passive: true });
+    toggleTop();
+    toTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  }
 })();

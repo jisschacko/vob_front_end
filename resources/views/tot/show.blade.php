@@ -117,4 +117,9 @@
 
     <p class="footer-note">Lulu International Shopping Malls Private Limited &nbsp;&middot;&nbsp; Business Development Agreement / Terms of Trade (TOT)</p>
 </div>
+
+{{-- Back to top: arrow only, floating in the right margin outside the form; appears once the page is scrolled (tot-form.js). --}}
+<button type="button" class="back-to-top" data-back-to-top title="Back to top" aria-label="Back to top" hidden>
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
 @endsection

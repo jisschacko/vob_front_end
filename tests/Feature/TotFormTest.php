@@ -399,3 +399,12 @@ describe('bank details, mandatory rules and signatories', function () {
         expect($html)->not->toMatch('/<(?:input|textarea)[^>]*id="f-signatories-bda-vendor-name"[^>]*disabled/');
     });
 });
+
+it('has an arrow-only Back to top button floating outside the form', function () {
+    $html = page()->getContent();
+
+    expect($html)->toMatch('/<button type="button" class="back-to-top" data-back-to-top[^>]*aria-label="Back to top"[^>]*hidden>/')
+        ->and(preg_match('/<form[^>]*id="tot-form".*?<\/form>/s', $html, $m) ? $m[0] : '')->not->toContain('back-to-top');
+    expect(file_get_contents(public_path('js/tot-form.js')))->toContain('data-back-to-top')->toContain('scrollTo');
+    expect(file_get_contents(public_path('css/tot.css')))->toMatch('/\.back-to-top \{ position:fixed; right:\d+px;/');
+});
