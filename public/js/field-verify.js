@@ -125,11 +125,14 @@
 
     // Submit / Resubmit ask this: a bank account that was verified and then edited must be verified again (or the manual-approval box ticked)
     var verifiedSig = (document.querySelector('.bank-status strong') || {}).textContent === 'Verified' ? keyOf() : null;
+    // the values for which the check answered "failed" / "could not verify" (also when the Admin already says failed on page load)
+    var failedSig = (document.querySelector(".bank-status strong") || {}).textContent === "Verification failed" ? keyOf() : null;
     var override = form.querySelector('input[type="checkbox"][name$="[validation_failed_override]"]');
     var overrideBox = form.querySelector('[data-override-box]');
     window.vobBankGate = function () {
       if (override && override.checked) return '';
       if (running) return 'Bank account is being verified, please wait for the verification to finish.';
+      if (failedSig !== null && keyOf() === failedSig) return 'Bank account verification failed, click the checkbox "For failed validations" to proceed with manual verification.';
       if (verifiedSig !== null && keyOf() !== verifiedSig) return 'Bank account is edited, wait for verification. If verification fails, tick "For failed validations" to continue on manual approval.';
       return '';
     };
@@ -155,7 +158,8 @@
           if (r.state === 'valid' && d.name_at_bank) text += ' Name at bank: ' + d.name_at_bank + (d.name_match ? ' (' + d.name_match.toLowerCase().replace(/_/g, ' ') + ')' : '') + '.';
           show(bankMsg, r.state === 'valid' ? 'valid' : (r.state === 'invalid' || r.state === 'incomplete' ? 'bad' : 'muted'), text);
           if (r.state === 'unavailable' || r.state === 'incomplete') lastKey = null;
-          if (r.state === 'valid') { verifiedSig = key; setOk(true); }
+          if (r.state === 'valid') { verifiedSig = key; failedSig = null; setOk(true); }
+          if (r.state === 'invalid' || r.state === 'unavailable') failedSig = key;
           // "For failed validations" is offered only when the bank could not confirm the account or the check could not run (Cashfree down,
           // no credits, IP not whitelisted); a verified account no longer needs it
           if (overrideBox && (r.state === 'invalid' || r.state === 'unavailable')) overrideBox.hidden = false;
