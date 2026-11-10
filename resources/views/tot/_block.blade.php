@@ -14,7 +14,8 @@
                 @include('tot._field', ['f' => $f])
             @endforeach
         </div>
-        <div class="split-right">
+        {{-- "For failed validations": only offered when the bank could not confirm the account (shown / hidden by field-verify.js) --}}
+        <div class="split-right" data-override-box @unless ($page->showBankOverride()) hidden @endunless>
             <div class="importance-box">
                 @foreach ($b[2] as $f)
                     @include('tot._field', ['f' => $f])
@@ -39,13 +40,11 @@
 
 @elseif ($kind === 'bank_status')
     @php $status = $page->bankStatus() @endphp
-    {{-- Verify bank account button disabled for now
-    @if ($page->editable())
-        <div class="field-row">
-            <button type="submit" class="file-btn" form="bank-verify" data-bank-verify>{{ $status === 'verified' ? 'Verify again' : 'Verify bank account' }}</button>
-        </div>
-    @endif
-    --}}
+    <p class="help bank-status">Bank account verification:
+        <strong>{{ ['verified' => 'Verified', 'failed' => 'Verification failed', 'pending' => 'Pending'][$status] ?? ucfirst($status) }}</strong>.
+        @if ($status === 'verified' && ($ref = $page->bankVerification())['reference']) (reference {{ $ref['reference'] }}@if ($ref['verified_at']), {{ \Illuminate\Support\Carbon::parse($ref['verified_at'])->setTimezone(config('vob.display_timezone'))->format('d-M-Y, h:i A') }}@endif) @endif
+        Changing the account name, number or IFS code resets it; on a renewal the account is always verified again.</p>
+    {{-- No "Verify bank account" button: Cashfree checks the account in the background when the vendor leaves the bank fields (field-verify.js). --}}
 
 @elseif ($kind === 'table')
     <div class="table-scroll">

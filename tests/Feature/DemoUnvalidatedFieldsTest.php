@@ -175,13 +175,6 @@ describe('demo mode ON (VOB_SKIP_THIRD_PARTY)', function () {
         $this->post('/tot/submit', ['form' => ['vendor_details' => ['pan_no' => 'whatever']]])->assertSessionHasErrors(['bank.ifsc']);
     });
 
-    it('lets the bank be "verified" without any bank details at the Admin', function () {
-        T::fake(['POST tots/'.T::TOT_ID.'/bank-verification' => Http::response(['saved' => true])], T::detail(['form' => ['bank' => ['account_name' => null, 'account_no' => null, 'ifsc' => null]]]));
-
-        $this->withSession(T::session())->post('/bank/verify')->assertRedirect(route('home'))->assertSessionDoesntHaveErrors();
-        expect(T::sent('POST', 'tots/'.T::TOT_ID.'/bank-verification')['status'])->toBe('verified');
-    });
-
     it('is never active in production', function () {
         app()->detectEnvironment(fn () => 'production');
 

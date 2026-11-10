@@ -263,26 +263,6 @@ describe('demo mode (VOB_SKIP_THIRD_PARTY)', function () {
         $this->get('/')->assertDontSee('DEMO: third-party services are skipped');
     });
 
-    it('marks the bank account verified at the Admin without calling Cashfree', function () {
-        T::fake(['POST tots/'.T::TOT_ID.'/bank-verification' => Http::response(['saved' => true])], readyDetail(['form' => ['bank' => ['account_no' => '**********1191']]]));
-
-        $this->withSession(T::session())->post('/bank/verify')->assertRedirect(route('home'))
-            ->assertSessionHas('status', 'Demo mode: bank verification was skipped and the account is marked as verified.');
-
-        $sent = T::sent('POST', 'tots/'.T::TOT_ID.'/bank-verification');
-        expect($sent['status'])->toBe('verified')->and($sent['reference'])->toStartWith('DEMO-');
-        Http::assertNotSent(fn (Request $r) => str_contains($r->url(), 'cashfree'));
-        expect(CashfreeVerification::count())->toBe(0)->and(ApiLog::where('service', 'cashfree')->count())->toBe(0);
-    });
-
-    it('does not need the bank fields to be filled in (they are not validated in demo mode) but reports an Admin failure', function () {
-        T::fake(['POST tots/'.T::TOT_ID.'/bank-verification' => Http::response(['saved' => true])], readyDetail(['form' => ['bank' => ['account_no' => null, 'ifsc' => null]]]));
-        $this->withSession(T::session())->from('/home')->post('/bank/verify')->assertRedirect(route('home'))->assertSessionDoesntHaveErrors();
-
-        T::fake(['POST tots/'.T::TOT_ID.'/bank-verification' => Http::response([], 500)], readyDetail());
-        $this->from('/home')->post('/bank/verify')->assertSessionHasErrors(['bank_verify' => 'We could not record the verification right now. Please try again.']);
-    });
-
     it('stores documents on the local disk instead of S3 and still registers them with the Admin', function () {
         T::fake([], readyDetail());
 
@@ -293,11 +273,10 @@ describe('demo mode (VOB_SKIP_THIRD_PARTY)', function () {
         expect(T::sent('POST', 'tots/'.T::TOT_ID.'/documents')['path'])->toBe(Storage::disk('local')->allFiles()[0]);
     });
 
-    it('lets a vendor complete the whole journey with no third party: bank, documents, submit', function () {
+    it('lets a vendor complete the whole journey with no third party: documents, submit', function () {
         T::fake(submitRoutes(['POST tots/'.T::TOT_ID.'/bank-verification' => Http::response(['saved' => true])]), readyDetail());
 
-        $this->withSession(T::session())->post('/bank/verify')->assertRedirect(route('home'));
-        $this->post('/tot/submit', ['form' => ['vendor_details' => ['vendor_name' => 'A']]])->assertRedirect(route('home'));
+        $this->withSession(T::session())->post('/tot/submit', ['form' => ['vendor_details' => ['vendor_name' => 'A']]])->assertRedirect(route('home'));
 
         Http::assertNotSent(fn (Request $r) => ! str_contains($r->url(), 'admin.test'));
     });

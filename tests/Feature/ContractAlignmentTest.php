@@ -117,13 +117,11 @@ describe('values the Admin returns in clear (5C)', function () {
 });
 
 describe('bank verification record (5B)', function () {
-    // The status line under the bank fields ("Bank account verification: Verified (reference ..., time)") was removed from the page,
-    // so the vendor no longer sees the reference; the reviewer still does in the Admin.
-    it('no longer shows the bank status line, reference or time on the vendor page', function () {
+    it('shows the reference and time the Admin recorded', function () {
         T::fake([], T::detail(['form' => ['bank' => ['verification_status' => 'verified', 'verification_reference' => 'DEMO-4F9K2LQ7XA', 'verified_at' => '2026-10-21T05:00:00+00:00']]]));
         $html = $this->withSession(T::session())->get('/home')->getContent();
 
-        expect($html)->not->toContain('Bank account verification:')->not->toContain('DEMO-4F9K2LQ7XA');
+        expect($html)->toContain('<strong>Verified</strong>')->toContain('reference DEMO-4F9K2LQ7XA')->toContain('21-Oct-2026, 10:30 AM');
     });
 
     it('shows no reference line while the bank is not verified', function () {

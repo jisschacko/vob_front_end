@@ -40,7 +40,7 @@ Application column: **VOB** = this app (vendor front end), **Both** = a value th
 | `AWS_USE_PATH_STYLE_ENDPOINT` | VOB | S3-compatible endpoints (MinIO) | default false |
 | `CASHFREE_ENV` | VOB | `sandbox` or `production` Cashfree endpoint | Test credentials are rejected in production |
 | `CASHFREE_CLIENT_ID` / `CASHFREE_CLIENT_SECRET` | VOB | Cashfree Verification Suite credentials | Never commit; whitelist the server IP in the Cashfree dashboard |
-| `CASHFREE_NAME_MATCH` | VOB | `ignore` or `reject_no_match`: whether a NO_MATCH account name fails the verification | Account number + IFSC must always match |
+| `CASHFREE_NAME_MATCH` | VOB | `reject_no_match` (default) or `ignore`: whether a NO_MATCH between the Account Name and the name at the bank fails the bank verification (the bank check is Cashfree's own penny drop, done in the background when the vendor leaves the field; PAN, GSTIN and IFSC are checked the same way) | Account number + IFSC must always match |
 
 ## Application, database, session, mail (Laravel)
 
@@ -55,7 +55,7 @@ Application column: **VOB** = this app (vendor front end), **Both** = a value th
 | `APP_MAINTENANCE_DRIVER` | VOB | Where maintenance mode is stored | |
 | `BCRYPT_ROUNDS` | VOB | Hashing cost (no local passwords are stored) | |
 | `LOG_CHANNEL` / `LOG_STACK` / `LOG_DEPRECATIONS_CHANNEL` / `LOG_LEVEL` | VOB | Laravel log output | |
-| `DB_CONNECTION` / `DB_HOST` / `DB_PORT` / `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | VOB | Small local database: sessions, cache, jobs, `api_logs`, `cashfree_verifications` (no business data) | Local: MySQL `vob_front_end`; production: least-privilege user |
+| `DB_CONNECTION` / `DB_HOST` / `DB_PORT` / `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | VOB | Small local database: sessions, cache, jobs, `api_logs` (no business data) | Local: MySQL `vob_front_end`; production: least-privilege user |
 | `SESSION_DRIVER` | VOB | Where sessions (and the Admin access token) live, server side | `database` locally, `redis` in production |
 | `SESSION_LIFETIME` | VOB | Storage lifetime in minutes; keep >= `VOB_SESSION_ABSOLUTE_MINUTES` | Sign-out timing is the `VOB_SESSION_*` keys |
 | `SESSION_ENCRYPT` | VOB | Encrypt session payloads | keep `true` (holds the Admin token) |

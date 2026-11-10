@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\AdminApi\AdminApiClient;
 use App\Services\AdminApi\AdminSession;
 use App\Services\Cashfree\BankVerificationService;
+use App\Services\Cashfree\FieldVerifier;
 use App\Services\Tot\Masters;
 use App\Services\Tot\SubmitReadiness;
 use App\Services\Tot\TotFormMapper;
@@ -27,7 +28,6 @@ class TotController extends Controller
         private readonly AdminSession $session,
         private readonly Masters $masters,
         private readonly TotFormMapper $mapper,
-        private readonly BankVerificationService $bank,
         private readonly SubmitReadiness $readiness,
     ) {}
 
@@ -44,8 +44,6 @@ class TotController extends Controller
 
             return $count > 1 ? redirect()->route('tots.index') : view('home', ['tot' => null]);
         }
-
-        $this->bank->reconcile($tot['id']); // a payment made while the page was closed is reported to the Admin first
 
         $response = $this->api->get('tots/'.$tot['id']);
         if (! $response->successful()) {
@@ -102,7 +100,7 @@ class TotController extends Controller
             return back()->withInput()->withErrors(['form' => 'We could not submit right now. Please try again.']);
         }
 
-        $missing = $this->readiness->missing($detail->json(), EnforcementSwitches::required(), EnforcementSwitches::documents());
+        $missing = $this->readiness->missing($detail->json(), EnforcementSwitches::required(), EnforcementSwitches::documents()) + $this->failedChecks($detail->json());
         if ($missing !== []) {
             return back()->withInput()->withErrors(['submit' => 'Please complete the following before submitting.'] + $missing);
         }
@@ -121,6 +119,42 @@ class TotController extends Controller
             409 => ['form' => 'This Terms of Trade can no longer be edited.'],
             default => ['form' => 'We could not submit right now. Please try again.'],
         });
+    }
+
+    /**
+     * Values the background Cashfree check (FieldVerificationController) already reported as NOT valid for what is saved now.
+     * "Could not check" never blocks; the bank account is gated by the Admin through its verification status.
+     *
+     * @param  array<string,mixed>  $detail  GET /tots/{id}
+     * @return array<string,string> field path => message
+     */
+    private function failedChecks(array $detail): array
+    {
+        if (EnforcementSwitches::skipThirdParty() || ! EnforcementSwitches::required()) {
+            return [];
+        }
+
+        $form = (array) ($detail['form'] ?? []);
+        $checks = [
+            'vendor_details.pan_no' => ['pan', 'The PAN could not be verified. Check the PAN number.'],
+            'bank.ifsc' => ['ifsc', 'The IFS Code was not found. Check the IFS Code.'],
+        ];
+        if (data_get($form, 'vendor_details.gst_type') === 'GST Registered') {
+            $checks['vendor_details.gst_regn_no'] = ['gstin', 'The GSTIN could not be verified. Check the GST Regn. No.'];
+        }
+
+        $problems = [];
+        foreach ($checks as $path => [$type, $message]) {
+            $value = FieldVerifier::clean((string) data_get($form, $path));
+            if ($value === '' || str_contains($value, '*')) {
+                continue;
+            }
+            if (($this->session->cached($type.':'.hash('sha256', $value))['state'] ?? null) === 'invalid') {
+                $problems[$path] = $message;
+            }
+        }
+
+        return $problems;
     }
 
     /** Autosave (same call, JSON answer). */

@@ -275,6 +275,15 @@ class TotPage
         return (string) ($this->detail['form']['bank']['verification_status'] ?? 'pending');
     }
 
+    /**
+     * The "For failed validations" box is offered only after the bank could not confirm the account (status failed), or while it is already
+     * ticked (so a saved choice is never hidden). field-verify.js shows it when a check fails and hides it again when the account verifies.
+     */
+    public function showBankOverride(): bool
+    {
+        return ! $this->liveVerify() || $this->bankStatus() === 'failed' || in_array($this->raw('bank.validation_failed_override'), ['Yes', true, '1', 1], true);
+    }
+
     /** It was submitted before (so a reviewer has sent it back): the vendor edits again and presses Resubmit. */
     public function isResubmission(): bool
     {
@@ -303,6 +312,7 @@ class TotPage
      */
     public function switchMismatches(): array
     {
+        // (see liveVerify() below for the background Cashfree checks)
         $admin = $this->detail['validation'] ?? null;
         if (! is_array($admin) || app()->isProduction()) {
             return [];
@@ -316,6 +326,28 @@ class TotPage
         }
 
         return $notes;
+    }
+
+    /** Background Cashfree checks (PAN, GSTIN, IFSC, bank account) while the vendor types. Off in demo mode (those fields then just show "Verified") and when read-only. */
+    public function liveVerify(): bool
+    {
+        return $this->editable() && ! EnforcementSwitches::skipThirdParty();
+    }
+
+    /** Which background check a field takes part in: pan | gstin | ifsc | bank, or null. */
+    public function verifyKind(string $path): ?string
+    {
+        if (! $this->liveVerify() || $this->isLocked($path)) {
+            return null;
+        }
+
+        return match ($path) {
+            'vendor_details.pan_no' => 'pan',
+            'vendor_details.gst_regn_no' => 'gstin',
+            'bank.ifsc' => 'ifsc',
+            'bank.account_name', 'bank.account_no', 'bank.account_no_confirm' => 'bank',
+            default => null,
+        };
     }
 
     /**

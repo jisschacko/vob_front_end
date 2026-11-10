@@ -1,5 +1,8 @@
 # To bring back after the demo
 
+> **RESTORED on 2026-11-09** (demo over, Cashfree sandbox switched on): items 1 and 2 below are back in `resources/views/tot/_block.blade.php`
+> and the original tests are back. The IFS help text was left out, as noted at the bottom.
+
 Things switched off or removed **for the demo only**. When the demo is over the owner tells Claude "demo is over, restore the items in
 `docs/AFTER_DEMO.md`"; Claude restores them, puts the original tests back and runs the suite.
 

@@ -123,12 +123,12 @@ Laravel 11/12, PHP 8.3, MySQL 8, Redis (cache/queue/nonce), Blade + Bootstrap/Ta
 
 ## 5. Vendor Onboarding Platform (VOB)
 
-- Stateless-ish public app: **no business DB**, only: `cashfree_verifications` (temporary: tot ref, reference_id, status, masked account, response, expires_at, purged by scheduler), `api_logs`, sessions/cache/jobs.
-- Flow: email link (signed+encrypted) → login page (existing vendor: own password; new vendor: password from email) → first-login forced password change → TOT form (multi-section wizard with autosave to Admin API) → uploads direct to S3 (pre-signed) → Cashfree Reverse Penny Drop bank verification → submit → read-only status page; shows reviewer comments when sent back and allows resubmission. Marks "Pending with vendor" on first login (via API).
+- Stateless-ish public app: **no business DB**, only: `api_logs`, sessions/cache/jobs.
+- Flow: email link (signed+encrypted) → login page (existing vendor: own password; new vendor: password from email) → first-login forced password change → TOT form (multi-section wizard with autosave to Admin API) → uploads direct to S3 (pre-signed) → Cashfree bank verification (originally planned as Reverse Penny Drop; now Cashfree's own penny drop, run in the background) → submit → read-only status page; shows reviewer comments when sent back and allows resubmission. Marks "Pending with vendor" on first login (via API).
 - `AdminApiClient` service: encrypts credentials header, builds decoy body, signs requests, Bearer token handling/refresh, retries/timeouts, logs every call/response to `api_logs`, same purge job.
 - Master data (accounting groups, states, regions, company codes, purchase orgs) fetched via API with short cache. Field rules (§5A): vendor-mandatory validation, greyed-out buyer-only fields (Company Code, Purchase Organization, Vendor Accounting Group Type, Reconciliation of Accounts Type), and renewal prefill from the previous TOT.
 - Hardening: WAF/CloudFront, rate limiting, reCAPTCHA on login, no stack traces, CSP, S3 bucket private, session in Redis, token kept server-side only (never in browser JS).
-- Cashfree: create verification (RPD), show QR/UPI link, poll/webhook for result, store only reference + status; failure shows "Bank details validation failed" per form.
+- Cashfree (original plan: Reverse Penny Drop with QR/UPI link; replaced by background PAN / GSTIN / IFSC / bank checks, see README): result, store only reference + status; failure shows "Bank details validation failed" per form.
 
 ---
 
@@ -145,14 +145,14 @@ Laravel 11/12, PHP 8.3, MySQL 8, Redis (cache/queue/nonce), Blade + Bootstrap/Ta
 
 **Renewal prefill (VOB):** for `type = renew`, the Admin API returns these values from the vendor's previous approved TOT (`previous_tot_id`) when the form is first opened; vendor may edit them: Registration Type, Vendor Agreement No, Company Code, Purchase Organization, Vendor Name, Vendor Code, Brand, Parent Code, Address, State, PIN, GST Regn. No, PAN No, MSME Reg No, GST Type, MSME Type, Account Name, Bank Name and Address, Account No, IFS Code.
 - Company Code and Purchase Organization are prefilled but stay greyed out for the vendor.
-- Bank details: prefilled, but Cashfree Reverse Penny Drop verification is **always re-run on every renewal, even if the details are unchanged** (accounts can be closed at any time). Submit is blocked until verification succeeds. Account number is returned masked unless the vendor chooses to edit it.
+- Bank details: prefilled, but Cashfree bank verification is **always re-run on every renewal, even if the details are unchanged** (accounts can be closed at any time). Submit is blocked until verification succeeds. Account number is returned masked unless the vendor chooses to edit it.
 - Fields not prefilled (fees, margins, terms, deliverables, signatories, documents) start empty.
 
 ## 5B. Local development database
 
 - Admin Panel `.env` (local only): `DB_CONNECTION=mysql`, `DB_HOST=127.0.0.1`, `DB_DATABASE=vendor_onboarding`, `DB_USERNAME=root`, `DB_PASSWORD=` (empty). Database already created on localhost.
 - `.env` is git-ignored; only `.env.example` (no real credentials) is committed. Staging/production must use a dedicated least-privilege MySQL user with a strong password from AWS Secrets Manager or equivalent; root with an empty password is for the local machine only.
-- `vendor_onboarding` is the **Admin Panel** database (confirmed; it holds all business data). The VOB app keeps only its small local tables (`cashfree_verifications`, `api_logs`, jobs/sessions). Proposed separate DB name for it: `vendor_onboarding_portal` (confirm, or use SQLite/Redis-only locally).
+- `vendor_onboarding` is the **Admin Panel** database (confirmed; it holds all business data). The VOB app keeps only its small local tables (`api_logs`, jobs/sessions). Proposed separate DB name for it: `vendor_onboarding_portal` (confirm, or use SQLite/Redis-only locally).
 
 ## 5C. Keys and secrets (owner-generated; Claude must never generate or commit them)
 
@@ -240,12 +240,12 @@ Deliver with migrations, seeders, factories, Pest tests, and a README of env var
 Act as a senior Laravel developer. Build "Vendor Handshake – Vendor Onboarding Platform (VOB)", an internet-facing Laravel 12 app, as the continuation of the Admin Panel project (read its docs/DEVELOPMENT_PLAN.md, the API contract it exposes, and docs/TOT_Main_Form.html for the form).
 
 RULES
-- VOB has NO business database. All TOT/vendor data is read/written through the Admin Panel REST API (/api/v1). Local tables only: cashfree_verifications (temporary, purged), api_logs (every outbound/inbound call + response, redacted, purged after 2 months by a scheduled command), plus sessions/cache/jobs (Redis).
+- VOB has NO business database. All TOT/vendor data is read/written through the Admin Panel REST API (/api/v1). Local tables only: api_logs (every outbound/inbound call + response, redacted, purged after 2 months by a scheduled command), plus sessions/cache/jobs (Redis).
 - AdminApiClient service: sends credentials only as an encrypted header X-Auth-Data (AES-256-GCM random IV, key RSA-OAEP wrapped) with a decoy dummy JSON body; afterwards uses Bearer access_token; adds HMAC signature/timestamp/nonce headers; stored server-side only; handles expiry/refresh, timeouts, retries; logs everything.
 - Links from emails are encrypted/signed/expiring; no raw IDs or emails in URLs; routes use encrypted tokens.
 - Follow plan §5A: the 18 vendor-mandatory fields; grey out and never submit Company Code, Purchase Organization, Vendor Accounting Group Type, Reconciliation of Accounts Type; for renewals prefill the 20 listed fields from the API.
 - Also required: a **Save Draft** button + last-saved time + autosave (PUT .../draft); the vertical **status tracker** in the left margin from the API `progress` (ticks for passed stages, current highlighted, remaining stages pending in order; see docs/vob_status_tracker_reference.html); and development switches `VOB_ENFORCE_REQUIRED` / `VOB_ENFORCE_DOCUMENTS` (false = the front end does not block Submit on mandatory fields/documents; always on when APP_ENV=production; formats always validated).
-- Features: login (existing vendor password vs new vendor password from email), forced password change, multi-section TOT wizard replicating TOT_Main_Form.html with server-side validation and autosave, master dropdowns (Vendor Accounting Group Type, State, Region, Company Code) via API with caching, document upload to AWS S3 (private bucket, pre-signed, MIME/size/AV checks), Cashfree Reverse Penny Drop bank account verification (create → poll/webhook → store ref+status only, show "Bank details validation failed" on failure), review/submit, read-only status page, display reviewer comments when sent back and allow resubmission. First successful login triggers status "Pending with vendor" through the API.
+- Features: login (existing vendor password vs new vendor password from email), forced password change, multi-section TOT wizard replicating TOT_Main_Form.html with server-side validation and autosave, master dropdowns (Vendor Accounting Group Type, State, Region, Company Code) via API with caching, document upload to AWS S3 (private bucket, pre-signed, MIME/size/AV checks), Cashfree bank verification (penny drop) bank account verification (create → poll/webhook → store ref+status only, show "Bank details validation failed" on failure), review/submit, read-only status page, display reviewer comments when sent back and allow resubmission. First successful login triggers status "Pending with vendor" through the API.
 - Hardening: rate limiting + captcha on login, CSP/security headers, no debug output, WAF-friendly, token never exposed to the browser.
 
 PHASES: 1 scaffolding + AdminApiClient + logging/purge; 2 auth & password flow; 3 TOT wizard + S3 uploads; 4 Cashfree integration; 5 submit/resubmit/status; 6 eMudhra vendor e-sign page (later); 7 security review and deployment. Stop after each phase for review. Include Pest tests with Http::fake for Admin API, Cashfree and S3.

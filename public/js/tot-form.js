@@ -22,6 +22,16 @@
   document.querySelectorAll('textarea.autogrow').forEach(grow);
   form.addEventListener('input', function (e) { if (e.target.matches && e.target.matches('textarea.autogrow')) grow(e.target); });
 
+  // ---- a message from the last Save Draft (server-rendered, e.g. "format is invalid") goes away as soon as the vendor edits that field ----
+  function clearServerError(e) {
+    var box = e.target.closest && e.target.closest('.field-wrap, td');
+    if (!box) return;
+    box.querySelectorAll('p.error:not([data-live-error])').forEach(function (p) { p.remove(); });
+    if (e.target.getAttribute && e.target.getAttribute('aria-invalid') === 'true' && !box.querySelector('[data-live-error]:not([hidden])')) e.target.setAttribute('aria-invalid', 'false');
+  }
+  form.addEventListener('input', clearServerError);
+  form.addEventListener('change', clearServerError);
+
   // ---- GST Regn. No is not mandatory for GST Unregistered vendors ----------------------------------------------------
   var gstType = form.querySelector('[data-gst-type]');
   var gstStar = document.getElementById('gst-regn-req');
@@ -129,6 +139,9 @@
     return saving;
   }
 
+  // field-verify.js saves the draft through this before it asks for the bank check (the check uses the saved values)
+  window.vobAutosave = function () { return Promise.resolve(saving).then(function () { return save(); }); };
+
   function schedule() {
     dirty = true;
     clearTimeout(timer);
@@ -141,22 +154,12 @@
   var submitBtn = document.querySelector('[data-submit]');
   if (submitBtn) {
     submitBtn.addEventListener('click', function (e) {
+      var bankProblem = window.vobBankGate ? window.vobBankGate() : '';
+      if (bankProblem) { e.preventDefault(); window.alert(bankProblem); return; }
       if (!window.confirm(submitBtn.dataset.confirm)) e.preventDefault();
     });
   }
 
-  // ---- bank verification: save the typed bank details first, then start the verification ----------------------------------
-  var verifyBtn = document.querySelector('[data-bank-verify]');
-  if (verifyBtn) {
-    verifyBtn.addEventListener('click', function (e) {
-      e.preventDefault();
-      var target = document.getElementById(verifyBtn.getAttribute('form'));
-      Promise.resolve(save()).then(function (ok) {
-        if (ok === false && !window.confirm('Your latest changes could not be saved. Verify with the bank details already saved?')) return;
-        if (target) target.submit();
-      });
-    });
-  }
 
   // ---- Terms of Trade clauses: pencil opens the wording as a textarea ------------------------------------------------------
   function clauseParts(card) {

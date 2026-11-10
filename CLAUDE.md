@@ -2,7 +2,7 @@
 
 Public, internet-facing Laravel 12 app. Vendors sign in from an emailed link, fill the Terms of Trade (TOT)
 form (docs/TOT_Main_Form.html), upload documents to S3, verify their bank account with Cashfree
-(Reverse Penny Drop) and submit. It has NO business database: all data goes through the Admin Panel's
+(its own penny drop, run in the background) and submit. It has NO business database: all data goes through the Admin Panel's
 REST API (separate repo). Read before coding: docs/API_CONTRACT.md, docs/DEVELOPMENT_PLAN.md.
 
 ## Rules

@@ -146,10 +146,10 @@ final class TotLayout
             ['id' => 'bank_account_details', 'title' => 'Bank Account Details', 'blocks' => [
                 ['split', [
                     self::field('bank.account_name', 'Account Name'),
+                    self::field('bank.ifsc', 'IFS Code', 'line', ['maxlength' => 11, 'ifsc' => true]),
                     self::field('bank.bank_name_address', 'Bank Name and Address', 'text', ['maxlength' => 500]),
                     self::field('bank.account_no', 'Account No', 'line'),
                     self::field('bank.account_no_confirm', 'Confirm Account No', 'confirm', ['help' => 'Re-enter the account number to confirm it.']),
-                    self::field('bank.ifsc', 'IFS Code', 'line', ['maxlength' => 11, 'ifsc' => true]),
                 ], [
                     self::field('bank.validation_failed_override', 'For failed validations.', 'check', ['help' => 'Check this to proceed on manual vendor approval if automated bank account validation fails or is unavailable.']),
                 ]],

@@ -1,6 +1,6 @@
 <?php
 
-// Cashfree Verification Suite: Reverse Penny Drop (bank account verification). Credentials come from .env only.
+// Cashfree Verification Suite: PAN, GSTIN, IFSC and bank account (Cashfree's own penny drop, run in the background). Credentials come from .env only.
 return [
     'client_id' => env('CASHFREE_CLIENT_ID'),
     'client_secret' => env('CASHFREE_CLIENT_SECRET'),
@@ -14,13 +14,8 @@ return [
 
     'timeout' => (int) env('CASHFREE_TIMEOUT', 15),
 
-    // The UPI link / QR code is valid for 10 minutes (Cashfree). Used when valid_upto is not returned.
-    'link_minutes' => 10,
-
-    // Account number and IFSC of the paying account must always match the entered bank details.
-    // 'ignore' = the name match result is only logged; 'reject_no_match' = also fail when Cashfree reports NO_MATCH.
-    'name_match' => env('CASHFREE_NAME_MATCH', 'ignore'),
-
-    // Rows in cashfree_verifications are temporary: purged this many days after they expire.
-    'purge_after_days' => (int) env('CASHFREE_PURGE_AFTER_DAYS', 2),
+    // The bank account is checked by Cashfree's own penny drop (FieldVerifier), in the background when the vendor leaves the field.
+    // Name at the bank vs the Account Name:
+    // 'reject_no_match' (default) = the account is not verified when Cashfree reports NO_MATCH; 'ignore' = the result is only shown.
+    'name_match' => env('CASHFREE_NAME_MATCH', 'reject_no_match'),
 ];

@@ -33,7 +33,7 @@ vendor/bin/pest                 # needs a .env to exist, otherwise PHPUnit repor
 | `VOB_DOCS_DISK` | filesystem disk for vendor PDFs, default `s3` (set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`; the bucket must be private and be the same one the Admin reads with `TOT_DOCS_DISK=s3`) |
 | `VOB_MASTERS_CACHE_MINUTES` | how long `/masters` dropdown data is cached (default 10) |
 | `CASHFREE_ENV`, `CASHFREE_CLIENT_ID`, `CASHFREE_CLIENT_SECRET` | bank verification. `sandbox` needs sandbox credentials, `production` live ones. Whitelist the server egress IP in the Cashfree dashboard |
-| `CASHFREE_NAME_MATCH` | `ignore` (default) or `reject_no_match`: the paying account number and IFSC must always match; this also fails a NO_MATCH name |
+| `CASHFREE_NAME_MATCH` | `reject_no_match` (default) or `ignore`: a NO_MATCH between the Account Name and the name at the bank fails the bank verification |
 | `VOB_SKIP_THIRD_PARTY` | **demo / testing only**: `true` skips every third-party service. Bank verification is not sent to Cashfree (the Admin is told `verified` with a `DEMO-...` reference) and documents are stored on the local disk instead of S3. PAN No, GST Regn. No, Account Name, Account No and IFS Code are not validated and always show a green "Verified" (the Admin skips their format checks too while its own `TOT_SKIP_THIRD_PARTY` is on; if it does not, its format error is shown beside the field). A banner shows while it is on. Always off when `APP_ENV=production` |
 | `VOB_DISPLAY_TIMEZONE` | timezone for "Draft saved ..." (default `Asia/Kolkata`) |
 
@@ -78,12 +78,13 @@ A missing key/secret/URL raises a clear "not configured" error before any reques
 - The comparison (original struck through in red, new wording on yellow) is shown by the **Admin Panel** to the owner and reviewers; VOB only edits.
 - Reviewer "Look for comment" sections (`flagged_sections`, `section_note`): the flagged section titles get a "Comment added" marker and the page scrolls to the first one. Every section card has the Admin's section key as its `id`.
 
-## Bank verification (Cashfree Reverse Penny Drop)
+## Background checks (Cashfree PAN, GSTIN, IFSC and bank account)
 
-- "Verify bank account" on the form saves the draft, then creates an RPD request for the saved account name / number / IFSC; the vendor pays Rs 1 by UPI (QR or app link, valid 10 minutes, refunded in 48 h).
-- The result is read from Cashfree (`GET /remitter/status`), never from a webhook payload. The paying account number and IFSC must match the form; then `POST /tots/{id}/bank-verification` tells the Admin `verified` (with the Cashfree ref_id) or `failed`. An expired link is not reported as failed.
-- `cashfree_verifications` is temporary (no account number, only last four digits and a keyed hash); `cashfree:purge-verifications` runs daily.
-- Webhook (optional, speeds things up): `POST /webhooks/cashfree`, signature checked, no session. Without it the vendor page polls every 4 seconds, and a payment made while the page was closed is picked up when the form is next opened.
+- When the vendor leaves **PAN No**, **GST Regn. No** or **IFS Code**, `public/js/field-verify.js` POSTs the value to `/verify/pan`, `/verify/gstin`, `/verify/ifsc` (CSRF, signed-in vendor, throttled). The server calls Cashfree `POST /pan`, `/gstin`, `/ifsc`; the page shows "Verified" (with the registered / legal name), a red message, or a grey "could not verify right now" (credits, IP whitelist, outage: never blocks the vendor). IFSC also shows bank, branch, address, MICR and live payment modes and fills "Bank Name & Address" when it is empty.
+- When Account Name, Account No, Confirm Account No and IFS Code are all filled and match, the page saves the draft, then POSTs `/verify/bank`. The server reads the **saved** bank details from the Admin, calls Cashfree `POST /bank-account/sync` (Cashfree makes the penny drop itself: nothing to scan or pay), shows "Name at bank: ..." and records `verified` / `failed` with the Admin (`POST /tots/{id}/bank-verification`), which its submit check needs. A masked account number must be re-typed first.
+- Answers are remembered per value in the server-side session, so the same value is never paid for twice; "could not verify" is never remembered. Submit is blocked only for a PAN, GSTIN (GST Registered) or IFSC that Cashfree already reported as not valid. Demo mode (`VOB_SKIP_THIRD_PARTY=true`) calls nothing and shows everything verified.
+- The "For failed validations" box (manual approval) is hidden until the bank check fails or could not run, "could not verify right now" (or the Admin status is `failed`, or the box is already ticked; always shown in demo mode). It is unticked and hidden again when the account verifies. Submit / Resubmit warn when a verified account was edited and not yet re-verified. The buyer-side handling (failed message, approval reason, history, Cashfree retry) is Admin work: `docs/ADMIN_PANEL_CHANGES.md` entry 10.
+- A NO_MATCH between the Account Name and the name at the bank fails the bank check (`CASHFREE_NAME_MATCH=reject_no_match`, the default); PAN and IFSC are checked without a name or date of birth.
 
 ## Submit, resubmit, status
 

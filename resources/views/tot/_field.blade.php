@@ -13,6 +13,8 @@
     $listed = in_array($path, $page->requiredFields(), true);
     $inputType = ['line' => 'text', 'tel' => 'tel', 'email' => 'email', 'number' => 'number', 'date' => 'date'][$type] ?? 'text';
     $demoVerified = $page->demoVerified($path);
+    $verify = $page->verifyKind($path); // pan | gstin | ifsc | bank: checked by Cashfree in the background when the vendor leaves the box
+    $verifyUrl = ['pan' => 'verify.pan', 'gstin' => 'verify.gstin', 'ifsc' => 'verify.ifsc'][$verify ?? ''] ?? ($path === 'bank.account_no_confirm' ? 'verify.bank' : null);
     $class = 'f'.(($f['inline'] ?? false) ? ' inline-f' : '').($demoVerified && filled($val) && ! $err ? ' is-valid' : '');
 @endphp
 @unless ($bare)
@@ -36,7 +38,7 @@
         @break
 
     @case('text')
-        <textarea class="{{ $class }} autogrow" id="{{ $id }}" name="{{ $name }}" rows="1" maxlength="{{ $max }}" @if ($demoVerified) data-demo-valid @endif
+        <textarea class="{{ $class }} autogrow" id="{{ $id }}" name="{{ $name }}" rows="1" maxlength="{{ $max }}" @if ($demoVerified) data-demo-valid @endif @if ($path === 'bank.bank_name_address') data-ifsc-fill @endif @if ($verify) data-verify="{{ $verify }}" @endif
             @if ($locked) disabled @endif @isset($f['placeholder']) placeholder="{{ $f['placeholder'] }}" @endisset>{{ $val }}</textarea>
         @break
 
@@ -75,7 +77,7 @@
 
     @case('confirm')
         {{-- Typed again to catch mistakes; masked, never pre-filled and never sent to the Admin (it is not a form field there). --}}
-        <input class="{{ $class }}" type="password" id="{{ $id }}" name="{{ $name }}" maxlength="{{ $max }}" autocomplete="off" data-confirm-of="{{ $page->id('bank.account_no') }}" @if ($locked) disabled @endif>
+        <input class="{{ $class }}" type="password" id="{{ $id }}" name="{{ $name }}" maxlength="{{ $max }}" autocomplete="off" data-confirm-of="{{ $page->id('bank.account_no') }}" @if ($verify) data-verify="{{ $verify }}" @endif @if ($verifyUrl) data-verify-url="{{ route($verifyUrl) }}" @endif @if ($locked) disabled @endif>
         @break
 
     @default
@@ -87,8 +89,17 @@
             @isset($f['aria']) aria-label="{{ $f['aria'] }}" @endisset
             @isset($f['sync']) data-sync="{{ $f['sync'] }}" @endisset
             @if ($demoVerified) data-demo-valid @endif
+            @if ($verify) data-verify="{{ $verify }}" @endif @if ($verifyUrl) data-verify-url="{{ route($verifyUrl) }}" @endif
             @if ($locked) disabled @endif>
 @endswitch
+
+{{-- Result of the background Cashfree check (filled in by field-verify.js). The bank check reports under Confirm Account No. --}}
+@if ($verifyUrl)<p class="verify-msg" role="status" data-verify-msg hidden></p>@endif
+{{-- Green tick for the saved, verified bank values (from the Admin's verification_status); field-verify.js hides it when they are edited --}}
+@if (in_array($path, ['bank.account_no', 'bank.ifsc'], true) && ($verify || $page->bankStatus() === 'verified'))
+    <p class="verify-msg is-valid" data-bank-ok @unless ($page->bankStatus() === 'verified' && filled($page->raw($path))) hidden @endunless>&#10003; Verified</p>
+@endif
+@if ($verify === 'ifsc')<p class="verify-detail" data-verify-detail hidden></p>@endif
 
 @if ($demoVerified)<p class="valid-badge" data-demo-valid-badge @if (! filled($val) || $err) hidden @endif>&#10003; Verified</p>@endif
 @if ($err)<p class="error" role="alert">{{ $err }}</p>@endif

@@ -266,6 +266,74 @@ Then update docs/API_CONTRACT.md and tell the VOB owner to re-copy it.
 
 ---
 
+## 10. Unverified bank accounts: buyer acknowledgement, three new TOT fields, Cashfree retry in the Admin - Status: OPEN
+
+**Why VOB needs it.** VOB now verifies the bank account in the background with Cashfree. The vendor's "For failed validations" box
+(`form.bank.validation_failed_override`) only appears after the bank could not confirm the account; ticking it lets the vendor submit with an
+unverified account on manual approval. The Admin must make that visible to the buyer reviewer, force an explicit, recorded acknowledgement when
+the buyer approves anyway, keep three audit fields, and let the buyer retry the same Cashfree check. VOB sends nothing new: it already sends
+`bank.validation_failed_override` in the draft and `POST tots/{id}/bank-verification` (`verified` / `failed`, reference `CF-<reference_id>`).
+
+```
+Implement the following in the Admin Panel (Laravel). Keep every existing rule (HMAC, logging, masking, POST-only state changes).
+
+1. THREE NEW COLUMNS on the TOT table (new migration, nullable, no default surprises for existing rows):
+   - bank_validation_failed_on_submission  boolean  - "For failed bank validations on vendor submission". Set by the Admin (never taken from VOB's payload)
+     inside the vendor Submit / Resubmit handling: true when, at that moment, bank verification_status is not "verified" (i.e. the vendor went ahead
+     with the validation_failed_override box ticked), otherwise false. Recomputed on every Submit / Resubmit.
+   - bank_validation_failed_on_approval    boolean  - "For failed bank validations on buyer approval". Set when the BUYER REVIEWER approves: true when the
+     bank is still not verified at that moment and the buyer approved anyway, otherwise false. Reset to false if the bank is verified later.
+   - bank_approval_reason                  text     - the "reason for approving without bank verification" typed by the buyer (max 1000 chars).
+   Show the three values read-only on the TOT detail page (Bank Account Details section or an "Audit" block) for owner, reviewers and in exports/PDF if any.
+
+2. BUYER REVIEW SCREEN, section "Bank Account Details": when bank verification_status is "failed", or the vendor ticked
+   validation_failed_override and the status is not "verified", show a red message "Bank account verification failed" at the top of the section
+   (plus the stored verification reference / time when verified). Verified accounts show the existing green state.
+
+3. BUYER APPROVE: when the buyer reviewer presses Approve and the bank is not verified (status != verified), do NOT approve at once. Open a confirmation
+   popup with the text "Bank Account of the vendor not verified, sign off and approve" and a MANDATORY textarea "Reason for approving without bank
+   verification" (min 10, max 1000 characters; the confirm button stays disabled until it is filled). Only then submit the approval.
+   Server side (do not trust the popup): the approve action must return 422 when the bank is unverified and the reason is empty / too short. On success:
+   set bank_validation_failed_on_approval = true and bank_approval_reason = the reason. If the bank is verified, no popup and no reason are needed
+   (bank_validation_failed_on_approval = false, bank_approval_reason = null). The popup is for the buyer reviewer stage; apply the same rule to any stage
+   that can approve a TOT with an unverified bank.
+
+4. TOT HISTORY: add a history entry for every such approval, type "bank_unverified_approval", showing: the buyer's name (and role), the date and time,
+   the text "Explicit acknowledgement by <name>: proceeded without bank verification", and the reason. It appears in the TOT history list next to
+   the normal "Approved" entry, cannot be edited or deleted, and is included in any history export. Also write it to the Admin audit log.
+
+5. RETRY BANK VERIFICATION IN THE ADMIN (buyer reviewer, and the owner): in the Bank Account Details section add a "Retry bank verification" button
+   (POST route, CSRF, permission = can review this TOT, throttle 10/min, hidden once verified or when the TOT is not under review). It does the same
+   Cashfree Bank Account Verification as VOB:
+   - Cashfree Verification Suite v2, sync API: POST {base}/verification/bank-account/sync with JSON {bank_account, ifsc, name}; headers x-client-id and
+     x-client-secret. base = https://sandbox.cashfree.com when CASHFREE_ENV=sandbox, https://api.cashfree.com when production.
+   - Use the SAVED, unmasked account number, IFSC and account name of the TOT, read server-side only (never from the browser request; reject any payload).
+   - Name match: CASHFREE_NAME_MATCH=reject_no_match (only a NO_MATCH name_match_result fails; partial matches pass), same as VOB.
+   - account_status VALID and no rejected name -> verification_status = "verified", verification_reference = "CF-<reference_id>", verified_at = now.
+     INVALID / bank-rejected / NO_MATCH -> "failed". A Cashfree outage, 403 ip_validation_failed, 422 insufficient_balance, 429 or a timeout -> show
+     "Could not verify right now" and change nothing.
+   - On success also set bank_validation_failed_on_approval = false and clear bank_approval_reason if they were set earlier; record a TOT history entry
+     "Bank account verified by <buyer> (retry)" or "... verification failed (retry)".
+   - New .env settings, documented in the Admin's settings list/.env.example: CASHFREE_ENV, CASHFREE_CLIENT_ID, CASHFREE_CLIENT_SECRET (owner fills the
+     values; never generate or log them), CASHFREE_NAME_MATCH. The Admin's server egress IP must be whitelisted in the Cashfree dashboard.
+     When TOT_SKIP_THIRD_PARTY=true the button is simulated (verified with a DEMO-... reference), like the VOB demo mode.
+   - Log every Cashfree call in the Admin api_logs with the account number masked and the x-client-id / x-client-secret redacted.
+   - Keep accepting POST tots/{id}/bank-verification from VOB exactly as today. Changing the account name, number or IFSC still resets the status to pending.
+
+6. Tests (Pest/PHPUnit, Http::fake for Cashfree): approve with unverified bank needs the reason (422 without, saved with), approve with verified bank needs
+   none, history entry is written with actor and time, the three columns are set as described, the retry button verifies / fails / reports "could not verify"
+   without changing the status, a request with a payload to the retry route is refused, and no secret or full account number reaches the logs.
+
+Then update docs/API_CONTRACT.md (the three fields are Admin-only; say so, or expose them read-only in GET tots/{id} under `tot.bank_audit` if useful) and tell the
+VOB owner to re-copy it.
+```
+
+VOB side (done): the checkbox is hidden until a bank check fails or could not run ("could not verify right now", e.g. Cashfree down) (it also stays visible when it is already ticked or the Admin status is `failed`; in
+demo mode it is always visible because nothing is verified), is cleared again when the account verifies, and Submit / Resubmit warn when a verified
+account was edited. If the Admin should show the three fields to VOB, add them to the API first.
+
+---
+
 ## 5. Demo run-book (both apps on one machine)
 
 **Admin Panel `.env`** (names as above; values are yours): `APP_URL=http://127.0.0.1:8000`, `VOB_URL=http://127.0.0.1:8001`, `VOB_ALLOWED_IPS=127.0.0.1`,

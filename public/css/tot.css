@@ -146,6 +146,8 @@
 /* Bank Account Details: text boxes stacked on the left, the manual-approval option boxed on the right */
 .tot .bank-split { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:20px 40px; align-items:start; }
 .tot .bank-split .split-left { display:flex; flex-direction:column; gap:20px; max-width:420px; }
+.tot .bank-split .split-right[hidden] { display:none; }
+.tot .bank-split:has(> .split-right[hidden]) { grid-template-columns:minmax(0, 1fr); }
 .tot .bank-split .split-right { justify-self:end; width:100%; max-width:420px; }
 .tot .importance-box { border:1px solid #c9a227; border-radius:8px; padding:14px 16px; background:#fffdf5; }
 .tot .importance-box .field-wrap { margin:0; }
@@ -203,3 +205,13 @@
 .tot .sku-confirm-box h4 { margin:0 0 12px; font-size:15px; }
 .tot .sku-summary { min-width:0; }
 .tot .sku-confirm .sku-foot { padding:14px 0 18px; }
+
+/* Background Cashfree checks (PAN, GSTIN, IFSC, bank account): result line under the field */
+.tot .verify-msg { font-size:12.5px; margin:4px 0 0; color:#6b7180; line-height:1.4; }
+.tot .verify-msg[hidden], .tot .verify-detail[hidden] { display:none; }
+.tot .verify-msg.is-valid { color:#1e7a45; font-weight:600; }
+.tot .verify-msg.is-bad { color:#b3261e; font-weight:600; }
+.tot .verify-msg.is-wait { color:#4b5563; font-style:italic; }
+.tot .verify-msg.is-muted { color:#8a6d00; }
+.tot .verify-detail { font-size:12px; color:#4b4f5a; background:#f3f6fb; border-radius:6px; padding:6px 9px; margin:4px 0 0; line-height:1.45; }
+.tot input.f.is-bad { border-color:#e0a09a; }

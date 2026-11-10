@@ -2,19 +2,14 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BankVerificationController;
-use App\Http\Controllers\CashfreeWebhookController;
+use App\Http\Controllers\FieldVerificationController;
 use App\Http\Controllers\OnboardController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\TotController;
 use App\Http\Controllers\TotDocumentController;
 use App\Http\Controllers\TotListController;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
-use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
-use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 Route::view('/', 'landing');
 
@@ -36,21 +31,14 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetStore'])->
 Route::get('/sign-in', [AuthController::class, 'create'])->name('sign-in');
 Route::post('/sign-in', [AuthController::class, 'store'])->middleware('throttle:sign-in');
 
-// Cashfree calls this with no browser session; it is not a form, so no CSRF token (see bootstrap/app.php) and no session is started.
-Route::post('/webhooks/cashfree', CashfreeWebhookController::class)->middleware('throttle:120,1')->withoutMiddleware([
-    ValidateCsrfToken::class,
-    EncryptCookies::class,
-    AddQueuedCookiesToResponse::class,
-    StartSession::class,
-    ShareErrorsFromSession::class,
-])->name('webhooks.cashfree');
-
 Route::middleware('vendor')->group(function () {
     Route::get('/tots', [TotListController::class, 'index'])->name('tots.index');
     Route::post('/tots/select', [TotListController::class, 'select'])->name('tots.select');
-    Route::post('/bank/verify', [BankVerificationController::class, 'create'])->middleware('throttle:6,1')->name('bank.create');
-    Route::get('/bank/verify', [BankVerificationController::class, 'show'])->name('bank.verify');
-    Route::post('/bank/verify/status', [BankVerificationController::class, 'status'])->middleware('throttle:60,1')->name('bank.status');
+    // Background Cashfree checks while the vendor fills the form (POST + CSRF; each call can cost money, hence the throttles)
+    Route::post('/verify/pan', [FieldVerificationController::class, 'pan'])->middleware('throttle:30,1')->name('verify.pan');
+    Route::post('/verify/gstin', [FieldVerificationController::class, 'gstin'])->middleware('throttle:30,1')->name('verify.gstin');
+    Route::post('/verify/ifsc', [FieldVerificationController::class, 'ifsc'])->middleware('throttle:30,1')->name('verify.ifsc');
+    Route::post('/verify/bank', [FieldVerificationController::class, 'bank'])->middleware('throttle:10,1')->name('verify.bank');
     Route::get('/home', [TotController::class, 'show'])->name('home');
     Route::post('/tot/draft', [TotController::class, 'save'])->name('tot.draft');
     Route::post('/tot/submit', [TotController::class, 'submit'])->middleware('throttle:10,1')->name('tot.submit');

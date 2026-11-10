@@ -109,7 +109,7 @@ class AdminSession
         }
 
         session()->put(self::TOT, $tot);
-        session()->forget(['tot.locked', 'cashfree.pending']); // belonged to the previous TOT
+        session()->forget(['tot.locked', 'cashfree.pending', self::CHECKS]); // belonged to the previous TOT
 
         return $tot;
     }
@@ -154,10 +154,27 @@ class AdminSession
         session()->forget(self::LINK);
     }
 
+    /** Cashfree answers for values the vendor typed (PAN, GSTIN, IFSC, bank), kept per sign-in so a value is checked only once. */
+    private const CHECKS = 'verify.cache';
+
+    /** @return array<string,mixed>|null */
+    public function cached(string $key): ?array
+    {
+        $found = session(self::CHECKS.'.'.$key);
+
+        return is_array($found) ? $found : null;
+    }
+
+    /** @param  array<string,mixed>  $answer */
+    public function remember(string $key, array $answer): void
+    {
+        session()->put(self::CHECKS.'.'.$key, $answer);
+    }
+
     /** Drop the token and vendor data (logout, 401, expiry). */
     public function forget(): void
     {
-        session()->forget([self::TOKEN, self::USER, self::TOT, self::TOTS, self::STARTED, self::SEEN]);
+        session()->forget([self::TOKEN, self::USER, self::TOT, self::TOTS, self::STARTED, self::SEEN, self::CHECKS]);
         session()->regenerate();
     }
 }

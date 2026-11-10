@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="{{ asset('css/tot.css') }}">
     <script src="{{ asset('js/tot-form.js') }}" defer></script>
     <script src="{{ asset('js/sku-data.js') }}" defer></script>
+    <script src="{{ asset('js/field-verify.js') }}" defer></script>
 @endpush
 
 @section('content')
@@ -62,7 +63,7 @@
 
     @if ($errors->any())
         <div class="error-summary" role="alert">
-            @php $special = collect(['form', 'document', 'bank_verify'])->first(fn ($k) => $errors->has($k)) @endphp
+            @php $special = collect(['form', 'document'])->first(fn ($k) => $errors->has($k)) @endphp
             @if ($errors->has('submit'))
                 <strong>{{ $errors->first('submit') }} Your draft was saved.</strong>
                 <ul>@foreach ($errors->getMessages() as $key => $messages)@if ($key !== 'submit')<li>{{ $messages[0] }}</li>@endif @endforeach</ul>
@@ -105,7 +106,6 @@
 
     {{-- Document forms live outside the main form (forms cannot nest); the file inputs above point at them with form="..." --}}
     @if ($page->editable())
-        <form id="bank-verify" method="POST" action="{{ route('bank.create') }}">@csrf</form>
         @foreach (array_keys(\App\Services\Tot\TotLayout::documents()) as $type)
             <form id="doc-up-{{ $type }}" method="POST" action="{{ route('tot.documents.store') }}" enctype="multipart/form-data">
                 @csrf <input type="hidden" name="type" value="{{ $type }}">
