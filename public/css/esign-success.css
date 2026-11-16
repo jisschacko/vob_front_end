@@ -1,0 +1,27 @@
+/* e-sign success landing page (docs/vob/esign-success.html ported; external file because the CSP forbids inline style) */
+:root { --bg: #f4f6fa; --card: #ffffff; --text: #16233b; --muted: #5b6678; --line: #e2e6ee; --ok: #1d7a34; --ok-soft: #e4f4e8; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1624; --card: #172033; --text: #eef1f7; --muted: #9aa5b8; --line: #263147; --ok: #4cc26a; --ok-soft: #173826; }
+}
+* { box-sizing: border-box; }
+body.esign-success { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.esign-success .card { width: 100%; max-width: 440px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 40px 28px 32px;
+  text-align: center; box-shadow: 0 8px 30px rgba(22, 35, 59, .08); }
+.esign-success .tick { width: 104px; height: 104px; margin: 0 auto 22px; display: block; }
+.esign-success .tick .disc { fill: var(--ok-soft); transform-origin: 50% 50%; animation: pop .45s cubic-bezier(.2, .9, .3, 1.3) both; }
+.esign-success .tick .ring { fill: none; stroke: var(--ok); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 289; stroke-dashoffset: 289;
+  transform: rotate(-90deg); transform-origin: 50% 50%; animation: draw .6s ease-out .15s forwards; }
+.esign-success .tick .check { fill: none; stroke: var(--ok); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 50; stroke-dashoffset: 50;
+  animation: draw .4s ease-out .7s forwards; }
+.esign-success h1 { margin: 0 0 10px; font-size: 1.45rem; line-height: 1.25; color: var(--text); }
+.esign-success p { margin: 0 0 8px; color: var(--muted); line-height: 1.5; }
+.esign-success .fade { opacity: 0; animation: rise .5s ease-out 1s forwards; }
+.esign-success h1.fade { animation-delay: .9s; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .esign-success .tick .disc, .esign-success .tick .ring, .esign-success .tick .check, .esign-success .fade { animation: none; opacity: 1; stroke-dashoffset: 0; transform: none; }
+  .esign-success .tick .ring { transform: rotate(-90deg); }
+}

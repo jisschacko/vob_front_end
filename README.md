@@ -95,3 +95,7 @@ A missing key/secret/URL raises a clear "not configured" error before any reques
 ## Conventions
 
 - Every state-changing browser route is POST (a test enforces it). Admin-side changes needed by VOB are listed in `docs/ADMIN_PANEL_CHANGES.md`.
+
+## E-sign success page (`/esign/success`)
+
+Public landing page for the Admin's `EMSIGNER_REDIRECT_URL` (set it to `https://<vob-host>/esign/success`). eMudhra sends every signer here after signing, so it names nobody: an animated tick, "TOT signed successfully", "You can now close this window." No login, no session or cookies, no Admin API call; query values eMudhra appends are never read, shown or logged. `esign_initiated` / `esign_completed` need no code: the status text and the tracker come from the API (`status_label`, `progress`).

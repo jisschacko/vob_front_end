@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BankVerificationController;
 use App\Http\Controllers\FieldVerificationController;
 use App\Http\Controllers\OnboardController;
 use App\Http\Controllers\PasswordController;
@@ -27,6 +26,16 @@ Route::post('/forgot-password', [PasswordResetController::class, 'forgotStore'])
 Route::get('/reset-password/{token}', [PasswordResetController::class, 'link'])->where('token', '.{10,2000}')->middleware('throttle:30,1')->name('password.reset.link');
 Route::get('/reset-password', [PasswordResetController::class, 'resetForm'])->name('password.reset');
 Route::post('/reset-password', [PasswordResetController::class, 'resetStore'])->middleware('throttle:10,1')->name('password.reset.store');
+
+// Landing page after a signer signs in eMudhra (the Admin's EMSIGNER_REDIRECT_URL). Public: the signer arrives straight from eMudhra, so no login,
+// no session and no cookies. Whatever query values eMudhra appends are never read, shown or logged; no API call is made.
+Route::view('/esign/success', 'esign-success')->withoutMiddleware([
+    \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+    \Illuminate\Cookie\Middleware\EncryptCookies::class,
+    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+])->name('esign.success');
 
 Route::get('/sign-in', [AuthController::class, 'create'])->name('sign-in');
 Route::post('/sign-in', [AuthController::class, 'store'])->middleware('throttle:sign-in');
