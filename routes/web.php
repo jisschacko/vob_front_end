@@ -19,7 +19,7 @@ Route::get('/link-invalid', [OnboardController::class, 'invalid'])->name('link.i
 
 // Returning vendors: e-mail + password, no invitation link
 Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'loginStore'])->middleware('throttle:sign-in');
+Route::post('/login', [AuthController::class, 'loginStore'])->middleware(['throttle:sign-in', 'client.decrypt:email,password']);
 // Forgot password. The emailed token is moved into the session at once (like /onboard/{token}); the Admin does the rest.
 Route::get('/forgot-password', [PasswordResetController::class, 'forgotForm'])->name('password.forgot');
 Route::post('/forgot-password', [PasswordResetController::class, 'forgotStore'])->middleware('throttle:10,1')->name('password.email');
@@ -38,7 +38,7 @@ Route::view('/esign/success', 'esign-success')->withoutMiddleware([
 ])->name('esign.success');
 
 Route::get('/sign-in', [AuthController::class, 'create'])->name('sign-in');
-Route::post('/sign-in', [AuthController::class, 'store'])->middleware('throttle:sign-in');
+Route::post('/sign-in', [AuthController::class, 'store'])->middleware(['throttle:sign-in', 'client.decrypt:email,password']);
 
 Route::middleware('vendor')->group(function () {
     Route::get('/tots', [TotListController::class, 'index'])->name('tots.index');

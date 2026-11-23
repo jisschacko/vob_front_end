@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\DecryptClientPayload;
 use App\Http\Middleware\EnsureVendorSession;
+use App\Http\Middleware\SanitizeInput;
 use App\Http\Middleware\SecurityHeaders;
 use App\Services\AdminApi\AdminApiException;
 use App\Services\AdminApi\AdminApiUnauthenticatedException;
@@ -18,7 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(SecurityHeaders::class);
-        $middleware->alias(['vendor' => EnsureVendorSession::class]);
+        $middleware->web(append: [SanitizeInput::class]); // markup / control characters out of every browser input (secrets skipped)
+        $middleware->alias(['vendor' => EnsureVendorSession::class, 'client.decrypt' => DecryptClientPayload::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReport(AdminApiUnauthenticatedException::class);

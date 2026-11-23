@@ -1,8 +1,9 @@
-/* Sign-in pages: the "show password" eye button. No inline script (CSP). The button is hidden until this script runs. */
+/* Sign-in pages: the "show password" eye button. No inline script (CSP). The button is hidden until this script runs.
+   ES5 on purpose: Internet Explorer 11 has no NodeList.forEach. */
 (function () {
   'use strict';
 
-  document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
+  Array.prototype.forEach.call(document.querySelectorAll('[data-toggle-password]'), function (btn) {
     var input = document.getElementById(btn.getAttribute('data-toggle-password'));
     if (!input) return;
     btn.hidden = false;

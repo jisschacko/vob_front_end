@@ -23,6 +23,7 @@
 
     <form method="POST" action="{{ route('sign-in') }}" class="auth-form" autocomplete="on">
         @csrf
+        @include('auth._secure')
         <div class="auth-field">
             <label for="email">Email</label>
             <input id="email" name="email" type="email" value="{{ old('email') }}" placeholder="name@company.com" required autofocus autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254">
@@ -40,4 +41,5 @@
 
 @push('scripts')
     <script src="{{ asset('js/auth.js') }}"></script>
+    <script src="{{ asset('js/secure-form.js') }}"></script>
 @endpush

@@ -31,4 +31,12 @@ return [
 
     // Admin /masters data changes rarely; cache it (not vendor specific) for this many minutes.
     'masters_cache_minutes' => (int) env('VOB_MASTERS_CACHE_MINUTES', 10),
+
+    // Browser -> VOB encryption of the sign-in forms (App\Services\Security\ClientEncryption). The owner creates this key pair (it is NOT the
+    // Admin API key): the page gets the public key, the private key stays on the server. Without both files the forms post as before, except
+    // in production, where the sign-in pages stay closed.
+    'client_encryption' => [
+        'public_key_path' => env('VOB_LOGIN_RSA_PUBLIC_KEY_PATH'),
+        'private_key_path' => env('VOB_LOGIN_RSA_PRIVATE_KEY_PATH'),
+    ],
 ];
