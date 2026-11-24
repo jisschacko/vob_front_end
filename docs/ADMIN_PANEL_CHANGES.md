@@ -96,7 +96,7 @@ Add Pest tests, including that production ignores the flag.
 
 Part B - one list of every setting. Create docs/ENV_SETTINGS.md in the Admin repo with a table of EVERY key in .env.example, grouped by topic, with the
 columns: Variable | Application ("Admin Panel", or "Both" when the same value must also be set in the VOB front end) | Purpose | Default / production note.
-Include API_HMAC_SECRET, API_RSA_*, VOB_ALLOWED_IPS, ADMIN_ALLOWED_CIDRS, VOB_URL, TOT_ENFORCE_REQUIRED, TOT_ENFORCE_DOCUMENTS, TOT_DOCS_DISK, TOT_SKIP_THIRD_PARTY,
+Include API_HMAC_SECRET, API_RSA_*, VOB_ALLOWED_IPS, VOB_URL, TOT_ENFORCE_REQUIRED, TOT_ENFORCE_DOCUMENTS, TOT_DOCS_DISK, TOT_SKIP_THIRD_PARTY,
 mail, queue, database and every other key. Add a Pest test that fails when a key exists in .env.example without a row in that file (VOB has the same test:
 tests/Feature/EnvSettingsDocTest.php), and make sure .env.example parses with Dotenv (no inline "//" or "#" comments after values).
 Link the file from the README.
@@ -123,8 +123,8 @@ changes, with Pest tests, and tell me what you could not do.
    ({VOB_URL}/onboard/{token}) with a copy button on the TOT page and in the TOT list actions, so I do not depend on email delivery.
    Make sure VOB_URL=http://127.0.0.1:8001 works and that "Resend invitation" / "Reset" links still invalidate older ones.
 
-3. Local network allow-lists. Confirm that API requests from 127.0.0.1 are accepted when VOB_ALLOWED_IPS=127.0.0.1 (and ::1 if needed), that web requests from
-   127.0.0.1 pass ADMIN_ALLOWED_CIDRS, and write the exact local .env values to the README ("Running both apps on one machine").
+3. Local network allow-lists. Confirm that API requests from 127.0.0.1 are accepted when VOB_ALLOWED_IPS=127.0.0.1 (and ::1 if needed), that web requests are
+   not IP-restricted (ADMIN_ALLOWED_CIDRS was removed), and write the exact local .env values to the README ("Running both apps on one machine").
 
 4. Documents in the demo. With VOB_SKIP_THIRD_PARTY=true VOB saves PDFs on its own local disk (storage/app/private/tots/{tot id}/{random}.pdf) and registers
    path "tots/{tot id}/{random}.pdf". Add a disk "vob_local" whose root is TOT_DOCS_LOCAL_ROOT (e.g. D:/projects/vob_front_end/storage/app/private) and let
@@ -245,7 +245,7 @@ something here clashes with the existing design, and tell me what you changed):
 
 ---
 
-## 9. Vendor Type mandatory, GST number / certificate only for GST Registered - Status: OPEN
+## 9. Vendor Type mandatory, GST number / certificate only for GST Registered - Status: DONE in the Admin repo (see API_CONTRACT.md after the `required_fields` bullet and `locked_fields`; no migration; VOB can drop its own `entity_type` addition to `required_fields`)
 
 Raised from VOB. VOB now treats `vendor_details.entity_type` (Vendor Type) as mandatory, and `vendor_details.gst_regn_no` and the GST certificate as
 mandatory **only when `gst_type` is `GST Registered`** (not for `GST Unregistered` or `GST Compounding`). VOB adds `vendor_details.entity_type` to the
@@ -266,7 +266,7 @@ Then update docs/API_CONTRACT.md and tell the VOB owner to re-copy it.
 
 ---
 
-## 10. Unverified bank accounts: buyer acknowledgement, three new TOT fields, Cashfree retry in the Admin - Status: OPEN
+## 10. Unverified bank accounts: buyer acknowledgement, three new TOT fields, Cashfree retry in the Admin - Status: DONE in the Admin repo (run php artisan migrate; fill CASHFREE_CLIENT_ID / CASHFREE_CLIENT_SECRET in .env and whitelist the server IP in Cashfree; the three fields stay Admin-only, see API_CONTRACT.md after the bank.verification_status bullet)
 
 **Why VOB needs it.** VOB now verifies the bank account in the background with Cashfree. The vendor's "For failed validations" box
 (`form.bank.validation_failed_override`) only appears after the bank could not confirm the account; ticking it lets the vendor submit with an
@@ -334,7 +334,11 @@ account was edited. If the Admin should show the three fields to VOB, add them t
 
 ---
 
-## 11. Input sanitising, XSS and SQL injection hardening in the Admin Panel - Status: OPEN
+## 11. E-sign with eMudhra after the Director's approval - Status: DONE in the Admin repo (run php artisan migrate; fill EMSIGNER_APP_NAME, EMSIGNER_SECRET_KEY, EMSIGNER_REQUEST_FROM, EMSIGNER_EMAIL_ID, EMSIGNER_REDIRECT_URL in .env; VOB shows `esign.signing_url`, see API_CONTRACT.md after the bank-accounts bullet)
+
+Admin: the approved agreement PDF goes to eMudhra InitiateEmbeddedSigning (serial: Vendor, Central Buyer, Manager Central Buying, GM Buying), `workflowId` / `documentIdList` are kept, the TOT becomes E-Sign Initiated (and **E-Sign Completed**, `esign_completed`, once all four have signed), and the signed PDF is fetched from eMudhra (base64 or bytes) into our storage once the workflow is completed and shown through the view-only **View signed PDF** button (same label on the TOT page header and the E-sign card); there is no download. The e-sign anchors (L01, L02, L03, V01, white text) are in the E-Sign section after Single Point of Contact; L03 and V01 are repeated in Signatories - Terms of Trade so those two signatures appear in both places. `vendor_esign` is now a required email. VOB: add a "Sign the agreement" button from `esign.signing_url` while `esign.status` is `initiated`.
+
+## 12. Input sanitising, XSS and SQL injection hardening in the Admin Panel - Status: DONE in the Admin repo (TextSanitizer + SanitizeInput middleware, CSP headers, reviewed-safe static check; see API_CONTRACT.md 5B-1. Inline script/style are still allowed in the CSP)
 
 **Why VOB needs it.** VOB now removes HTML / script markup and control characters from everything a vendor types (`App\Support\TextSanitizer`, middleware
 `SanitizeInput`) and escapes every value it prints, but the Admin Panel is the system that stores the data in its database and shows it to buyers,
@@ -387,7 +391,7 @@ VOB side (done): `SanitizeInput` middleware on every browser request, `TextSanit
 
 ---
 
-## 12. Documents move from S3 to the shared network folder - Status: OPEN
+## 13. Documents move from S3 to the shared network folder - Status: DONE in the Admin repo (disk `documents`, TOT_DOCS_DISK default; owner runs `php artisan documents:move-to-shared`, see README)
 
 Both servers now share one network-mounted folder: `/data/documents`, linked at `storage/app/documents` in each app (`ln -s /data/documents storage/app/documents`
 on 10.4.153.77 for VOB and 10.4.153.78 for the Admin). VOB now writes vendor PDFs to **disk `documents`** at `tots/{tot id}/{random}.pdf`, i.e. on the
@@ -425,7 +429,7 @@ tests use the fake `documents` disk. Demo mode (`VOB_SKIP_THIRD_PARTY=true`) sti
 
 ---
 
-## 13. More upload formats, additional files, safe download - Status: OPEN
+## 14. More upload formats, additional files, safe download - Status: DONE in the Admin repo (see API_CONTRACT.md "Documents"; web server and mount settings are the owner's)
 
 VOB now accepts **pdf, jpg, jpeg, png, webp** in every document slot, and a new slot **`additional_document`** in Vendor Details: up to **5 per TOT**,
 several allowed (not "one per type"), which also accepts **docx**; the **`rtgs_form`** slot accepts **docx** too. VOB inspects every file (type proven from content, images re-encoded without
@@ -462,6 +466,7 @@ pdf script / embedded-file markers and trailing data, docx macro / OLE / ActiveX
 Delete per file). VOB has no download route: it never serves an uploaded file back.
 
 ---
+
 
 ## 5. Demo run-book (both apps on one machine)
 
