@@ -155,13 +155,44 @@
                         <a class="file-btn" href="{{ asset('downloads/RTGS_template.docx') }}" download="RTGS_template.docx">Download Sample</a>
                     @endif
                     @if ($page->editable())
-                        <label class="file-btn">{{ $doc ? 'Replace File' : 'Choose File' }}<input type="file" name="file" accept="application/pdf,.pdf" form="doc-up-{{ $type }}" data-doc-input></label>
+                        <label class="file-btn">{{ $doc ? 'Replace File' : 'Choose File' }}<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp" form="doc-up-{{ $type }}" data-doc-input></label>
                         <button type="submit" class="file-btn" form="doc-up-{{ $type }}">Upload</button>
                         @if ($doc)<button type="submit" class="file-btn danger" form="doc-rm-{{ $type }}">Remove</button>@endif
                     @endif
                 </div>
-                <p class="help">PDF, up to {{ config('vob.docs_max_kb') / 1024 }} MB.@if ($help) {{ $help }}@endif</p>
+                <p class="help">PDF, JPG, PNG or WEBP, up to {{ config('vob.docs_max_kb') / 1024 }} MB.@if ($help) {{ $help }}@endif</p>
             </div>
         @endforeach
+    </div>
+@elseif ($kind === 'additional_documents')
+    @php
+        $extras = collect($page->documents())->where('type', \App\Services\Tot\TotLayout::ADDITIONAL)->values();
+        $maxExtras = (int) config('vob.docs_additional_max');
+        $room = $page->editable() && $extras->count() < $maxExtras;
+    @endphp
+    <div class="extra-docs" data-extra-docs>
+        <p class="flabel">Additional files <span class="muted">(optional, up to {{ $maxExtras }})</span></p>
+        @forelse ($extras as $i => $extra)
+            <div class="extra-doc">
+                <span class="extra-doc-name">{{ $extra['name'] ?? 'File' }}@if (! empty($extra['size'])) ({{ number_format($extra['size'] / 1024, 0) }} KB)@endif</span>
+                @if ($page->editable())
+                    <button type="submit" class="file-btn danger" form="doc-rm-extra-{{ $i }}">Delete</button>
+                @endif
+            </div>
+        @empty
+            <p class="help-top">No additional files uploaded yet.</p>
+        @endforelse
+
+        @if ($room)
+            <div class="extra-doc-new" data-extra-new @if ($extras->isNotEmpty()) hidden @endif>
+                <label class="file-btn">Choose File<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.docx" form="doc-up-additional" data-doc-input></label>
+            </div>
+            @if ($extras->isNotEmpty())
+                <button type="button" class="file-btn" data-extra-more hidden>Upload another file</button>
+            @endif
+            <p class="help">PDF, JPG, PNG, WEBP or Word (.docx), up to {{ config('vob.docs_max_kb') / 1024 }} MB each. Word files with macros or embedded objects are refused.</p>
+        @elseif ($page->editable())
+            <p class="help">The limit of {{ $maxExtras }} additional files is reached. Delete one to add another.</p>
+        @endif
     </div>
 @endif

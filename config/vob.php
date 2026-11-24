@@ -28,6 +28,13 @@ return [
     // Vendor documents: the shared network folder (disk 'documents' = storage/app/documents -> /data/documents). Disk 's3' still works if set. Tests use a fake disk.
     'docs_disk' => env('VOB_DOCS_DISK', 'documents'),
     'docs_max_kb' => 5120,
+    // Upload inspection (App\Services\Documents\UploadInspector): picture limits against decompression bombs, docx limits against zip bombs.
+    'docs_image_max_side' => 10000,
+    'docs_image_max_pixels' => 24000000,
+    'docs_docx_max_entries' => 1500,
+    'docs_docx_max_uncompressed_mb' => 60,
+    // Extra files in Vendor Details (type additional_document): at most this many per TOT.
+    'docs_additional_max' => 5,
 
     // Admin /masters data changes rarely; cache it (not vendor specific) for this many minutes.
     'masters_cache_minutes' => (int) env('VOB_MASTERS_CACHE_MINUTES', 10),

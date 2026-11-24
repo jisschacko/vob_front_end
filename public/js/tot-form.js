@@ -279,6 +279,17 @@
     });
   });
 
+  // ---- additional files: one chooser at first; "Upload another file" shows it again once files exist ------------------------
+  var extra = document.querySelector('[data-extra-docs]');
+  if (extra) {
+    var more = extra.querySelector('[data-extra-more]');
+    var chooser = extra.querySelector('[data-extra-new]');
+    if (more && chooser) {
+      more.hidden = false;
+      more.addEventListener('click', function () { chooser.hidden = false; more.hidden = true; });
+    }
+  }
+
   // ---- Back to top: shown once the page is scrolled -----------------------------------------------------------------------
   var toTop = document.querySelector('[data-back-to-top]');
   if (toTop) {

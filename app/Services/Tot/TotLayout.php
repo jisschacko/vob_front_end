@@ -73,6 +73,15 @@ final class TotLayout
         ];
     }
 
+    /** Extra files the vendor may attach in Vendor Details (not a required slot; up to vob.docs_additional_max, several per TOT). */
+    public const ADDITIONAL = 'additional_document';
+
+    /** File types a slot accepts. The extra files may also be Word (.docx). */
+    public static function allowedExtensions(string $type): array
+    {
+        return $type === self::ADDITIONAL ? ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'docx'] : ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
+    }
+
     /** Document slots: type => [label, help]. */
     public static function documents(): array
     {
@@ -127,6 +136,7 @@ final class TotLayout
                 ]],
                 ['note', 'A copy of the PAN, GST and MSME certificate is mandatory if registered.'],
                 ['documents', ['pan_certificate', 'gst_certificate', 'msme_certificate']],
+                ['additional_documents'],
             ]],
 
             ['id' => 'contact_person', 'title' => 'Contact Person', 'blocks' => [['grid', 3, [

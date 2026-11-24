@@ -114,6 +114,14 @@
                 @csrf <input type="hidden" name="type" value="{{ $type }}">
             </form>
         @endforeach
+        <form id="doc-up-additional" method="POST" action="{{ route('tot.documents.store') }}" enctype="multipart/form-data">
+            @csrf <input type="hidden" name="type" value="{{ \App\Services\Tot\TotLayout::ADDITIONAL }}">
+        </form>
+        @foreach (collect($page->documents())->where('type', \App\Services\Tot\TotLayout::ADDITIONAL)->values() as $i => $extra)
+            <form id="doc-rm-extra-{{ $i }}" method="POST" action="{{ route('tot.documents.destroy') }}">
+                @csrf <input type="hidden" name="type" value="{{ \App\Services\Tot\TotLayout::ADDITIONAL }}"><input type="hidden" name="document" value="{{ $extra['id'] ?? '' }}">
+            </form>
+        @endforeach
     @endif
 
     <p class="footer-note">Lulu International Shopping Malls Private Limited &nbsp;&middot;&nbsp; Business Development Agreement / Terms of Trade (TOT)</p>

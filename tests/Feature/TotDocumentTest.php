@@ -50,7 +50,7 @@ describe('upload to the shared documents folder', function () {
             ->and($log->user_public_id)->toBe('USERPUBLICID0001')->and($log->request_body)->toBeNull();
     });
 
-    it('rejects anything that is not a PDF of at most 5 MB, before touching storage or the Admin', function (callable $file, string $type) {
+    it('rejects anything that is not an allowed file of at most 5 MB, before touching storage or the Admin', function (callable $file, string $type) {
         T::fake();
 
         $this->withSession(T::session())->from('/home')->post('/tot/documents', ['type' => $type, 'file' => $file()])
@@ -60,7 +60,6 @@ describe('upload to the shared documents folder', function () {
         expect(T::sent('POST', 'tots/'.T::TOT_ID.'/documents'))->toBeNull();
     })->with([
         'text file' => [fn () => UploadedFile::fake()->createWithContent('notes.txt', 'hello'), 'pan_certificate'],
-        'image' => [fn () => UploadedFile::fake()->image('scan.png'), 'pan_certificate'],
         'pdf extension, not a pdf' => [fn () => UploadedFile::fake()->createWithContent('fake.pdf', 'MZ not a pdf at all'), 'pan_certificate'],
         'over 5 MB' => [fn () => pdf('big.pdf', 5200), 'pan_certificate'],
         'unknown type' => [fn () => pdf(), 'passport'],

@@ -267,7 +267,7 @@ describe('demo mode (VOB_SKIP_THIRD_PARTY)', function () {
     it('stores documents on the local disk instead of the shared folder and still registers them with the Admin', function () {
         T::fake([], readyDetail());
 
-        $this->withSession(T::session())->post('/tot/documents', ['type' => 'pan_certificate', 'file' => UploadedFile::fake()->createWithContent('pan.pdf', "%PDF-1.4\nx")])
+        $this->withSession(T::session())->post('/tot/documents', ['type' => 'pan_certificate', 'file' => UploadedFile::fake()->createWithContent('pan.pdf', "%PDF-1.4\nx\n%%EOF")])
             ->assertRedirect(route('home'));
 
         expect(Storage::disk('local')->allFiles())->toHaveCount(1)->and(Storage::disk('documents')->allFiles())->toBeEmpty();

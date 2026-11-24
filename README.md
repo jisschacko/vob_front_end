@@ -61,7 +61,7 @@ A missing key/secret/URL raises a clear "not configured" error before any reques
 
 - `app/Services/Tot/TotLayout.php` = presentation of the reference form (cards, labels, widgets) and the shape of each API section. Locked fields, mandatory fields, dropdown masters and all format rules come from the Admin API on every load; formats are validated by the Admin on each draft save and shown beside the field.
 - Save Draft (POST) and autosave (POST, JSON) both call `PUT /tots/{id}/draft`. The TOT id never appears in a URL: it is kept in the server-side session.
-- Documents: PDF only, max 5 MB, PDF signature checked, `DocumentScanner` hook for antivirus (no-op by default), stored at `tots/{tot id}/{random}.pdf` in the shared documents folder (`storage/app/documents` -> `/data/documents`), then registered with the Admin; the file is removed again if registration fails.
+- Documents: PDF, JPG, PNG or WEBP (and .docx for the up-to-5 additional files in Vendor Details), max 5 MB; every file is inspected by `UploadInspector` first (real type from the content, images re-encoded without metadata and size-capped, PDF and docx scanned for scripts, macros, embedded objects), `DocumentScanner` hook for antivirus (no-op by default), stored at `tots/{tot id}/{random}.pdf` in the shared documents folder (`storage/app/documents` -> `/data/documents`), then registered with the Admin; the file is removed again if registration fails.
 
 ## Login page for returning vendors (`/login`)
 

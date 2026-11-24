@@ -425,6 +425,44 @@ tests use the fake `documents` disk. Demo mode (`VOB_SKIP_THIRD_PARTY=true`) sti
 
 ---
 
+## 13. More upload formats, additional files, safe download - Status: OPEN
+
+VOB now accepts **pdf, jpg, jpeg, png, webp** in every document slot, and a new slot **`additional_document`** in Vendor Details: up to **5 per TOT**,
+several allowed (not "one per type"), which also accepts **docx**. VOB inspects every file (type proven from content, images re-encoded without
+metadata, pdf / docx scanned, macros and embedded objects refused) and stores it as `tots/{tot id}/{random 40 chars}.{pdf|jpg|png|webp|docx}`; the
+extension is the DETECTED type, never the vendor's. Until the Admin accepts the new values below, registering anything but a PDF returns 422.
+
+**Prompt for the Admin Panel repo:**
+
+```
+VOB now registers more than PDFs. Please change POST /tots/{id}/documents and everything that reads documents:
+
+1. Accept `path` ending .pdf, .jpg, .png, .webp or .docx (still tots/{tot id}/{8-120 chars of [A-Za-z0-9._-]}, no leading slash, no ".."), and `mime` one of
+   application/pdf, image/jpeg, image/png, image/webp, application/vnd.openxmlformats-officedocument.wordprocessingml.document. The extension and the
+   mime must agree. Reject anything else with 422 errors.path / errors.mime. `size` stays <= 5 MB.
+2. New document type `additional_document`: NOT required for submit, NOT "one per type" (a new upload does not replace the old one), at most 5 per
+   TOT (6th -> 422 errors.type "You can attach at most 5 additional files."), listed in GET /tots/{id} documents[] with id, type, name, size,
+   uploaded_at like the others. DELETE /tots/{id}/documents/{docId} removes just that one (and its file). Only `additional_document` may be .docx.
+   The TOT owner and reviewers in the Admin must see these files too (with their names).
+3. Downloading a vendor document in the Admin must go through an authenticated, authorised controller action (owner / reviewer of that TOT, or admin), never
+   a public URL or the storage symlink. Stream it with: Content-Disposition: attachment (filename from the stored original_name, sanitised),
+   Content-Type from the stored extension (not guessed from content), X-Content-Type-Options: nosniff, Content-Security-Policy: sandbox; default-src 'none'.
+   Never serve or include these files as HTML and never execute them: keep storage/app/documents outside public/, and make sure the web server does
+   not run PHP or any script from it (nginx: no location for it; Apache: php_flag engine off / RemoveHandler for that folder, and /data/documents
+   mounted noexec,nosuid,nodev).
+4. Defence in depth: re-check on the Admin side that the stored file really is what the extension says (same signature test: %PDF-, FFD8FF, PNG signature,
+   RIFF....WEBP, PK for docx) before the first download, and refuse to preview docx inline (download only).
+5. Pest tests: each type registers, .docx only for additional_document, 6th additional file is refused, delete removes one, download headers, and a
+   user who is not on the TOT gets 403.
+```
+
+VOB side (done): `UploadInspector` (extension / MIME spoofing, polyglots, image re-encode that strips metadata, pixel limit against decompression bombs,
+pdf script / embedded-file markers and trailing data, docx macro / OLE / ActiveX / executable / zip-bomb / external-link checks), Laravel validation
+(`extensions`, `mimetypes`, `max`) first, then the content checks; the "Additional files" block in Vendor Details (one chooser first, "Upload another file",
+Delete per file). VOB has no download route: it never serves an uploaded file back.
+
+---
+
 ## 5. Demo run-book (both apps on one machine)
 
 **Admin Panel `.env`** (names as above; values are yours): `APP_URL=http://127.0.0.1:8000`, `VOB_URL=http://127.0.0.1:8001`, `VOB_ALLOWED_IPS=127.0.0.1`,
