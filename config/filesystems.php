@@ -47,6 +47,21 @@ return [
             'report' => false,
         ],
 
+        // Vendor documents on the shared network mount: storage/app/documents -> /data/documents (symlink, same folder on the VOB and Admin servers).
+        // VOB writes tots/{tot id}/{random}.pdf here; the Admin reads the same path and writes its final PDFs under tots/ too.
+        // Group-writable on purpose: the two servers run as different users that share one group.
+        'documents' => [
+            'driver' => 'local',
+            'root' => storage_path('app/documents'),
+            'serve' => false,
+            'permissions' => [
+                'file' => ['public' => 0664, 'private' => 0660],
+                'dir' => ['public' => 0775, 'private' => 0770],
+            ],
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

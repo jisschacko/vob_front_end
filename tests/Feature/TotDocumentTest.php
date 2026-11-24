@@ -19,17 +19,18 @@ function pdf(string $name = 'pan card.pdf', int $kb = 10): UploadedFile
 }
 
 beforeEach(function () {
-    Storage::fake('s3'); // the private bucket
+    config(['vob.docs_disk' => 'documents']); // whatever the local .env says
+    Storage::fake('documents'); // the shared documents folder
 });
 
-describe('upload to S3', function () {
+describe('upload to the shared documents folder', function () {
     it('stores the PDF under tots/{id}/{random}.pdf and registers it with the Admin', function () {
         T::fake();
 
         $this->withSession(T::session())->post('/tot/documents', ['type' => 'pan_certificate', 'file' => pdf()])
             ->assertRedirect(route('home'))->assertSessionHas('status', 'Document uploaded.');
 
-        $files = Storage::disk('s3')->allFiles();
+        $files = Storage::disk('documents')->allFiles();
         expect($files)->toHaveCount(1)
             ->and($files[0])->toMatch('#^tots/'.T::TOT_ID.'/[A-Za-z0-9]{40}\.pdf$#');
 
@@ -40,22 +41,22 @@ describe('upload to S3', function () {
         expect(basename($files[0]))->toMatch('/^[A-Za-z0-9._-]{8,120}$/');
     });
 
-    it('logs the S3 write without any file content', function () {
+    it('logs the storage write without any file content', function () {
         T::fake();
         $this->withSession(T::session())->post('/tot/documents', ['type' => 'rtgs_form', 'file' => pdf()]);
 
-        $log = ApiLog::where('service', 's3')->sole();
+        $log = ApiLog::where('service', 'storage')->sole();
         expect($log->method)->toBe('PUT')->and($log->response_status)->toBe(200)
             ->and($log->user_public_id)->toBe('USERPUBLICID0001')->and($log->request_body)->toBeNull();
     });
 
-    it('rejects anything that is not a PDF of at most 5 MB, before touching S3 or the Admin', function (callable $file, string $type) {
+    it('rejects anything that is not a PDF of at most 5 MB, before touching storage or the Admin', function (callable $file, string $type) {
         T::fake();
 
         $this->withSession(T::session())->from('/home')->post('/tot/documents', ['type' => $type, 'file' => $file()])
             ->assertSessionHasErrors();
 
-        expect(Storage::disk('s3')->allFiles())->toBeEmpty();
+        expect(Storage::disk('documents')->allFiles())->toBeEmpty();
         expect(T::sent('POST', 'tots/'.T::TOT_ID.'/documents'))->toBeNull();
     })->with([
         'text file' => [fn () => UploadedFile::fake()->createWithContent('notes.txt', 'hello'), 'pan_certificate'],
@@ -83,7 +84,7 @@ describe('upload to S3', function () {
 
         $this->withSession(T::session())->from('/home')->post('/tot/documents', ['type' => 'pan_certificate', 'file' => pdf()])
             ->assertSessionHasErrors('document');
-        expect(Storage::disk('s3')->allFiles())->toBeEmpty();
+        expect(Storage::disk('documents')->allFiles())->toBeEmpty();
     });
 
     it('removes the object again when the Admin refuses the registration', function (int $status, string $message) {
@@ -92,7 +93,7 @@ describe('upload to S3', function () {
         $this->withSession(T::session())->from('/home')->post('/tot/documents', ['type' => 'pan_certificate', 'file' => pdf()])
             ->assertSessionHasErrors(['document' => $message]);
 
-        expect(Storage::disk('s3')->allFiles())->toBeEmpty();
+        expect(Storage::disk('documents')->allFiles())->toBeEmpty();
     })->with([
         'not editable' => [409, 'This Terms of Trade can no longer be edited.'],
         'server error' => [500, 'We could not register the document right now. Please try again.'],
@@ -106,7 +107,7 @@ describe('upload to S3', function () {
             ->assertSessionHasErrors(['document' => 'We could not store the file right now. Please try again.']);
 
         expect(T::sent('POST', 'tots/'.T::TOT_ID.'/documents'))->toBeNull();
-        expect(ApiLog::where('service', 's3')->sole()->error)->not->toBeNull();
+        expect(ApiLog::where('service', 'storage')->sole()->error)->not->toBeNull();
     });
 
     it('strips path tricks and odd characters from the original file name', function () {

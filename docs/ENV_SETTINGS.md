@@ -35,8 +35,8 @@ Application column: **VOB** = this app (vendor front end), **Both** = a value th
 
 | Variable | App | Purpose | Notes |
 |---|---|---|---|
-| `VOB_DOCS_DISK` | VOB | Disk for vendor PDFs, `s3` for the private bucket | Same bucket the Admin reads (`TOT_DOCS_DISK=s3`) |
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | VOB | Credentials to write to the bucket | Use least-privilege keys; secrets manager in production |
+| `VOB_DOCS_DISK` | VOB | Disk for vendor PDFs: `documents` (default) = `storage/app/documents`, a symlink to the shared mount `/data/documents`; `s3` still possible | Same folder the Admin reads (`TOT_DOCS_DISK=documents`). Local development has no mount: use `VOB_SKIP_THIRD_PARTY=true` |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | VOB | Only when `VOB_DOCS_DISK=s3`: credentials to write to the bucket | Use least-privilege keys; secrets manager in production |
 | `AWS_DEFAULT_REGION` / `AWS_BUCKET` | VOB | Bucket region and name | Bucket must be private |
 | `AWS_USE_PATH_STYLE_ENDPOINT` | VOB | S3-compatible endpoints (MinIO) | default false |
 | `CASHFREE_ENV` | VOB | `sandbox` or `production` Cashfree endpoint | Test credentials are rejected in production |

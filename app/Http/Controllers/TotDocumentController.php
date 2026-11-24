@@ -16,7 +16,7 @@ use Illuminate\Validation\Rule;
 use Throwable;
 
 /**
- * Vendor documents: the PDF goes from this server straight to the private S3 bucket (key tots/{tot id}/{random}.pdf), then it is
+ * Vendor documents: the PDF is written to the shared documents folder (disk 'documents' = storage/app/documents -> /data/documents, path tots/{tot id}/{random}.pdf), then it is
  * registered with the Admin (docs/API_CONTRACT.md "Documents"). Neither the TOT id nor a document id appears in a URL.
  */
 class TotDocumentController extends Controller
@@ -58,7 +58,7 @@ class TotDocumentController extends Controller
         }
 
         $key = 'tots/'.$tot['id'].'/'.Str::random(40).'.pdf';
-        $disk = EnforcementSwitches::skipThirdParty() ? 'local' : config('vob.docs_disk'); // demo mode: no S3
+        $disk = EnforcementSwitches::skipThirdParty() ? 'local' : config('vob.docs_disk'); // demo mode: private local disk, no shared folder
 
         if (! $this->putObject($disk, $key, $file->getRealPath())) {
             return back()->withErrors(['document' => 'We could not store the file right now. Please try again.']);
@@ -76,7 +76,7 @@ class TotDocumentController extends Controller
             return redirect()->route('home')->with('status', 'Document uploaded.');
         }
 
-        $this->deleteObject($disk, $key); // registration failed: do not leave an orphan in the bucket
+        $this->deleteObject($disk, $key); // registration failed: do not leave an orphan file
 
         $message = match ($response->status()) {
             409 => 'This Terms of Trade can no longer be edited.',
@@ -126,10 +126,10 @@ class TotDocumentController extends Controller
             }
         } catch (Throwable $e) {
             report($e);
-            $error = class_basename($e); // no bucket detail in the log row
+            $error = class_basename($e); // no path detail in the log row
         }
 
-        $this->logger->record('s3', 'PUT', 's3://'.($disk === 's3' ? config('filesystems.disks.s3.bucket') : $disk).'/'.$key, [], null,
+        $this->logger->record('storage', 'PUT', $disk.'://'.$key, [], null,
             $error === null ? 200 : null, null, (int) ((hrtime(true) - $started) / 1e6), $this->session->userPublicId(), $error);
 
         return $error === null;

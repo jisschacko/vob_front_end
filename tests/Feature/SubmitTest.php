@@ -253,7 +253,8 @@ describe('demo mode (VOB_SKIP_THIRD_PARTY)', function () {
     beforeEach(function () {
         config(['vob.skip_third_party' => true]);
         Storage::fake('local');
-        Storage::fake('s3');
+        config(['vob.docs_disk' => 'documents']);
+        Storage::fake('documents');
     });
 
     it('shows no banner (it is commented out in the layout for now)', function () {
@@ -263,13 +264,13 @@ describe('demo mode (VOB_SKIP_THIRD_PARTY)', function () {
         $this->get('/')->assertDontSee('DEMO: third-party services are skipped');
     });
 
-    it('stores documents on the local disk instead of S3 and still registers them with the Admin', function () {
+    it('stores documents on the local disk instead of the shared folder and still registers them with the Admin', function () {
         T::fake([], readyDetail());
 
         $this->withSession(T::session())->post('/tot/documents', ['type' => 'pan_certificate', 'file' => UploadedFile::fake()->createWithContent('pan.pdf', "%PDF-1.4\nx")])
             ->assertRedirect(route('home'));
 
-        expect(Storage::disk('local')->allFiles())->toHaveCount(1)->and(Storage::disk('s3')->allFiles())->toBeEmpty();
+        expect(Storage::disk('local')->allFiles())->toHaveCount(1)->and(Storage::disk('documents')->allFiles())->toBeEmpty();
         expect(T::sent('POST', 'tots/'.T::TOT_ID.'/documents')['path'])->toBe(Storage::disk('local')->allFiles()[0]);
     });
 

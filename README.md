@@ -1,12 +1,12 @@
 # Vendor Handshake - Vendor Onboarding Platform (VOB)
 
-Public, internet-facing Laravel 12 app. Vendors sign in from an emailed link, fill the Terms of Trade form, upload documents to S3,
+Public, internet-facing Laravel 12 app. Vendors sign in from an emailed link, fill the Terms of Trade form, upload documents to the shared documents folder,
 verify their bank account with Cashfree and submit. There is **no business database**: all data goes through the Admin Panel REST API
 (`docs/API_CONTRACT.md`). Plan and phases: `docs/DEVELOPMENT_PLAN.md`. Working rules: `CLAUDE.md`.
 
 ## Status
 
-All five phases are done: Admin API client + logging, sign-in / password flow, the Terms of Trade form (Save Draft, autosave, locked / mandatory fields from the API, document upload to S3), Cashfree bank verification, and Submit / Resubmit with a read-only status page. eMudhra e-sign (Phase 6) and the security review (Phase 7) are not started.
+All five phases are done: Admin API client + logging, sign-in / password flow, the Terms of Trade form (Save Draft, autosave, locked / mandatory fields from the API, document upload to the shared folder), Cashfree bank verification, and Submit / Resubmit with a read-only status page. eMudhra e-sign (Phase 6) and the security review (Phase 7) are not started.
 
 ## Setup
 
@@ -30,7 +30,7 @@ vendor/bin/pest                 # needs a .env to exist, otherwise PHPUnit repor
 | `API_LOG_RETENTION_MONTHS` | `api_logs` retention, default 2 |
 | `VOB_ENFORCE_REQUIRED`, `VOB_ENFORCE_DOCUMENTS` | `false` = Submit not blocked on mandatory fields / documents. Ignored (always on) in production |
 | `VOB_SESSION_IDLE_MINUTES` / `VOB_SESSION_ABSOLUTE_MINUTES` | vendor session expiry: no activity for this long (default 30) / since sign-in (default 480). On expiry the vendor sees "Your session has ended" and the invitation link is kept. The Admin token has its own 30 min idle / 8 h limits and ends the session earlier if shorter. Keep `SESSION_LIFETIME` >= the absolute value |
-| `VOB_DOCS_DISK` | filesystem disk for vendor PDFs, default `s3` (set `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`; the bucket must be private and be the same one the Admin reads with `TOT_DOCS_DISK=s3`) |
+| `VOB_DOCS_DISK` | filesystem disk for vendor PDFs, default `documents` = `storage/app/documents`, a symlink to the shared network folder `/data/documents` (`ln -s /data/documents storage/app/documents` on both servers; the Admin reads the same folder with `TOT_DOCS_DISK=documents`). `s3` is still possible (then set the `AWS_*` keys). Local development has no mount: use `VOB_SKIP_THIRD_PARTY=true` |
 | `VOB_MASTERS_CACHE_MINUTES` | how long `/masters` dropdown data is cached (default 10) |
 | `CASHFREE_ENV`, `CASHFREE_CLIENT_ID`, `CASHFREE_CLIENT_SECRET` | bank verification. `sandbox` needs sandbox credentials, `production` live ones. Whitelist the server egress IP in the Cashfree dashboard |
 | `CASHFREE_NAME_MATCH` | `reject_no_match` (default) or `ignore`: a NO_MATCH between the Account Name and the name at the bank fails the bank verification |
@@ -61,7 +61,7 @@ A missing key/secret/URL raises a clear "not configured" error before any reques
 
 - `app/Services/Tot/TotLayout.php` = presentation of the reference form (cards, labels, widgets) and the shape of each API section. Locked fields, mandatory fields, dropdown masters and all format rules come from the Admin API on every load; formats are validated by the Admin on each draft save and shown beside the field.
 - Save Draft (POST) and autosave (POST, JSON) both call `PUT /tots/{id}/draft`. The TOT id never appears in a URL: it is kept in the server-side session.
-- Documents: PDF only, max 5 MB, PDF signature checked, `DocumentScanner` hook for antivirus (no-op by default), stored at `tots/{tot id}/{random}.pdf` in the private bucket, then registered with the Admin; the object is removed again if registration fails.
+- Documents: PDF only, max 5 MB, PDF signature checked, `DocumentScanner` hook for antivirus (no-op by default), stored at `tots/{tot id}/{random}.pdf` in the shared documents folder (`storage/app/documents` -> `/data/documents`), then registered with the Admin; the file is removed again if registration fails.
 
 ## Login page for returning vendors (`/login`)
 

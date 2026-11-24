@@ -387,6 +387,44 @@ VOB side (done): `SanitizeInput` middleware on every browser request, `TextSanit
 
 ---
 
+## 12. Documents move from S3 to the shared network folder - Status: OPEN
+
+Both servers now share one network-mounted folder: `/data/documents`, linked at `storage/app/documents` in each app (`ln -s /data/documents storage/app/documents`
+on 10.4.153.77 for VOB and 10.4.153.78 for the Admin). VOB now writes vendor PDFs to **disk `documents`** at `tots/{tot id}/{random}.pdf`, i.e. on the
+shared folder as `/data/documents/tots/{tot id}/{random}.pdf`. The `path` sent to `POST /tots/{id}/documents` is unchanged (`tots/{tot id}/{random}.pdf`)
+but it is now relative to the `documents` disk, not to the S3 bucket. The production error that triggered this was `PutObject ... requires non-empty parameter: Bucket`.
+
+Owner action (data): copy the existing Admin files, including the final PDFs generated on director approval, from `storage/app/private/tots` to
+`storage/app/documents/tots` (for example `cp -a storage/app/private/tots/. storage/app/documents/tots/`), keep the same sub-paths, then check that
+stored `path` values in the Admin database still resolve.
+
+**Prompt for the Admin Panel repo:**
+
+```
+The Admin and the VOB front end now share one network folder. Please:
+
+1. Add a filesystem disk `documents` in config/filesystems.php: driver local, root storage_path('app/documents') (a symlink to /data/documents on this
+   server), 'serve' => false, 'throw' => true, permissions file 0664 public / 0660 private and directory 0775 public / 0770 private (the VOB server
+   and this server run as different users in one group, so both must be able to read and write).
+2. Make TOT_DOCS_DISK default to `documents` (and `.env.example` / docs/ENV_SETTINGS.md say so). Everything that reads, replaces or deletes vendor
+   documents (GET document link, DELETE /tots/{id}/documents/{docId}, re-upload of the same type, uploads made by the TOT owner in the Admin) must use
+   that disk, with the key `tots/{tot id}/{file}.pdf` exactly as VOB registers it. VOB never sends a leading slash or `..`; keep rejecting those.
+3. The final PDF generated on director approval must also be written to the `documents` disk under tots/ (use the same tots/{tot id}/ folder, a name
+   that cannot collide with VOB's random 8-120 character names, e.g. final_{timestamp}.pdf), and its stored path must be relative to that disk. If
+   the generator currently writes to the `local` disk (storage/app/private), switch it to `documents`.
+4. Add an artisan command (or a documented one-off) that moves existing files from storage/app/private/tots to storage/app/documents/tots, keeps the
+   sub-paths, skips files that already exist at the target, and reports what it moved / skipped / could not find (database paths without a file).
+   Run it once on the Admin server; do not delete the originals until the owner confirms.
+5. TOT_SKIP_THIRD_PARTY (demo) keeps using the local disk. Update docs/API_CONTRACT.md "Documents": VOB writes to the shared documents folder, not S3,
+   and document deletion applies to that folder.
+6. Pest tests with Storage::fake('documents'): download, delete, replace, final PDF location, and path-traversal rejection.
+```
+
+VOB side (done): disk `documents` in `config/filesystems.php`, `VOB_DOCS_DISK=documents` by default, controller log row service renamed `s3` -> `storage`,
+tests use the fake `documents` disk. Demo mode (`VOB_SKIP_THIRD_PARTY=true`) still writes to `storage/app/private`, which is what local development uses.
+
+---
+
 ## 5. Demo run-book (both apps on one machine)
 
 **Admin Panel `.env`** (names as above; values are yours): `APP_URL=http://127.0.0.1:8000`, `VOB_URL=http://127.0.0.1:8001`, `VOB_ALLOWED_IPS=127.0.0.1`,

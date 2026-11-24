@@ -25,8 +25,8 @@ return [
     'session_idle_minutes' => (int) env('VOB_SESSION_IDLE_MINUTES', 30),
     'session_absolute_minutes' => (int) env('VOB_SESSION_ABSOLUTE_MINUTES', 480),
 
-    // Vendor documents: private bucket (disk 's3' reads AWS_* from .env). Tests use a fake disk.
-    'docs_disk' => env('VOB_DOCS_DISK', 's3'),
+    // Vendor documents: the shared network folder (disk 'documents' = storage/app/documents -> /data/documents). Disk 's3' still works if set. Tests use a fake disk.
+    'docs_disk' => env('VOB_DOCS_DISK', 'documents'),
     'docs_max_kb' => 5120,
 
     // Admin /masters data changes rarely; cache it (not vendor specific) for this many minutes.
