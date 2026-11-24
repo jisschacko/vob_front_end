@@ -3,8 +3,8 @@
 @section('title', 'Terms of Trade')
 
 @push('head')
-    <link rel="stylesheet" href="{{ asset('css/tot.css') }}">
-    <script src="{{ asset('js/tot-form.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/tot.css') }}?v={{ filemtime(public_path('css/tot.css')) }}">
+    <script src="{{ asset('js/tot-form.js') }}?v={{ filemtime(public_path('js/tot-form.js')) }}" defer></script>
     <script src="{{ asset('js/sku-data.js') }}" defer></script>
     <script src="{{ asset('js/field-verify.js') }}" defer></script>
 @endpush
@@ -61,9 +61,18 @@
         </details>
     @endif
 
-    @if ($errors->any())
+    {{-- File upload / removal problems are a toast (like the success message), because the page is scrolled to the section, not at the top. --}}
+    @php
+        $uploadError = $errors->first('document') ?: $errors->first('file');
+        $otherErrors = collect($errors->getMessages())->except(['document', 'file'])->isNotEmpty();
+    @endphp
+    @if ($uploadError)
+        <div class="flash flash-error" role="alert">{{ $uploadError }}</div>
+    @endif
+
+    @if ($otherErrors)
         <div class="error-summary" role="alert">
-            @php $special = collect(['form', 'document'])->first(fn ($k) => $errors->has($k)) @endphp
+            @php $special = collect(['form'])->first(fn ($k) => $errors->has($k)) @endphp
             @if ($errors->has('submit'))
                 <strong>{{ $errors->first('submit') }} Your draft was saved.</strong>
                 <ul>@foreach ($errors->getMessages() as $key => $messages)@if ($key !== 'submit')<li>{{ $messages[0] }}</li>@endif @endforeach</ul>

@@ -267,7 +267,9 @@ class UploadInspector
                 if (str_starts_with($lower, 'word/embeddings/') || str_starts_with($lower, 'word/activex/') || str_contains($lower, 'oleobject')) {
                     return $this->no('Word files with embedded objects are not allowed.');
                 }
-                if (in_array(pathinfo($lower, PATHINFO_EXTENSION), self::BAD_ENTRY_EXTENSIONS, true)) {
+                // word/printerSettings/printerSettings1.bin is ordinary printer data that Word writes into many files (still checked by its first bytes below)
+                $printerData = (bool) preg_match('#^word/printersettings/[^/]+\.bin$#', $lower);
+                if (! $printerData && in_array(pathinfo($lower, PATHINFO_EXTENSION), self::BAD_ENTRY_EXTENSIONS, true)) {
                     return $this->no('That Word file contains a file type that is not allowed inside a document.');
                 }
 
@@ -312,15 +314,28 @@ class UploadInspector
         return ['ok' => true, 'ext' => 'docx', 'mime' => self::DOCX_MIME, 'path' => $path, 'temp' => false];
     }
 
-    /** External links are allowed only as ordinary hyperlinks; templates, OLE objects, frames, packages and macro parts never. */
+    /**
+     * Relationships of a part. Blocked by their TYPE (last segment, so ordinary parts such as .../package/2006/relationships/metadata/core-properties,
+     * which every Word file has, are fine): macro projects, OLE objects, ActiveX, embedded packages, frames, sub-documents, external workbooks.
+     * An external TARGET is allowed only for a plain hyperlink, or for the attached template when it is a local path (Word writes
+     * file:///C:/.../Normal.dotm into many documents); a template or anything else on http(s), ftp or a network host (UNC) is refused.
+     */
     private function badRelationships(string $xml): bool
     {
-        if (preg_match('/Type="[^"]*(vbaProject|oleObject|activeX|attachedTemplate|package|frame|subDocument|externalLink|macro)[^"]*"/i', $xml)) {
-            return true;
+        if (! preg_match_all('/<Relationship\b[^>]*>/i', $xml, $all)) {
+            return false;
         }
-        if (preg_match_all('/<Relationship\b[^>]*>/i', $xml, $all)) {
-            foreach ($all[0] as $tag) {
-                if (preg_match('/TargetMode="External"/i', $tag) && ! preg_match('#Type="[^"]*/relationships/hyperlink"#i', $tag)) {
+        foreach ($all[0] as $tag) {
+            $type = preg_match('/\bType="([^"]*)"/i', $tag, $m) ? strtolower(basename($m[1])) : '';
+            $target = preg_match('/\bTarget="([^"]*)"/i', $tag, $m) ? trim(html_entity_decode($m[1])) : '';
+            $external = (bool) preg_match('/\bTargetMode="External"/i', $tag);
+
+            if (preg_match('/^(vbaproject\w*|oleobject|activex\w*|package|frame|subdocument|externallink\w*|macro\w*)$/', $type)) {
+                return true;
+            }
+            if ($external && $type !== 'hyperlink') {
+                $local = $type === 'attachedtemplate' && ! preg_match('#^(https?:|ftp:|\\\\|//|file://[^/])#i', $target);
+                if (! $local) {
                     return true;
                 }
             }

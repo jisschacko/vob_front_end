@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
@@ -37,11 +38,12 @@ class TotDocumentController extends Controller
 
         $request->validate(['type' => ['required', Rule::in([...array_keys(TotLayout::documents()), TotLayout::ADDITIONAL])]]);
         $type = $request->string('type')->toString();
+        $here = $this->anchor($type); // back to the section the vendor was in, not the top of the page
         $allowed = TotLayout::allowedExtensions($type);
         $names = strtoupper(implode(', ', $allowed));
 
         // Laravel validation: presence, size and a first type check (client name and MIME). The real checks follow, on the file content.
-        $request->validate([
+        $this->validateAt($request, $here, [
             'file' => ['required', 'file', 'extensions:'.implode(',', $allowed), 'mimetypes:'.implode(',', $this->mimeTypes($allowed)), 'max:'.config('vob.docs_max_kb')],
         ], [
             'file.max' => 'The file must be at most '.(config('vob.docs_max_kb') / 1024).' MB.',
@@ -55,26 +57,26 @@ class TotDocumentController extends Controller
         if ($type === TotLayout::ADDITIONAL) {
             $existing = collect((array) $this->api->get('tots/'.$tot['id'])->json('documents', []))->where('type', TotLayout::ADDITIONAL)->count();
             if ($existing >= (int) config('vob.docs_additional_max')) {
-                return back()->withErrors(['document' => 'You can attach at most '.config('vob.docs_additional_max').' additional files. Remove one first.']);
+                return redirect()->to($here)->withErrors(['document' => 'You can attach at most '.config('vob.docs_additional_max').' additional files. Remove one first.']);
             }
         }
 
         // Extension, MIME and the file's own signature must agree; images are re-encoded, PDF / Word are checked inside. Storage uses the DETECTED type.
         $checked = $inspector->inspect($file->getRealPath(), $file->getClientOriginalName(), $allowed);
         if (! $checked['ok']) {
-            return back()->withErrors(['document' => $checked['error']]);
+            return redirect()->to($here)->withErrors(['document' => $checked['error']]);
         }
 
         try {
             if (! $scanner->isClean($checked['path'])) {
-                return back()->withErrors(['document' => 'That file could not be accepted. Please upload a different file.']);
+                return redirect()->to($here)->withErrors(['document' => 'That file could not be accepted. Please upload a different file.']);
             }
 
             $key = 'tots/'.$tot['id'].'/'.Str::random(40).'.'.$checked['ext']; // never the client's name or extension
             $disk = EnforcementSwitches::skipThirdParty() ? 'local' : config('vob.docs_disk'); // demo mode: private local disk, no shared folder
 
             if (! $this->putObject($disk, $key, $checked['path'])) {
-                return back()->withErrors(['document' => 'We could not store the file right now. Please try again.']);
+                return redirect()->to($here)->withErrors(['document' => 'We could not store the file right now. Please try again.']);
             }
             $size = (int) filesize($checked['path']);
         } finally {
@@ -92,7 +94,7 @@ class TotDocumentController extends Controller
         ]);
 
         if ($response->status() === 201) {
-            return redirect()->route('home')->with('status', 'Document uploaded.');
+            return redirect()->to($here)->with('status', 'Document uploaded.');
         }
 
         $this->deleteObject($disk, $key); // registration failed: do not leave an orphan file
@@ -103,7 +105,7 @@ class TotDocumentController extends Controller
             default => 'We could not register the document right now. Please try again.',
         };
 
-        return back()->withErrors(['document' => $message]);
+        return redirect()->to($here)->withErrors(['document' => $message]);
     }
 
     /**
@@ -122,6 +124,7 @@ class TotDocumentController extends Controller
         }
 
         $type = $request->string('type')->toString();
+        $here = $this->anchor($type);
         $detail = $this->api->get('tots/'.$tot['id']);
         $documents = collect((array) $detail->json('documents', []))->where('type', $type);
         $document = $type === TotLayout::ADDITIONAL
@@ -129,18 +132,43 @@ class TotDocumentController extends Controller
             : $documents->first();
 
         if (! $document) {
-            return redirect()->route('home');
+            return redirect()->to($here);
         }
 
         $response = $this->api->delete('tots/'.$tot['id'].'/documents/'.$document['id']);
 
         if ($response->successful()) {
-            return redirect()->route('home')->with('status', 'Document removed.');
+            return redirect()->to($here)->with('status', 'Document removed.');
         }
 
-        return back()->withErrors(['document' => $response->status() === 409
+        return redirect()->to($here)->withErrors(['document' => $response->status() === 409
             ? 'This Terms of Trade can no longer be edited.'
             : 'We could not remove the document right now. Please try again.']);
+    }
+
+    /** The Home page at the card that holds this document slot, so the page opens where the vendor was (not at the top). */
+    private function anchor(string $type): string
+    {
+        foreach (TotLayout::cards() as $card) {
+            foreach ($card['blocks'] as $block) {
+                $kind = $block[0] ?? null;
+                if (($kind === 'documents' && in_array($type, $block[1], true)) || ($kind === 'additional_documents' && $type === TotLayout::ADDITIONAL)) {
+                    return route('home').'#'.$card['id'];
+                }
+            }
+        }
+
+        return route('home');
+    }
+
+    /** Laravel validation whose failure also returns to the section (a plain validate() would go back to the top of the page). */
+    private function validateAt(Request $request, string $here, array $rules, array $messages): void
+    {
+        try {
+            $request->validate($rules, $messages);
+        } catch (ValidationException $e) {
+            throw $e->redirectTo($here);
+        }
     }
 
     /** Content types the first (Laravel) check lets through; the inspector then proves the real type from the content. */

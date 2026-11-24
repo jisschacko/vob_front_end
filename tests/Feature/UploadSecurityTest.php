@@ -71,7 +71,7 @@ beforeEach(function () {
 
 describe('images', function () {
     it('accepts jpg, jpeg, png and webp and stores a re-encoded copy named by its real type', function (string $ext, string $kind, string $mime) {
-        uplPost("scan.$ext", uplPicture($kind), 'pan_certificate')->assertRedirect(route('home'))->assertSessionHas('status', 'Document uploaded.');
+        uplPost("scan.$ext", uplPicture($kind), 'pan_certificate')->assertRedirectContains(route('home'))->assertSessionHas('status', 'Document uploaded.');
 
         $files = Storage::disk('documents')->allFiles();
         expect($files)->toHaveCount(1)->and($files[0])->toMatch('#^tots/'.T::TOT_ID.'/[A-Za-z0-9]{40}\.'.$kind.'$#');
@@ -84,7 +84,7 @@ describe('images', function () {
         // a comment segment (COM, FFFE) carrying script text, right after the SOI marker
         $poison = substr($poison, 0, 2)."\xFF\xFE\x00\x1b<script>alert(1)</script>".substr($poison, 2);
 
-        uplPost('x.jpg', $poison)->assertRedirect(route('home'));
+        uplPost('x.jpg', $poison)->assertRedirectContains(route('home'));
 
         $stored = Storage::disk('documents')->get(Storage::disk('documents')->allFiles()[0]);
         expect($stored)->not->toContain('<?php')->not->toContain('<script')->not->toContain('system(')
@@ -153,7 +153,7 @@ describe('pdf', function () {
 
 describe('docx', function () {
     it('accepts a plain docx in the additional slot only', function () {
-        uplPost('terms.docx', uplDocx())->assertRedirect(route('home'));
+        uplPost('terms.docx', uplDocx())->assertRedirectContains(route('home'));
 
         expect(Storage::disk('documents')->allFiles()[0])->toEndWith('.docx');
         expect(T::sent('POST', 'tots/'.T::TOT_ID.'/documents'))->toMatchArray(['type' => 'additional_document', 'mime' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
@@ -232,24 +232,71 @@ describe('additional files (Vendor Details)', function () {
     it('deletes one file by its Admin id, and only if it belongs to this TOT', function () {
         T::fake(['DELETE tots/'.T::TOT_ID.'/documents/EXTRADOC000002' => Http::response(null, 204)], T::detail(['documents' => uplExtras(3)]));
 
-        $this->withSession(T::session())->post('/tot/documents/remove', ['type' => 'additional_document', 'document' => 'EXTRADOC000002'])->assertRedirect(route('home'));
+        $this->withSession(T::session())->post('/tot/documents/remove', ['type' => 'additional_document', 'document' => 'EXTRADOC000002'])->assertRedirectContains(route('home'));
         Http::assertSent(fn (Request $r) => $r->method() === 'DELETE' && str_ends_with($r->url(), '/documents/EXTRADOC000002'));
 
         Http::fake();
         T::fake([], T::detail(['documents' => uplExtras(3)]));
-        $this->withSession(T::session())->post('/tot/documents/remove', ['type' => 'additional_document', 'document' => 'SOMEONEELSESDOC1'])->assertRedirect(route('home'));
-        $this->withSession(T::session())->post('/tot/documents/remove', ['type' => 'additional_document'])->assertRedirect(route('home'));
+        $this->withSession(T::session())->post('/tot/documents/remove', ['type' => 'additional_document', 'document' => 'SOMEONEELSESDOC1'])->assertRedirectContains(route('home'));
+        $this->withSession(T::session())->post('/tot/documents/remove', ['type' => 'additional_document'])->assertRedirectContains(route('home'));
         Http::assertNotSent(fn (Request $r) => $r->method() === 'DELETE');
     });
 });
 
 describe('storage safety', function () {
     it('never stores under the client file name or extension and keeps the folder out of the web root', function () {
-        uplPost('../../public/index.php.pdf', "%PDF-1.4\nx\n%%EOF", 'pan_certificate')->assertRedirect(route('home'));
+        uplPost('../../public/index.php.pdf', "%PDF-1.4\nx\n%%EOF", 'pan_certificate')->assertRedirectContains(route('home'));
 
         $key = Storage::disk('documents')->allFiles()[0];
         expect($key)->toMatch('#^tots/'.T::TOT_ID.'/[A-Za-z0-9]{40}\.pdf$#');
         expect(T::sent('POST', 'tots/'.T::TOT_ID.'/documents')['original_name'])->not->toContain('/')->not->toContain('..');
         expect(config('filesystems.disks.documents.root'))->toBe(storage_path('app/documents'))->and(config('filesystems.disks.documents.root'))->not->toContain('public');
+    });
+});
+
+describe('the page stays where the vendor was', function () {
+    it('returns to the card of the slot after an upload, a refusal and a removal', function (string $type, string $card) {
+        uplPost('scan.pdf', "%PDF-1.4\nx\n%%EOF", $type)->assertRedirect(route('home').'#'.$card);
+        uplPost('scan.php', 'x', $type)->assertRedirect(route('home').'#'.$card);
+        $this->withSession(T::session())->post('/tot/documents/remove', ['type' => $type])->assertRedirect(route('home').'#'.$card);
+    })->with([['pan_certificate', 'vendor_details'], ['additional_document', 'vendor_details'], ['cancelled_cheque', 'bank_account_details']]);
+});
+
+describe('a real Word file and the error toast', function () {
+    it('accepts what Word itself writes: core-properties and thumbnail parts, printer settings, a local attached template, a hyperlink', function () {
+        $rootRels = '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            .'<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>'
+            .'<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail" Target="docProps/thumbnail.jpeg"/>'
+            .'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+        $settingsRels = '<Relationships><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/attachedTemplate" Target="file:///C:\Users\a\Normal.dotm" TargetMode="External"/>'
+            .'<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/printerSettings" Target="printerSettings/printerSettings1.bin"/></Relationships>';
+        $docx = uplDocx(['word/printerSettings/printerSettings1.bin' => "\x00\x01DEVMODE", 'word/_rels/settings.xml.rels' => $settingsRels, '_rels/.rels' => $rootRels, 'docProps/core.xml' => '<x/>']);
+
+        expect(uplInspect('letter.docx', $docx)['ok'])->toBeTrue();
+    });
+
+    it('refuses a template on the network (http, UNC)', function (string $target) {
+        $rels = '<Relationships><Relationship Id="r1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/attachedTemplate" Target="'.$target.'" TargetMode="External"/></Relationships>';
+
+        expect(uplInspect('x.docx', uplDocx(['word/_rels/settings.xml.rels' => $rels]))['ok'])->toBeFalse();
+    })->with(['https://evil.test/t.dotm', '\\evil\share\t.dotm', 'file://evil/share/t.dotm']);
+
+    it('shows an upload problem as a toast, not in the top summary', function () {
+        $bag = (new Illuminate\Support\ViewErrorBag)->put('default', new Illuminate\Support\MessageBag(['document' => ['Word files with macros are not allowed.']]));
+
+        $page = $this->withSession(array_merge(T::session(), ['errors' => $bag]))->get('/home')->getContent();
+        expect($page)->toContain('class="flash flash-error"')->toContain('Word files with macros are not allowed.')->not->toContain('error-summary');
+    });
+});
+
+describe('Word for the RTGS form', function () {
+    it('takes a docx in the RTGS form slot and shows it in the page, but not in the other fixed slots', function () {
+        uplPost('rtgs.docx', uplDocx(), 'rtgs_form')->assertRedirect(route('home').'#bank_account_details')->assertSessionHas('status', 'Document uploaded.');
+        expect(T::sent('POST', 'tots/'.T::TOT_ID.'/documents'))->toMatchArray(['type' => 'rtgs_form', 'mime' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
+
+        $page = $this->withSession(T::session())->get('/home')->getContent();
+        expect($page)->toContain('.webp,.docx" form="doc-up-rtgs_form"')->not->toContain('.webp,.docx" form="doc-up-cancelled_cheque"');
+
+        uplPost('cheque.docx', uplDocx(), 'cancelled_cheque')->assertSessionHasErrors('file');
     });
 });

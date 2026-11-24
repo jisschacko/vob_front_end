@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Vendor Handshake') | Lulu</title>
-    <link rel="stylesheet" href="{{ asset('css/vob.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/vob.css') }}?v={{ filemtime(public_path('css/vob.css')) }}">
     @stack('head')
     @isset($progress)<script src="{{ asset('js/menu.js') }}" defer></script>@endisset
 </head>

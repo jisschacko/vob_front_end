@@ -143,6 +143,7 @@
                 $doc = $page->document($type);
                 [$label, $help] = (\App\Services\Tot\TotLayout::documents()[$type] + [1 => null]);
                 $required = $page->documentRequired($type);
+                $word = in_array('docx', \App\Services\Tot\TotLayout::allowedExtensions($type), true); // RTGS form: Word too
             @endphp
             <div class="field-wrap">
                 <label class="flabel">{{ $label }}{!! $type === 'gst_certificate' ? '<span class="req" id="gst-cert-req"'.($required ? '' : ' hidden').'>*</span>' : ($required ? '<span class="req">*</span>' : '') !!}</label>
@@ -155,12 +156,12 @@
                         <a class="file-btn" href="{{ asset('downloads/RTGS_template.docx') }}" download="RTGS_template.docx">Download Sample</a>
                     @endif
                     @if ($page->editable())
-                        <label class="file-btn">{{ $doc ? 'Replace File' : 'Choose File' }}<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp" form="doc-up-{{ $type }}" data-doc-input></label>
+                        <label class="file-btn">{{ $doc ? 'Replace File' : 'Choose File' }}<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp{{ $word ? ',.docx' : '' }}" form="doc-up-{{ $type }}" data-doc-input></label>
                         <button type="submit" class="file-btn" form="doc-up-{{ $type }}">Upload</button>
                         @if ($doc)<button type="submit" class="file-btn danger" form="doc-rm-{{ $type }}">Remove</button>@endif
                     @endif
                 </div>
-                <p class="help">PDF, JPG, PNG or WEBP, up to {{ config('vob.docs_max_kb') / 1024 }} MB.@if ($help) {{ $help }}@endif</p>
+                <p class="help">PDF, JPG, PNG, WEBP{{ $word ? ' or Word (.docx)' : '' }}, up to {{ config('vob.docs_max_kb') / 1024 }} MB.@if ($help) {{ $help }}@endif</p>
             </div>
         @endforeach
     </div>
@@ -171,7 +172,7 @@
         $room = $page->editable() && $extras->count() < $maxExtras;
     @endphp
     <div class="extra-docs" data-extra-docs>
-        <p class="flabel">Additional files <span class="muted">(optional, up to {{ $maxExtras }})</span></p>
+        <p class="flabel">Additional files</p>
         @forelse ($extras as $i => $extra)
             <div class="extra-doc">
                 <span class="extra-doc-name">{{ $extra['name'] ?? 'File' }}@if (! empty($extra['size'])) ({{ number_format($extra['size'] / 1024, 0) }} KB)@endif</span>
@@ -184,12 +185,10 @@
         @endforelse
 
         @if ($room)
-            <div class="extra-doc-new" data-extra-new @if ($extras->isNotEmpty()) hidden @endif>
-                <label class="file-btn">Choose File<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.docx" form="doc-up-additional" data-doc-input></label>
+            <div class="extra-doc-new">
+                {{-- A plain label around the file input: it opens the file picker by itself (no script needed). Same button, first "Choose File", then "Upload another file". --}}
+                <label class="file-btn">{{ $extras->isEmpty() ? 'Choose File' : 'Upload another file' }}<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.docx" form="doc-up-additional" data-doc-input></label>
             </div>
-            @if ($extras->isNotEmpty())
-                <button type="button" class="file-btn" data-extra-more hidden>Upload another file</button>
-            @endif
             <p class="help">PDF, JPG, PNG, WEBP or Word (.docx), up to {{ config('vob.docs_max_kb') / 1024 }} MB each. Word files with macros or embedded objects are refused.</p>
         @elseif ($page->editable())
             <p class="help">The limit of {{ $maxExtras }} additional files is reached. Delete one to add another.</p>

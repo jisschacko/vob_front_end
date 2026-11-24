@@ -52,7 +52,11 @@ body { margin:0; font-family:var(--font); background:var(--bg); color:#1c2433; }
 .brand-login { display:block; height:72px; max-width:100%; margin:0 auto 20px; }
 .muted { color:#5d6a85; font-size:13px; line-height:1.5; }
 .hint { background:#f4f1e8; border-left:3px solid var(--gold); padding:8px 12px; font-size:13px; }
-.flash { background:#e6f2e8; border:1px solid #b9d8bf; color:#1d5b2a; padding:10px 14px; border-radius:8px; max-width:760px; width:100%; font-size:14px; }
+/* Success messages are a toast: top-right, fades away by itself (pure CSS, no script). Without animation support it simply stays. */
+.flash { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; z-index:1000; background:#e6f2e8; border:1px solid #b9d8bf; color:#1d5b2a; padding:12px 18px; border-radius:10px; max-width:min(380px, calc(100vw - 36px)); font-size:14px; font-weight:600; box-shadow:0 6px 20px rgba(0,0,0,.15); animation:flash-in .25s ease-out, flash-out .6s ease-in 4.5s forwards; }
+@keyframes flash-in { from { opacity:0; transform:translate(-50%,-44%); } to { opacity:1; transform:translate(-50%,-50%); } }
+@keyframes flash-out { to { opacity:0; visibility:hidden; transform:translate(-50%,-56%); } }
+@media (prefers-reduced-motion:reduce) { .flash { animation:flash-out .01s linear 6s forwards; } }
 .card-narrow form label { display:block; margin:14px 0 4px; font-size:13px; font-weight:600; }
 .card-narrow form input { width:100%; padding:10px 12px; border:1px solid #c5cad6; border-radius:6px; font:inherit; }
 .card-narrow form input:focus { outline:2px solid var(--gold); border-color:var(--gold); }
@@ -102,3 +106,5 @@ blockquote footer { color:#5d6a85; font-size:12px; margin-top:4px; }
 .layout.menu-collapsed .logo-mini { display:block; }
 /* narrow screens: the menu is stacked above the page and always open */
 @media (max-width:900px) { .layout.menu-collapsed { grid-template-columns:minmax(0, 1fr); } .layout.menu-collapsed .tracker { padding:20px; } .layout.menu-collapsed .menu-panel { display:block; } .layout.menu-collapsed .logo-full { display:block; } .layout.menu-collapsed .logo-mini { display:none; } .menu-logo .logo-full { flex-basis:100%; width:100%; } }
+/* Upload problems use the same toast, red, and stay a little longer */
+.flash.flash-error { background:#fdecea; border-color:#f0b9b3; color:#8c1d14; animation:flash-in .25s ease-out, flash-out .6s ease-in 8s forwards; }

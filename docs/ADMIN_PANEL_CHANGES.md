@@ -428,7 +428,7 @@ tests use the fake `documents` disk. Demo mode (`VOB_SKIP_THIRD_PARTY=true`) sti
 ## 13. More upload formats, additional files, safe download - Status: OPEN
 
 VOB now accepts **pdf, jpg, jpeg, png, webp** in every document slot, and a new slot **`additional_document`** in Vendor Details: up to **5 per TOT**,
-several allowed (not "one per type"), which also accepts **docx**. VOB inspects every file (type proven from content, images re-encoded without
+several allowed (not "one per type"), which also accepts **docx**; the **`rtgs_form`** slot accepts **docx** too. VOB inspects every file (type proven from content, images re-encoded without
 metadata, pdf / docx scanned, macros and embedded objects refused) and stores it as `tots/{tot id}/{random 40 chars}.{pdf|jpg|png|webp|docx}`; the
 extension is the DETECTED type, never the vendor's. Until the Admin accepts the new values below, registering anything but a PDF returns 422.
 
@@ -442,7 +442,7 @@ VOB now registers more than PDFs. Please change POST /tots/{id}/documents and ev
    mime must agree. Reject anything else with 422 errors.path / errors.mime. `size` stays <= 5 MB.
 2. New document type `additional_document`: NOT required for submit, NOT "one per type" (a new upload does not replace the old one), at most 5 per
    TOT (6th -> 422 errors.type "You can attach at most 5 additional files."), listed in GET /tots/{id} documents[] with id, type, name, size,
-   uploaded_at like the others. DELETE /tots/{id}/documents/{docId} removes just that one (and its file). Only `additional_document` may be .docx.
+   uploaded_at like the others. DELETE /tots/{id}/documents/{docId} removes just that one (and its file). Only `additional_document` and `rtgs_form` may be .docx (the vendor fills in the Word RTGS template and uploads it back); every other type is pdf or an image.
    The TOT owner and reviewers in the Admin must see these files too (with their names).
 3. Downloading a vendor document in the Admin must go through an authenticated, authorised controller action (owner / reviewer of that TOT, or admin), never
    a public URL or the storage symlink. Stream it with: Content-Disposition: attachment (filename from the stored original_name, sanitised),

@@ -28,7 +28,7 @@ describe('upload to the shared documents folder', function () {
         T::fake();
 
         $this->withSession(T::session())->post('/tot/documents', ['type' => 'pan_certificate', 'file' => pdf()])
-            ->assertRedirect(route('home'))->assertSessionHas('status', 'Document uploaded.');
+            ->assertRedirectContains(route('home'))->assertSessionHas('status', 'Document uploaded.');
 
         $files = Storage::disk('documents')->allFiles();
         expect($files)->toHaveCount(1)
@@ -136,7 +136,7 @@ describe('remove a document', function () {
         T::fake(['DELETE tots/'.T::TOT_ID.'/documents/77' => Http::response([], 204)]);
 
         $this->withSession(T::session())->post('/tot/documents/remove', ['type' => 'pan_certificate'])
-            ->assertRedirect(route('home'))->assertSessionHas('status', 'Document removed.');
+            ->assertRedirectContains(route('home'))->assertSessionHas('status', 'Document removed.');
 
         Http::assertSent(fn (Request $r) => $r->method() === 'DELETE' && str_ends_with($r->url(), '/tots/'.T::TOT_ID.'/documents/77'));
     });
@@ -144,7 +144,7 @@ describe('remove a document', function () {
     it('ignores a document id sent by the browser and does nothing if that type has no document', function () {
         T::fake();
 
-        $this->withSession(T::session())->post('/tot/documents/remove', ['type' => 'gst_certificate', 'id' => 77])->assertRedirect(route('home'));
+        $this->withSession(T::session())->post('/tot/documents/remove', ['type' => 'gst_certificate', 'id' => 77])->assertRedirectContains(route('home'));
 
         Http::assertNotSent(fn (Request $r) => $r->method() === 'DELETE');
     });

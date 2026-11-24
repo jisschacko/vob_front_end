@@ -268,7 +268,7 @@ describe('demo mode (VOB_SKIP_THIRD_PARTY)', function () {
         T::fake([], readyDetail());
 
         $this->withSession(T::session())->post('/tot/documents', ['type' => 'pan_certificate', 'file' => UploadedFile::fake()->createWithContent('pan.pdf', "%PDF-1.4\nx\n%%EOF")])
-            ->assertRedirect(route('home'));
+            ->assertRedirectContains(route('home'));
 
         expect(Storage::disk('local')->allFiles())->toHaveCount(1)->and(Storage::disk('documents')->allFiles())->toBeEmpty();
         expect(T::sent('POST', 'tots/'.T::TOT_ID.'/documents')['path'])->toBe(Storage::disk('local')->allFiles()[0]);
