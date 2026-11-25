@@ -468,6 +468,45 @@ Delete per file). VOB has no download route: it never serves an uploaded file ba
 ---
 
 
+## 15. Security controls inventory for the Admin Panel (kept OUT of git) - Status: OPEN
+
+VOB now has `docs/SECURITY_CONTROLS.md`: one page that lists every security control in the application (transport and headers, sign-in encryption,
+signed Admin calls and log redaction, input sanitising, file-upload inspection, deployment checklist, known limits). It is **git-ignored on purpose**
+(`/docs/SECURITY_CONTROLS.md` in `.gitignore`) because a list of what protects an application and where it is weak is a route map for an attacker.
+This entry is the only trace of it in git, and deliberately says nothing about the contents.
+
+Owner action: copy `docs/SECURITY_CONTROLS.md` from the VOB repo to the Admin repo by hand (not through git, not by e-mail or chat), and keep the two in step.
+Do not commit it in either repo. After a change in either application, update that application's copy in the same piece of work.
+
+**Prompt for the Admin Panel repo:**
+
+```
+Create docs/SECURITY_CONTROLS.md for the Admin Panel, with the same layout as the VOB copy the owner has put next to this task
+(sections: 1 Transport, browser hardening and session; 2 Sign-in and credentials; 3 Calls between the applications and logging; 4 Input handling;
+5 File uploads and downloads; 6 Deployment checklist; 7 Known limits; 8 Where it lives). Each control gets: what it is, how it is done, status
+(ON = implemented and covered by a Pest test, CONFIG = needs deployment settings, GAP = known limit).
+
+Describe what the Admin really does today, by reading the code, not what the VOB copy says. Cover at least:
+- the API side of the signed calls (HMAC check, timestamp window, nonce replay store, VOB_ALLOWED_IPS, the RSA-wrapped X-Auth-Data envelope and its
+  private key handling, token lifetime and idle / absolute limits, lockout of repeated bad vendor passwords, unblock, rate limits);
+- sanitising (TextSanitizer / SanitizeInput), output escaping, CSP and the other response headers (and note honestly that the CSP still allows
+  inline script and style, if it does), SQL injection posture (Eloquent / bound queries only, any raw SQL and why it is safe), mass assignment;
+- admin user security: password rules, session settings and fixation, CSRF, role / policy checks (a user not on the TOT gets 403), buyer / legal /
+  director approval actions, the "bank account not verified, sign off and approve" reason and its history entry, audit trail in TOT history;
+- documents: the `documents` disk, extension and MIME re-check before download, authorised download action with attachment / nosniff / sandbox CSP, no
+  public URL, upload by the TOT owner (same inspection rules as VOB: content type, image re-encode, macro / OLE / executable checks for docx), the
+  5-file limit of additional documents, the moved-files command;
+- eMudhra e-sign: webhook / redirect handling, secrets, what is logged, what is verified before a signed PDF is accepted;
+- Cashfree retry from the Admin (if built): secrets, redaction, masking;
+- deployment: .env protection, document root, storage permissions, scheduler, queue worker, backups, firewall (only the VOB server may reach the API).
+Add the "known limits" honestly (what is not covered). Add `/docs/SECURITY_CONTROLS.md` to .gitignore in the Admin repo and confirm with
+`git check-ignore -v docs/SECURITY_CONTROLS.md`. Do not commit the file. Do not copy secrets, key paths with real values, IP addresses or
+host names into it.
+While writing it, list any control that is listed as a GAP or that you find missing, as numbered findings at the end of your reply (not in git).
+```
+
+---
+
 ## 5. Demo run-book (both apps on one machine)
 
 **Admin Panel `.env`** (names as above; values are yours): `APP_URL=http://127.0.0.1:8000`, `VOB_URL=http://127.0.0.1:8001`, `VOB_ALLOWED_IPS=127.0.0.1`,

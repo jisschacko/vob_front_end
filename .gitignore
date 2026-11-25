@@ -28,3 +28,6 @@ Thumbs.db
 
 # local page previews
 /public/_preview
+
+# Internal security inventory: not a route map for attackers, never commit
+/docs/SECURITY_CONTROLS.md
