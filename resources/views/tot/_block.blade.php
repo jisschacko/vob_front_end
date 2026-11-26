@@ -189,7 +189,7 @@
                 {{-- A plain label around the file input: it opens the file picker by itself (no script needed). Same button, first "Choose File", then "Upload another file". --}}
                 <label class="file-btn">{{ $extras->isEmpty() ? 'Choose File' : 'Upload another file' }}<input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.docx" form="doc-up-additional" data-doc-input></label>
             </div>
-            <p class="help">PDF, JPG, PNG, WEBP or Word (.docx), up to {{ config('vob.docs_max_kb') / 1024 }} MB each. Word files with macros or embedded objects are refused.</p>
+            <p class="help">PDF, JPG, PNG, WEBP or Word (.docx), up to {{ config('vob.docs_max_kb') / 1024 }} MB each.</p>
         @elseif ($page->editable())
             <p class="help">The limit of {{ $maxExtras }} additional files is reached. Delete one to add another.</p>
         @endif
